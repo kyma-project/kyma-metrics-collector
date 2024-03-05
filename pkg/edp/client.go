@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"time"
 
-	log "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/logger"
+	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )

@@ -3,8 +3,8 @@ package process
 import (
 	"strconv"
 
-	kmccache "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/cache"
-	skrcommons "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/skr/commons"
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
+	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )

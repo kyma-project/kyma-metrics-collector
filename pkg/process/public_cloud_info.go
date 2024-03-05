@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 
-	"github.com/kyma-project/control-plane/components/kyma-metrics-collector/env"
+	"github.com/kyma-project/kyma-metrics-collector/env"
 )
 
 type Providers struct {

@@ -2,15 +2,15 @@ package node
 
 import (
 	"context"
-	kmccache "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/cache"
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 	"testing"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	skrcommons "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/skr/commons"
-	kmctesting "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/testing"
+	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
+	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 	"github.com/onsi/gomega"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	corev1 "k8s.io/api/core/v1"

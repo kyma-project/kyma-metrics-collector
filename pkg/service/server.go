@@ -13,7 +13,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	log "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/logger"
+	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 )
 
 const (

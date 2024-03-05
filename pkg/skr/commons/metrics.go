@@ -1,7 +1,7 @@
 package commons
 
 import (
-	kmccache "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/cache"
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"strconv"

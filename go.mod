@@ -1,4 +1,4 @@
-module github.com/kyma-project/control-plane/components/kyma-metrics-collector
+module github.com/kyma-project/kyma-metrics-collector
 
 go 1.22.0
 

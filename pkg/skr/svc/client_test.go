@@ -2,7 +2,7 @@ package svc
 
 import (
 	"context"
-	kmccache "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/cache"
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"sort"
 	"strconv"
 	"testing"
@@ -12,8 +12,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	skrcommons "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/skr/commons"
-	kmctesting "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/testing"
+	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
+	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 	"github.com/onsi/gomega"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
