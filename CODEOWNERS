@@ -18,18 +18,18 @@
 # Provide granular ownership specification for folders and subfolders. You can also define the owners of specific file types in your repository.
 # The order is important. The last matching pattern in the file has the most precedence.
 
-# Examples
+# These are the default owners for the whole content of the repository. The default owners are automatically added as reviewers when you open a pull request unless different owners are specified in the file.
+* @kyma-project/eventing
 
-# These are the default owners for the whole content of the repository, including the content for which no owners are specified in the file.
-# * @global-owner1 globalowner@example.com @org/team-name
-# The following rule indicates that if a pull request affects folder1 at the root of the repository and any content in that folder, only this owner is requested for a review.
-# /folder1/ @testuser1
-# When you use the following pattern, you specify that @testuser2 is responsible for the review of any file in folder2, excluding subfolders located therein.
-# /folder2/* @testuser2
-# In this example, you define @testuser3 as the owner of any content in every "docs" folder in the repository.
-# docs/ @testuser3
-# When you open a pull request that modifies the "yaml" files, only @testuser4 is requested for a review, and the global owner(s) are not.
-# *.yaml @testuser4
+*.md @kyma-project/technical-writers
+
+*.sh @kyma-project/eventing
+
+/.github/ @kyma-project/eventing
+
+/.version @kyma-project/eventing
+
+/.sec-scanners-config.yaml @kyma-project/eventing
 
 # Reference
 
