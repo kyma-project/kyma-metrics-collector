@@ -2,10 +2,11 @@ package pvc
 
 import (
 	"context"
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"sort"
 	"strconv"
 	"testing"
+
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 
 	"github.com/onsi/gomega"
 	"github.com/prometheus/client_golang/prometheus/testutil"

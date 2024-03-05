@@ -2,10 +2,11 @@ package node
 
 import (
 	"context"
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
 	"testing"
+
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 

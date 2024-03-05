@@ -1,10 +1,11 @@
 package commons
 
 import (
+	"strconv"
+
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"strconv"
 )
 
 const (

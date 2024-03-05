@@ -2,10 +2,11 @@ package svc
 
 import (
 	"context"
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"sort"
 	"strconv"
 	"testing"
+
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 

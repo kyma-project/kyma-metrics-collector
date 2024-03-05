@@ -3,11 +3,12 @@ package edp
 import (
 	"bytes"
 	"fmt"
-	"github.com/avast/retry-go/v4"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/avast/retry-go/v4"
 
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	"github.com/pkg/errors"

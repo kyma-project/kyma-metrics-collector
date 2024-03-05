@@ -3,10 +3,11 @@ package keb
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus/testutil"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus/testutil"
 
 	"github.com/kyma-project/kyma-environment-broker/common/runtime"
 	"github.com/onsi/gomega"
