@@ -2,10 +2,11 @@ package pvc
 
 import (
 	"context"
-	kmccache "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/cache"
 	"sort"
 	"strconv"
 	"testing"
+
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 
 	"github.com/onsi/gomega"
 	"github.com/prometheus/client_golang/prometheus/testutil"
@@ -14,8 +15,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
 
-	skrcommons "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/skr/commons"
-	kmctesting "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/testing"
+	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
+	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
 
 const (

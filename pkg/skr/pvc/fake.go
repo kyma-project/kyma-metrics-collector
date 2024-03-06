@@ -2,9 +2,10 @@ package pvc
 
 import (
 	"fmt"
-	kmccache "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/cache"
-	skrcommons "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/skr/commons"
-	kmctesting "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/testing"
+
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
+	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
+	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
 )

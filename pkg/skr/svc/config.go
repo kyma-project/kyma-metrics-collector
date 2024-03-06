@@ -1,6 +1,6 @@
 package svc
 
-import kmccache "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/cache"
+import kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 
 type ConfigInf interface {
 	NewClient(kmccache.Record) (*Client, error)

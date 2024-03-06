@@ -3,7 +3,8 @@ package node
 import (
 	"context"
 	"encoding/json"
-	kmccache "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/cache"
+
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 
 	corev1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,7 +13,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/clientcmd"
 
-	skrcommons "github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/skr/commons"
+	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
 )
 
 type Client struct {

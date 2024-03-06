@@ -1,6 +1,6 @@
 FROM europe-docker.pkg.dev/kyma-project/prod/external/golang:1.22.0-alpine3.19 as builder
 
-ENV BASE_APP_DIR /go/src/github.com/kyma-project/control-plane/components/kyma-metrics-collector
+ENV BASE_APP_DIR /go/src/github.com/kyma-project/kyma-metrics-collector
 WORKDIR ${BASE_APP_DIR}
 
 COPY . .

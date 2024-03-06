@@ -22,7 +22,7 @@ spec:
         app: kmc-dev
     spec:
       containers:
-      - image: ko://github.com/kyma-project/control-plane/components/kyma-metrics-collector/cmd
+      - image: ko://github.com/kyma-project/kyma-metrics-collector/cmd
         imagePullPolicy: Always
         name: kmc-dev
         args:

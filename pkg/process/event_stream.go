@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyma-project/control-plane/components/kyma-metrics-collector/pkg/edp"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
