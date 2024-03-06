@@ -52,24 +52,9 @@ Kyma Metrics Collector comes with the following environment variables:
 ko apply -f dev/
 ```
 
-- Resolve all dependencies:
-```
-make resolve-local
-```
-
 - Run tests:
 ```
-make tests
-```
-
-- Run tests and publish a test coverage report:
-```
-make publish-test-results
-```
-
-- Run tests on the Prometheus alerting rules:
-```
-make test-alerts
+make test
 ```
 
 ### Troubleshooting

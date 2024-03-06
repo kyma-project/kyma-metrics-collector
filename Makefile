@@ -111,6 +111,10 @@ test: ## Run tests
 	@echo -n "Total coverage: "
 	@go tool cover -func=/tmp/artifacts/cover.out | grep total | awk '{print $$3}'
 
+update-metrics-docs: ## Updates the metrics document (i.e. metrics.md).
+	@metrics=$$(mktemp).json; echo $${metrics}; promlinter list -ojson . > $${metrics}; gomplate -d kmc=$${metrics} -f hack/metrics.md.tpl  | prettier --parser markdown > metrics.md
+
+
 ##@ Build
 
 .PHONY: build
@@ -152,6 +156,3 @@ docker-buildx: test ## Build and push docker image for the KMC for cross-platfor
 	- docker buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross .
 	- docker buildx rm project-v3-builder
 	rm Dockerfile.cross
-
-update_metrics_docs:
-	@metrics=$$(mktemp).json; echo $${metrics}; promlinter list -ojson . > $${metrics}; gomplate -d kmc=$${metrics} -f hack/metrics.md.tpl  | prettier --parser markdown > metrics.md
