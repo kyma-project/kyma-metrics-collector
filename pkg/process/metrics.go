@@ -28,7 +28,7 @@ var (
 			Namespace: namespace,
 			Subsystem: subsystem,
 			Name:      "sub_account_total",
-			Help:      "Number of sub-accounts processed including successful and failed.",
+			Help:      "Number of subaccounts processed, including successful and failed.",
 		},
 		[]string{successLabel, shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
 	)
@@ -37,7 +37,7 @@ var (
 			Namespace: namespace,
 			Subsystem: subsystem,
 			Name:      "sub_account_processed_timestamp_seconds",
-			Help:      "Unix timestamp (in seconds) of last successful processing of sub-account.",
+			Help:      "Unix timestamp (in seconds) of last successful processing of subaccount.",
 		},
 		[]string{withOldMetricLabel, shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
 	)
@@ -46,7 +46,7 @@ var (
 			Namespace: namespace,
 			Subsystem: subsystem,
 			Name:      "old_metric_published_gauge",
-			Help:      "Number of consecutive re-sends of old metrics to edp per cluster. It Will reset to 0 when new metric data is published.",
+			Help:      "Number of consecutive re-sends of old metrics to EDP per cluster. It will reset to 0 when new metric data is published.",
 		},
 		[]string{shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
 	)
@@ -55,7 +55,7 @@ var (
 			Namespace: namespace,
 			Subsystem: subsystem,
 			Name:      "fetched_clusters",
-			Help:      "All clusters fetched from KEB including trackable and not trackable.",
+			Help:      "All clusters fetched from KEB, including trackable and not trackable.",
 		},
 		[]string{trackableLabel, shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
 	)
