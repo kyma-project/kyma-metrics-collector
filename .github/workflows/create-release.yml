@@ -4,8 +4,8 @@ run-name: Create release ${{ inputs.name }}
 env:
   IMAGE_REPO: europe-docker.pkg.dev/kyma-project/prod/kyma-metrics-collector
   KYMA_METRICS_COLLECTOR_REPO: ${{ github.repository_owner }}/kyma-metrics-collector
-  GIT_EMAIL: tunas-bot@sap.com
-  GIT_NAME: tunas-bot
+  GIT_EMAIL: kyma-eventing-bot@sap.com
+  GIT_NAME: kyma-eventing-bot
   BUMP_SEC_SCANNERS_BRANCH_NAME: sec-scanners-config-${{ inputs.name }}
   BUMP_KMC_BRANCH_NAME: bump-kmc-${{ inputs.name }}
 
