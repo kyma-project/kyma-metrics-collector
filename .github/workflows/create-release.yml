@@ -178,7 +178,7 @@ jobs:
       - name: Check if release-kyma-metrics-collector-build status is not success
         if: steps.wait-for-post-kmc-release-build.outputs.state != 'success'
         run: |
-          echo 'release-kyma-metrics-collector-buildfailed.'
+          echo 'release-kyma-metrics-collector-build failed.'
           exit 1
 
   bump-kmc-chart:
