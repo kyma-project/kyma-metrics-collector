@@ -211,7 +211,7 @@ jobs:
             echo "Nothing changed, no need to create PR"
             echo "PR_NUMBER=-1" >> $GITHUB_ENV
           else
-            PR_STATUS=$(./hack/create_bump_kmc_chart_pr.sh ${{ inputs.name }})
+            PR_STATUS=$(./hack/scripts/create_bump_kmc_chart_pr.sh ${{ inputs.name }})
             echo "PR_NUMBER=$(echo "$PR_STATUS" | tail -n 1)" >> $GITHUB_ENV
           fi
 
@@ -221,7 +221,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "$PR_NUMBER" -gt 0 ]; then
-            ./hack/await_pr_merge.sh
+            ./hack/scripts/await_pr_merge.sh
           else
             echo "Step skipped"
           fi
