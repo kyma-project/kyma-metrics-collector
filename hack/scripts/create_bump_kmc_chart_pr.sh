@@ -17,20 +17,20 @@ set -o pipefail # prevents errors in a pipeline from being masked
 TAG=$1
 
 # add changed files to stage
-git add resources/keb/values.yaml
-git add resources/keb/Chart.yaml
+git add resources/kyma-metrics-collector/values.yaml
+git add resources/kyma-metrics-collector/Chart.yaml
 
 #stash staged changes
 git stash push --staged
 
 #pass changes to branch created from main
 git checkout --force -B main refs/remotes/origin/main
-git checkout -B ${BUMP_KEB_BRANCH_NAME}
+git checkout -B ${BUMP_KMC_BRANCH_NAME}
 
 #apply stashed changes
 git stash apply
-git add resources/keb/values.yaml
-git add resources/keb/Chart.yaml
+git add resources/kyma-metrics-collector/values.yaml
+git add resources/kyma-metrics-collector/Chart.yaml
 
 #configure git
 git config --global user.email ${GIT_EMAIL}
