@@ -21,8 +21,7 @@ IMAGE_NAMES=(
 
 for image in "${IMAGE_NAMES[@]}"; do
   if [ $(skopeo list-tags ${PROTOCOL}europe-docker.pkg.dev/kyma-project/prod/${image} | jq '.Tags|any(. == env.IMAGE_TAG)') == "true" ]; then
-    echo "::warning ::${image} binary image for tag ${IMAGE_TAG} already exists"
-    exit 1
+    echo "::WARNING ::${image} binary image for tag ${IMAGE_TAG} already exists"
   else
     echo "No previous ${image} binary image found for tag ${IMAGE_TAG}"
   fi

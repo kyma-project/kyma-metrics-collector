@@ -162,7 +162,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           statusName: "release-kyma-metrics-collector-build"
           timeoutSeconds: "600"
-          ref: ${{ needs.bump-sec-scanners-config.outputs.latest_commit}}
+          ref: main
 
       - name: Check if release-kyma-metrics-collector-build status is not success
         if: steps.wait-for-post-kmc-release-build.outputs.state != 'success'
