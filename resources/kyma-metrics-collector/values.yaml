@@ -4,7 +4,7 @@ global:
       path: europe-docker.pkg.dev/kyma-project/prod
     kyma_metrics_collector:
       dir:
-      version: "v20240306-55d63524"
+      version: "0.0.1"
   istio:
     gateway: "kyma-system/kyma-gateway"
     proxy:
