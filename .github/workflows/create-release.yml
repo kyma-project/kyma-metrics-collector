@@ -38,6 +38,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: main
+
+      - name: Check if that release tag is correctly formatted
+        run: "./hack/scripts/check_release_tag.sh ${{ inputs.name }}"
 
       - name: Check if release tag already exists
         run: |
@@ -66,6 +70,11 @@ jobs:
 #          NAME: ${{ inputs.name }}
 #        run: python3 hack/scripts/releaselabelvalidator/release_label_validator.py
 
+  run-unit-tests:
+    name: Unit tests
+    needs: validate-release
+    uses: kyma-project/eventing-tools/.github/workflows/unit-test-reusable.yml@main
+
   bump-sec-scanners-config:
     name: Bump sec-scanners-config
     needs: validate-release
@@ -76,7 +85,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - run: git pull
+          ref: main
 
       - name: Update sec-scanners-config.yaml
         if: ${{ inputs.sec-scanners-config }}
@@ -111,26 +120,6 @@ jobs:
             echo "Step skipped"
           fi
 
-      - name: Save latest commit ref
-        id: pull-ref
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git checkout main
-          git stash
-          git pull
-          LATEST_COMMIT=$(git rev-parse HEAD)
-          echo "latest_commit=$LATEST_COMMIT" >> $GITHUB_OUTPUT
-          echo "Latest commit ref $LATEST_COMMIT"
-
-    outputs:
-      latest_commit: ${{ steps.pull-ref.outputs.latest_commit }}
-
-  run-unit-tests:
-    name: Unit tests
-    needs: validate-release
-    uses: kyma-project/eventing-tools/.github/workflows/unit-test-reusable.yml@main
-
   create-draft:
     name: Create draft release
     needs: [ bump-sec-scanners-config, validate-release ]
@@ -141,7 +130,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ needs.bump-sec-scanners-config.outputs.latest_commit}}
+          ref: main
 
       - name: Create draft release
         id: create-draft
@@ -178,7 +167,7 @@ jobs:
       - name: Check if release-kyma-metrics-collector-build status is not success
         if: steps.wait-for-post-kmc-release-build.outputs.state != 'success'
         run: |
-          echo 'release-kyma-metrics-collector-buildfailed.'
+          echo 'release-kyma-metrics-collector-build failed.'
           exit 1
 
   bump-kmc-chart:
@@ -191,10 +180,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ needs.bump-sec-scanners-config.outputs.latest_commit}}
-      - run: |
-          git checkout main
-          git pull
+          ref: main
 
       - name: Bump KMC chart
         run: ./hack/scripts/bump_kmc_chart.sh ${{ inputs.name }}
@@ -226,21 +212,6 @@ jobs:
             echo "Step skipped"
           fi
 
-      - name: Save latest commit ref
-        id: pull-ref
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git checkout main
-          git stash
-          git pull
-          LATEST_COMMIT=$(git rev-parse HEAD)
-          echo "latest_commit=$LATEST_COMMIT" >> $GITHUB_OUTPUT
-          echo "Latest commit ref $LATEST_COMMIT"
-
-    outputs:
-      latest_commit: ${{ steps.pull-ref.outputs.latest_commit }}
-
   publish-release:
     name: Publish release
     needs: [ create-draft, run-unit-tests, bump-kmc-chart ]
@@ -252,10 +223,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ needs.bump-kmc-chart.outputs.latest_commit}}
-      - run: |
-          git checkout main
-          git pull
+          ref: main
+
+      - name: Check pre-requisites before publishing release
+        run: ./hack/scripts/check_publish_release_prerequisites.sh ${{ inputs.name }}
 
       - name: Package KMC chart
         run: |
