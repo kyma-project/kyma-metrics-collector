@@ -18,8 +18,9 @@ echo "Creating security scan configuration file:"
 
 cat <<EOF | tee ${FILENAME}
 module-name: kyma-metrics-collector
+rc-tag: ${TAG}
 protecode:
-  - europe-docker.pkg.dev/kyma-project/prod/kyma-metrics-collector:v20240306-55d63524
+  - europe-docker.pkg.dev/kyma-project/prod/kyma-metrics-collector:${TAG}
 whitesource:
   language: golang-mod
   subprojects: false
