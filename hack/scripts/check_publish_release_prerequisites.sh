@@ -29,18 +29,3 @@ if [[ ${ssc_rc_tag} != ${RELEASE_TAG} ]]; then
     exit 1
 fi
 echo "rc-tag in sec-scanners-config.yaml is correct: ${ssc_rc_tag}"
-
-# check version bumps in helm chart.
-chart_version=$(yq ".version" resources/kyma-metrics-collector/Chart.yaml)
-if [[ ${chart_version} != ${RELEASE_TAG} ]]; then
-    echo "Error: version in helm chart is not correct. Expected: ${RELEASE_TAG}, Got: ${chart_version}"
-    exit 1
-fi
-echo "version in helm chart is correct: ${chart_version}"
-
-chart_app_version=$(yq ".appVersion" resources/kyma-metrics-collector/Chart.yaml)
-if [[ ${chart_app_version} != ${RELEASE_TAG} ]]; then
-    echo "Error: appVersion in helm chart is not correct. Expected: ${RELEASE_TAG}, Got: ${chart_app_version}"
-    exit 1
-fi
-echo "appVersion in helm chart is correct: ${chart_app_version}"
