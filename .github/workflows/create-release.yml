@@ -170,51 +170,23 @@ jobs:
           echo 'release-kyma-metrics-collector-build failed.'
           exit 1
 
-  bump-kmc-chart:
-    name: Bump KMC chart
-    needs: [ bump-sec-scanners-config, wait-for-prow-jobs ]
+  check-prerequisites:
+    name: Check release pre-requisites
+    needs: [ create-draft, run-unit-tests, wait-for-prow-jobs]
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           ref: main
 
-      - name: Bump KMC chart
-        run: ./hack/scripts/bump_kmc_chart.sh ${{ inputs.name }}
-
-      - name: Create PR if anything changed
-        env:
-          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
-        run: |
-          prs=$(gh pr list -A ${{ env.GIT_NAME }} --state open --json headRefName | jq -r '.[] | .headRefName')
-          if echo $prs | tr " " '\n' | grep -F -q -x ${{ env.BUMP_KMC_BRANCH_NAME }}; then
-            echo "PR already exists, no need to create a new one"
-            echo "PR_NUMBER=$(gh pr list --search "base:main head:${{ env.BUMP_KMC_BRANCH_NAME }}" --json number | jq -r '.[] | .number')" >> $GITHUB_ENV
-          elif [ -z "$(git status --porcelain)" ]; then
-            echo "Nothing changed, no need to create PR"
-            echo "PR_NUMBER=-1" >> $GITHUB_ENV
-          else
-            PR_STATUS=$(./hack/scripts/create_bump_kmc_chart_pr.sh ${{ inputs.name }})
-            echo "PR_NUMBER=$(echo "$PR_STATUS" | tail -n 1)" >> $GITHUB_ENV
-          fi
-
-      - name: Await PR merge
-        timeout-minutes: 45
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ "$PR_NUMBER" -gt 0 ]; then
-            ./hack/scripts/await_pr_merge.sh
-          else
-            echo "Step skipped"
-          fi
+      - name: Check pre-requisites before publishing release
+        run: ./hack/scripts/check_publish_release_prerequisites.sh ${{ inputs.name }}
 
   publish-release:
     name: Publish release
-    needs: [ create-draft, run-unit-tests, bump-kmc-chart ]
+    needs: [ create-draft, run-unit-tests]
     if: ${{ !inputs.dry-run }}
     runs-on: ubuntu-latest
 
@@ -222,40 +194,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           ref: main
 
-      - name: Check pre-requisites before publishing release
-        run: ./hack/scripts/check_publish_release_prerequisites.sh ${{ inputs.name }}
-
-      - name: Package KMC chart
-        run: |
-          OUTPUT=$(helm package ./resources/kyma-metrics-collector -d ./)
-          FILENAME=$(echo $OUTPUT | grep -o '[^ ]*.tgz')
-          echo "KMC_CHART=$FILENAME" >> $GITHUB_ENV
-
-      - name: Upload packaged KMC chart to release
+      - name: Publish release
         env:
-          BOT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./hack/scripts/upload_assets.sh ${{ needs.create-draft.outputs.release_id }} $KMC_CHART
-
-#It will be enabled after initial release.
-#      - name: Update KMC chart metadata
-#        run: |
-#          git checkout gh-pages
-#          helm repo index --url https://github.com/kyma-project/kyma-metrics-collector/releases/download/${{ inputs.name }} --merge ./index.yaml ./
-
-#      - name: Commit KMC chart metadata to gh-pages branch
-#        run: |
-#          git config --global user.email ${{ env.GIT_EMAIL }}
-#          git config --global user.name ${{ env.GIT_NAME }}
-#          git add index.yaml
-#          git commit -m "Update KMC chart metadata with version ${{ inputs.name }}"
-#          git push origin gh-pages
-#
-#      - name: Publish release
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        run: |
-#          git checkout main
-#          ./hack/scripts/publish_release.sh ${{ needs.create-draft.outputs.release_id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git checkout main
+          ./hack/scripts/publish_release.sh ${{ needs.create-draft.outputs.release_id }}
