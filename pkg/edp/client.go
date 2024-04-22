@@ -2,6 +2,7 @@ package edp
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -45,36 +46,36 @@ func NewClient(config *Config, logger *zap.SugaredLogger) *Client {
 	}
 }
 
-func (eClient Client) NewRequest(dataTenant string) (*http.Request, error) {
-	edpURL := eClient.getEDPURL(dataTenant)
+func (c Client) NewRequest(dataTenant string) (*http.Request, error) {
+	edpURL := c.getEDPURL(dataTenant)
 
-	req, err := http.NewRequest(http.MethodPost, edpURL, bytes.NewBuffer([]byte{}))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, edpURL, bytes.NewBuffer([]byte{}))
 	if err != nil {
 		return nil, fmt.Errorf("failed generate request for EDP, %d: %v", http.StatusBadRequest, err)
 	}
 
 	req.Header.Set(userAgentKeyHeader, userAgentKMC)
 	req.Header.Add(contentTypeKeyHeader, contentType)
-	req.Header.Add(authorizationKeyHeader, fmt.Sprintf("Bearer %s", eClient.Config.Token))
+	req.Header.Add(authorizationKeyHeader, fmt.Sprintf("Bearer %s", c.Config.Token))
 
 	return req, nil
 }
 
-func (eClient Client) getEDPURL(dataTenant string) string {
+func (c Client) getEDPURL(dataTenant string) string {
 	return fmt.Sprintf(edpPathFormat,
-		eClient.Config.URL,
-		eClient.Config.Namespace,
-		eClient.Config.DataStreamName,
-		eClient.Config.DataStreamVersion,
+		c.Config.URL,
+		c.Config.Namespace,
+		c.Config.DataStreamName,
+		c.Config.DataStreamVersion,
 		dataTenant,
-		eClient.Config.DataStreamEnv,
+		c.Config.DataStreamEnv,
 	)
 }
 
-func (eClient Client) Send(req *http.Request, payload []byte) (*http.Response, error) {
+func (c Client) Send(req *http.Request, payload []byte) (*http.Response, error) {
 	// define retry policy.
 	retryOptions := []retry.Option{
-		retry.Attempts(uint(eClient.Config.EventRetry)),
+		retry.Attempts(uint(c.Config.EventRetry)),
 		retry.Delay(retryInterval),
 	}
 
@@ -83,7 +84,7 @@ func (eClient Client) Send(req *http.Request, payload []byte) (*http.Response, e
 			reqStartTime := time.Now()
 			// send request.
 			req.Body = io.NopCloser(bytes.NewReader(payload))
-			resp, err := eClient.HttpClient.Do(req)
+			resp, err := c.HttpClient.Do(req)
 			duration := time.Since(reqStartTime)
 			// check result.
 			if err != nil {
@@ -93,10 +94,10 @@ func (eClient Client) Send(req *http.Request, payload []byte) (*http.Response, e
 					responseCode = http.StatusRequestTimeout
 				}
 				// record metric.
-				recordEDPLatency(duration, responseCode, eClient.getEDPURL(tenantIdPlaceholder))
+				recordEDPLatency(duration, responseCode, c.getEDPURL(tenantIdPlaceholder))
 				// log error.
-				eClient.namedLogger().Debugf("req: %v", req)
-				eClient.namedLogger().With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).
+				c.namedLogger().Debugf("req: %v", req)
+				c.namedLogger().With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).
 					With(log.KeyRetry, log.ValueTrue).Warn("send event stream to EDP")
 				return resp, err
 			}
@@ -104,20 +105,20 @@ func (eClient Client) Send(req *http.Request, payload []byte) (*http.Response, e
 			// defer to close response body.
 			defer func() {
 				if err := resp.Body.Close(); err != nil {
-					eClient.namedLogger().Warn(err)
+					c.namedLogger().Warn(err)
 				}
 			}()
 
 			// set error object if status is not StatusCreated.
 			if resp.StatusCode != http.StatusCreated {
 				err = fmt.Errorf("failed to send event stream as EDP returned HTTP: %d", resp.StatusCode)
-				eClient.namedLogger().With(log.KeyError, err.Error()).With(log.KeyRetry, log.ValueTrue).
+				c.namedLogger().With(log.KeyError, err.Error()).With(log.KeyRetry, log.ValueTrue).
 					Warn("send event stream as EDP")
 			}
 
 			// record metric.
 			// the request URL is recorded without the actual tenant id to avoid having multiple histograms.
-			recordEDPLatency(duration, resp.StatusCode, eClient.getEDPURL(tenantIdPlaceholder))
+			recordEDPLatency(duration, resp.StatusCode, c.getEDPURL(tenantIdPlaceholder))
 			return resp, err
 		},
 		retryOptions...,
@@ -126,7 +127,7 @@ func (eClient Client) Send(req *http.Request, payload []byte) (*http.Response, e
 		return nil, errors.Wrapf(err, "failed to POST event to EDP")
 	}
 
-	eClient.namedLogger().Debugf("sent an event to '%s' with eventstream: '%s'", req.URL.String(), string(payload))
+	c.namedLogger().Debugf("sent an event to '%s' with eventstream: '%s'", req.URL.String(), string(payload))
 	return resp, nil
 }
 

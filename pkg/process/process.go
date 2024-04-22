@@ -42,8 +42,9 @@ type Process struct {
 }
 
 var (
-	errorSubAccountIDNotTrackable = errors.New("subAccountID is not trackable")
-	ErrLoadingFailed              = errors.New("could not load resource")
+	errSubAccountIDNotTrackable = errors.New("subAccountID is not trackable")
+	errCastObjFromCache         = errors.New("bad item from cache, could not cast to a record obj")
+	ErrLoadingFailed            = errors.New("could not load resource")
 )
 
 const (
@@ -57,14 +58,13 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 
 	obj, isFound := p.Cache.Get(subAccountID)
 	if !isFound {
-		err := errorSubAccountIDNotTrackable
+		err := errSubAccountIDNotTrackable
 		return kmccache.Record{}, err
 	}
 
 	var record kmccache.Record
 	if record, ok = obj.(kmccache.Record); !ok {
-		err := fmt.Errorf("bad item from cache, could not cast to a record obj")
-		return kmccache.Record{}, err
+		return kmccache.Record{}, errCastObjFromCache
 	}
 	p.namedLogger().With(log.KeyWorkerID, identifier).Debugf("record found from cache: %+v", record)
 
@@ -72,7 +72,7 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 
 	kubeconfig, err := kmccache.GetKubeConfigFromCache(p.Logger, p.SecretCacheClient, runtimeID)
 	if err != nil {
-		return record, fmt.Errorf("loading Kubeconfig for %s failed: %w", ErrLoadingFailed, err)
+		return record, fmt.Errorf("loading Kubeconfig for %w failed: %w", ErrLoadingFailed, err)
 	}
 	record.KubeConfig = kubeconfig
 
@@ -184,11 +184,10 @@ func (p *Process) Start() {
 		p.pollKEBForRuntimes()
 	}()
 
-	for i := 0; i < p.WorkersPoolSize; i++ {
-		j := i
+	for i := range p.WorkersPoolSize {
 		go func() {
 			defer wg.Done()
-			p.execute(j)
+			p.execute(i)
 			p.namedLogger().Debugf("########  Worker exits ########")
 		}()
 	}
@@ -201,12 +200,6 @@ func (p *Process) execute(identifier int) {
 		// Pick up a subAccountID to process from queue and mark as Done()
 		subAccountIDObj, _ := p.Queue.Get()
 		subAccountID := fmt.Sprintf("%v", subAccountIDObj)
-
-		// TODO Implement cleanup holistically in #kyma-project/control-plane/issues/512
-		// if isShuttingDown {
-		//	//p.Cleanup()
-		//	return
-		//}
 
 		p.processSubAccountID(subAccountID, identifier)
 		p.Queue.Done(subAccountIDObj)
@@ -229,7 +222,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 		p.namedLoggerWithRuntime(record).With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).With(log.KeyWorkerID, identifier).
 			With(log.KeySubAccountID, subAccountID).Error("no metric found/generated for subaccount")
 		// SubAccountID is not trackable anymore as there is no runtime
-		if errors.Is(err, errorSubAccountIDNotTrackable) {
+		if errors.Is(err, errSubAccountIDNotTrackable) {
 			p.namedLoggerWithRuntime(record).With(log.KeyRequeue, log.ValueFalse).With(log.KeySubAccountID, subAccountID).
 				With(log.KeyWorkerID, identifier).Info("subAccountID requeued")
 			return
@@ -317,7 +310,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 func (p *Process) getRecordWithOldOrNewMetric(identifier int, subAccountID string) (*kmccache.Record, bool, error) {
 	record, err := p.generateRecordWithNewMetrics(identifier, subAccountID)
 	if err != nil {
-		if errors.Is(err, errorSubAccountIDNotTrackable) {
+		if errors.Is(err, errSubAccountIDNotTrackable) {
 			p.namedLoggerWithRuntime(&record).With(log.KeySubAccountID, subAccountID).
 				With(log.KeyWorkerID, identifier).Info("subAccountID is not trackable anymore, skipping the fetch of old metric")
 			return nil, false, err
@@ -345,6 +338,7 @@ func (p *Process) sendEventStreamToEDP(tenant string, payload []byte) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to send event-stream to EDP")
 	}
+	defer resp.Body.Close()
 
 	if !isSuccess(resp.StatusCode) {
 		return fmt.Errorf("failed to send event-stream to EDP as it returned HTTP: %d", resp.StatusCode)
@@ -361,6 +355,7 @@ func isSuccess(status int) bool {
 
 // isTrackableState returns true if the runtime state is trackable, otherwise returns false.
 func isTrackableState(state kebruntime.State) bool {
+	//nolint:exhaustive // we only care about these states
 	switch state {
 	case kebruntime.StateSucceeded, kebruntime.StateError, kebruntime.StateUpgrading, kebruntime.StateUpdating:
 		return true

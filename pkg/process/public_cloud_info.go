@@ -33,7 +33,7 @@ type Feature struct {
 
 type MachineInfo map[string]json.RawMessage
 
-func (p Providers) GetFeature(cloudProvider, vmType string) (f *Feature) {
+func (p Providers) GetFeature(cloudProvider, vmType string) *Feature {
 	switch cloudProvider {
 	case AWS:
 		if feature, ok := p.AWS[vmType]; ok {

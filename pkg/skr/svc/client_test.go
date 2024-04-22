@@ -18,10 +18,6 @@ import (
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
 
-const (
-	totalQueriesMetricFullName = "kmc_skr_query_total"
-)
-
 func TestList(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 	// given
@@ -43,7 +39,7 @@ func TestList(t *testing.T) {
 
 	// then
 	g.Expect(err).ShouldNot(gomega.HaveOccurred())
-	g.Expect(len(gotSvcList.Items)).To(gomega.Equal(len(svcList.Items)))
+	g.Expect(gotSvcList.Items).To(gomega.HaveLen(len(svcList.Items)))
 	sort.Slice(gotSvcList.Items, func(i, j int) bool {
 		return gotSvcList.Items[i].Name < gotSvcList.Items[j].Name
 	})
@@ -73,7 +69,7 @@ func TestList(t *testing.T) {
 
 	// then
 	g.Expect(err).ShouldNot(gomega.HaveOccurred())
-	g.Expect(len(gotSvcList.Items)).To(gomega.Equal(0))
+	g.Expect(gotSvcList.Items).To(gomega.BeEmpty())
 	// ensure metrics.
 	gotMetrics, err = skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
 		skrcommons.ListingSVCsAction,

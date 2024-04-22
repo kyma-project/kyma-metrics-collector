@@ -101,7 +101,7 @@ func TestGetAllRuntimes(t *testing.T) {
 		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 		g.Expect(*gotRuntimes).To(gomega.Equal(*expectedRuntimes))
 		g.Expect(gotRuntimes.TotalCount).To(gomega.Equal(expectedRuntimes.TotalCount))
-		g.Expect(len(gotRuntimes.Data)).To(gomega.Equal(4))
+		g.Expect(gotRuntimes.Data).To(gomega.HaveLen(4))
 
 		// ensure metric exists.
 		expectedNumberOfMetrics := 1 // because single request is send.
@@ -190,7 +190,7 @@ func TestGetAllRuntimes(t *testing.T) {
 		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 		g.Expect(*gotRuntimes).To(gomega.Equal(*expectedRuntimes))
 		g.Expect(gotRuntimes.TotalCount).To(gomega.Equal(expectedRuntimes.TotalCount))
-		g.Expect(len(gotRuntimes.Data)).To(gomega.Equal(4))
+		g.Expect(gotRuntimes.Data).To(gomega.HaveLen(4))
 
 		// ensure metric exists.
 		expectedNumberOfMetrics := 1 // because single request is send.

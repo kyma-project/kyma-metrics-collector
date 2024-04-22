@@ -69,17 +69,7 @@ func NewLogger(logLevel zapcore.Level) *zap.SugaredLogger {
 }
 
 func newLogger(logLevel zapcore.Level) *zap.Logger {
-	encoderConfig := zapcore.EncoderConfig{
-		MessageKey:   "message",
-		LevelKey:     "level",
-		EncodeLevel:  zapcore.CapitalLevelEncoder,
-		TimeKey:      "time",
-		EncodeTime:   zapcore.ISO8601TimeEncoder,
-		CallerKey:    "caller",
-		EncodeCaller: zapcore.ShortCallerEncoder,
-	}
-
-	encoderConfig = zap.NewProductionEncoderConfig()
+	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 	encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder

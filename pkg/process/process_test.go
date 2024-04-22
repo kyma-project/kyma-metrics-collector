@@ -47,6 +47,7 @@ const (
 	testToken             = "token"
 	testEnv               = "env"
 	retryCount            = 1
+	fetchedClustersMetric = "kmc_process_fetched_clusters"
 )
 
 func TestGetOldRecordIfMetricExists(t *testing.T) {
@@ -136,6 +137,7 @@ func TestPollKEBForRuntimes(t *testing.T) {
 			// Ignoring error is ok as it goes for retry for non-200 cases
 			healthResp, err := http.Get(fmt.Sprintf("%s/health", srv.URL))
 			t.Logf("retrying :%v", err)
+			defer healthResp.Body.Close()
 			return healthResp.StatusCode
 		}, timeout).Should(gomega.Equal(http.StatusOK))
 
@@ -174,10 +176,10 @@ func TestPollKEBForRuntimes(t *testing.T) {
 		}, 10*time.Second).Should(gomega.Equal(expectedTimesVisited))
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
+		metricName := fetchedClustersMetric
 		numberOfAllClusters := 4
 		expectedMetricValue := 1
-		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
+		g.Eventually(testutil.CollectAndCount).WithArguments(kebFetchedClusters, metricName).Should(gomega.Equal(numberOfAllClusters))
 		// check each metric with labels has the expected value
 		for _, runtimeData := range expectedRuntimes.Data {
 			verifyKEBAllClustersCountMetricValue(expectedMetricValue, g, runtimeData)
@@ -382,10 +384,9 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(areQueuesEqual(p.Queue, expectedQueue)).To(gomega.BeTrue())
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
 		numberOfAllClusters := 4
 		expectedMetricValue := 1
-		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
+		g.Eventually(testutil.CollectAndCount).WithArguments(kebFetchedClusters, fetchedClustersMetric).Should(gomega.Equal(numberOfAllClusters))
 		for _, runtimeData := range runtimesPage.Data {
 			verifyKEBAllClustersCountMetricValue(expectedMetricValue, g, runtimeData)
 		}
@@ -422,10 +423,9 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(areQueuesEqual(p.Queue, expectedQueue)).To(gomega.BeTrue())
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
 		numberOfAllClusters := 4
 		expectedMetricValue := 1
-		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
+		g.Eventually(testutil.CollectAndCount).WithArguments(kebFetchedClusters, fetchedClustersMetric).Should(gomega.Equal(numberOfAllClusters))
 		for _, runtimeData := range runtimesPage.Data {
 			verifyKEBAllClustersCountMetricValue(expectedMetricValue, g, runtimeData)
 		}
@@ -461,10 +461,9 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(areQueuesEqual(p.Queue, expectedEmptyQueue)).To(gomega.BeTrue())
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
 		numberOfAllClusters := 0
 		expectedMetricValue := 0
-		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
+		g.Eventually(testutil.CollectAndCount).WithArguments(kebFetchedClusters, fetchedClustersMetric).Should(gomega.Equal(numberOfAllClusters))
 		for _, runtimeData := range runtimesPageWithNoRuntimes.Data {
 			verifyKEBAllClustersCountMetricValue(expectedMetricValue, g, runtimeData)
 		}
@@ -520,11 +519,10 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(gotSubAccID).To(gomega.Equal(subAccID))
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
 		// expecting number of all clusters to be 1, as deprovisioned shoot is removed
 		// only counting the new shoot
 		numberOfAllClusters := 1
-		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
+		g.Eventually(testutil.CollectAndCount).WithArguments(kebFetchedClusters, fetchedClustersMetric).Should(gomega.Equal(numberOfAllClusters))
 		// old shoot should not be present in the metric
 		for _, runtimeData := range runtimesPage.Data {
 			expectedMetricValue := 0
@@ -871,7 +869,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 
 			// when
 			// calling the method multiple times to generate testable metrics.
-			for i := 0; i < givenMethodRecalls; i++ {
+			for i := range givenMethodRecalls {
 				givenProcess.processSubAccountID(tc.givenShoot.SubAccountID, i)
 			}
 
@@ -1017,7 +1015,7 @@ func TestExecute(t *testing.T) {
 	}, bigTimeout).Should(gomega.BeTrue())
 
 	// Test cache state
-	g.Eventually(newProcess.Cache.ItemCount(), timeout).Should(gomega.Equal(len(cache.Items())))
+	g.Eventually(newProcess.Cache.ItemCount, timeout).Should(gomega.Equal(len(cache.Items())))
 	g.Eventually(func() error {
 		gotItemFromCache, found := newProcess.Cache.Get(subAccID)
 		if !found {
@@ -1064,7 +1062,7 @@ func TestExecute(t *testing.T) {
 	time.Sleep(timeout)
 	g.Expect(timesVisited).To(gomega.Equal(oldEventsSentCount))
 	// the queue should be empty.
-	g.Eventually(newProcess.Queue.Len()).Should(gomega.Equal(0))
+	g.Eventually(newProcess.Queue.Len).Should(gomega.Equal(0))
 }
 
 func NewRecord(subAccId, shootName, kubeconfig string) kmccache.Record {

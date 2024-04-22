@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
@@ -40,7 +41,7 @@ func (s *Server) Start() {
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			s.namedLogger().With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("start server")
 		}
 		s.namedLogger().Info("HTTP server stopped")

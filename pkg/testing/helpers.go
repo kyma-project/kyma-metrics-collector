@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	kebruntime "github.com/kyma-project/kyma-environment-broker/common/runtime"
 	"github.com/onsi/gomega"
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 	corev1 "k8s.io/api/core/v1"
@@ -22,6 +23,8 @@ import (
 const (
 	timeout = 10 * time.Second
 )
+
+var ErrNotFound = errors.New("bad item from cache, could not cast to a record obj")
 
 type NewRuntimeOpts func(*kebruntime.RuntimeDTO)
 
@@ -89,6 +92,7 @@ func StartTestServer(path string, testHandler http.HandlerFunc, g gomega.Gomega)
 		// Ignoring error is ok as it goes for retry for non-200 cases
 		healthResp, err := http.Get(fmt.Sprintf("%s/health", srv.URL))
 		log.Printf("retrying :%v", err)
+		defer healthResp.Body.Close()
 		return healthResp.StatusCode
 	}, timeout).Should(gomega.Equal(http.StatusOK))
 
@@ -338,7 +342,7 @@ func PrometheusGatherAndReturn(c prometheus.Collector, metricName string) (*dto.
 			return m, nil
 		}
 	}
-	return nil, fmt.Errorf("not found")
+	return nil, ErrNotFound
 }
 
 func PrometheusFilterLabelPair(pairs []*dto.LabelPair, name string) *dto.LabelPair {
