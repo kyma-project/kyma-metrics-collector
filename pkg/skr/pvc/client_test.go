@@ -36,13 +36,13 @@ func TestList(t *testing.T) {
 
 	pvcList := kmctesting.GetPVCs()
 	client, err := NewFakeClient(pvcList, givenShootInfo)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 	// when
 	gotPVCList, err := client.List(ctx)
 
 	// then
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	g.Expect(len(gotPVCList.Items)).To(gomega.Equal(len(pvcList.Items)))
 	sort.Slice(gotPVCList.Items, func(i, j int) bool {
 		return gotPVCList.Items[i].Name < gotPVCList.Items[j].Name
@@ -59,21 +59,21 @@ func TestList(t *testing.T) {
 		givenShootInfo.SubAccountID,
 		givenShootInfo.GlobalAccountID,
 	)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(1)))
 
 	// given - another case.
 	// Delete all the pvcs
 	for _, pvc := range pvcList.Items {
 		err := client.Resource.Namespace(pvc.Namespace).Delete(ctx, pvc.Name, metaV1.DeleteOptions{})
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	}
 
 	// when
 	gotPVCList, err = client.List(ctx)
 
 	// then
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	g.Expect(len(gotPVCList.Items)).To(gomega.Equal(0))
 	// ensure metrics.
 	gotMetrics, err = skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
@@ -85,7 +85,7 @@ func TestList(t *testing.T) {
 		givenShootInfo.SubAccountID,
 		givenShootInfo.GlobalAccountID,
 	)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(2)))
 }
 

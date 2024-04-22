@@ -17,10 +17,10 @@ const (
 func TestGetFeature(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 	providersData, err := kmctesting.LoadFixtureFromFile(providersFile)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	config := &env.Config{PublicCloudSpecs: string(providersData)}
 	providers, err := LoadPublicCloudSpecs(config)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 	testCases := []struct {
 		cloudProvider   string

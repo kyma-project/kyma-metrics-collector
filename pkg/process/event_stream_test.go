@@ -14,10 +14,10 @@ import (
 func TestParse(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 	providersData, err := kmctesting.LoadFixtureFromFile(providersFile)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	config := &env.Config{PublicCloudSpecs: string(providersData)}
 	providers, err := LoadPublicCloudSpecs(config)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 	testCases := []struct {
 		name            string
@@ -140,13 +140,14 @@ func TestParse(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			gotMetrics, err := tc.input.Parse(&tc.providers)
 			if !tc.expectedErr {
-				g.Expect(err).Should(gomega.BeNil())
+				g.Expect(err).ShouldNot(gomega.HaveOccurred())
 				g.Expect(gotMetrics.Compute).To(gomega.Equal(tc.expectedMetrics.Compute))
 				g.Expect(gotMetrics.Networking).To(gomega.Equal(tc.expectedMetrics.Networking))
 				g.Expect(gotMetrics.Timestamp).To(gomega.Not(gomega.BeEmpty()))
 				return
 			}
-			g.Expect(err).ShouldNot(gomega.BeNil())
+			g.Expect(err).Should(gomega.HaveOccurred())
+
 			g.Expect(gotMetrics).Should(gomega.BeNil())
 		})
 	}

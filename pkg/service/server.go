@@ -11,8 +11,6 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
-	"github.com/gorilla/mux"
-
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 )
 

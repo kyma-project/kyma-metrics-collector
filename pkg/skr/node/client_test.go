@@ -34,13 +34,13 @@ func TestList(t *testing.T) {
 	}
 	nodeList := kmctesting.Get3NodesWithStandardD8v3VMType()
 	client, err := NewFakeClient(nodeList, givenShootInfo)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 	// when
 	gotNodeList, err := client.List(ctx)
 
 	// then
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	g.Expect(len(gotNodeList.Items)).To(gomega.Equal(len(nodeList.Items)))
 	g.Expect(*gotNodeList).To(gomega.Equal(*nodeList))
 
@@ -54,21 +54,21 @@ func TestList(t *testing.T) {
 		givenShootInfo.SubAccountID,
 		givenShootInfo.GlobalAccountID,
 	)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(1)))
 
 	// given - another case.
 	// Delete all the nodes
 	for _, node := range nodeList.Items {
 		err := client.Resource.Delete(ctx, node.Name, metaV1.DeleteOptions{})
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	}
 
 	// when
 	gotNodeList, err = client.List(ctx)
 
 	// then
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	g.Expect(len(gotNodeList.Items)).To(gomega.Equal(0))
 	// check if the required labels exists in the metric.
 	gotMetrics, err = skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
@@ -80,7 +80,7 @@ func TestList(t *testing.T) {
 		givenShootInfo.SubAccountID,
 		givenShootInfo.GlobalAccountID,
 	)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(2)))
 }
 

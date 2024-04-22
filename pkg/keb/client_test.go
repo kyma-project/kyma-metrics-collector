@@ -37,25 +37,25 @@ func TestGetAllRuntimes(t *testing.T) {
 		latencyMetric.Reset()
 
 		runtimesResponse, err := kmctesting.LoadFixtureFromFile(kebRuntimeResponseFilePath)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		runtimesPage1Response, err := kmctesting.LoadFixtureFromFile(kebRuntimePage1ResponseFilePath)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		runtimesPage2Response, err := kmctesting.LoadFixtureFromFile(kebRuntimePage2ResponseFilePath)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		expectedRuntimes := new(runtime.RuntimesPage)
 		err = json.Unmarshal(runtimesResponse, expectedRuntimes)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		expectedPage1Runtimes := new(runtime.RuntimesPage)
 		err = json.Unmarshal(runtimesPage1Response, expectedPage1Runtimes)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		expectedPage2Runtimes := new(runtime.RuntimesPage)
 		err = json.Unmarshal(runtimesPage2Response, expectedPage2Runtimes)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		getRuntimesHandler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			// Success endpoint
@@ -64,13 +64,13 @@ func TestGetAllRuntimes(t *testing.T) {
 				switch req.URL.RawQuery {
 				case "page=1":
 					_, err := rw.Write(runtimesPage1Response)
-					g.Expect(err).Should(gomega.BeNil())
+					g.Expect(err).ShouldNot(gomega.HaveOccurred())
 					rw.WriteHeader(http.StatusOK)
 					return
 
 				case "page=2":
 					_, err := rw.Write(runtimesPage2Response)
-					g.Expect(err).Should(gomega.BeNil())
+					g.Expect(err).ShouldNot(gomega.HaveOccurred())
 					rw.WriteHeader(http.StatusOK)
 					return
 				}
@@ -84,7 +84,7 @@ func TestGetAllRuntimes(t *testing.T) {
 		g.Eventually(func() int {
 			// Ignoring error is ok as it goes for retry for non-200 cases
 			healthResp, err := http.Get(fmt.Sprintf("%s/health", srv.URL))
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 			return healthResp.StatusCode
 		}, timeout).Should(gomega.Equal(http.StatusOK))
 
@@ -92,13 +92,13 @@ func TestGetAllRuntimes(t *testing.T) {
 		kebClient := getKEBClient(kebURL)
 
 		req, err := kebClient.NewRequest()
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		// when
 		gotRuntimes, err := kebClient.GetAllRuntimes(req)
 
 		// then
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 		g.Expect(*gotRuntimes).To(gomega.Equal(*expectedRuntimes))
 		g.Expect(gotRuntimes.TotalCount).To(gomega.Equal(expectedRuntimes.TotalCount))
 		g.Expect(len(gotRuntimes.Data)).To(gomega.Equal(4))
@@ -110,7 +110,7 @@ func TestGetAllRuntimes(t *testing.T) {
 
 		// check if the required labels exists in the metric.
 		pMetric, err := kmctesting.PrometheusGatherAndReturn(latencyMetric, histogramName)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 		g.Expect(pMetric.GetMetric()).Should(gomega.HaveLen(expectedNumberOfMetrics))
 		gotLabel := pMetric.GetMetric()[0].GetLabel()
 		g.Expect(gotLabel).Should(gomega.HaveLen(expectedNumberOfLabels))
@@ -126,16 +126,17 @@ func TestGetAllRuntimes(t *testing.T) {
 		latencyMetric.Reset()
 		kebClient.Config.URL = fmt.Sprintf("%s/nopaging", kebClient.Config.URL)
 		req, err = kebClient.NewRequest()
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 		_, err = kebClient.GetAllRuntimes(req)
-		g.Expect(err).ShouldNot(gomega.BeNil())
+		g.Expect(err).Should(gomega.HaveOccurred())
+
 		g.Expect(err.Error()).To(gomega.ContainSubstring("KEB returned status code: 404"))
 
 		// ensure metric exists.
 		g.Expect(testutil.CollectAndCount(latencyMetric, histogramName)).Should(gomega.Equal(1))
 		// check if the required labels exists in the metric.
 		pMetric, err = kmctesting.PrometheusGatherAndReturn(latencyMetric, histogramName)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 		g.Expect(pMetric.GetMetric()).Should(gomega.HaveLen(expectedNumberOfMetrics))
 		gotLabel = pMetric.GetMetric()[0].GetLabel()
 		g.Expect(gotLabel).Should(gomega.HaveLen(expectedNumberOfLabels))
@@ -150,17 +151,17 @@ func TestGetAllRuntimes(t *testing.T) {
 		// given
 		latencyMetric.Reset()
 		runtimesResponse, err := kmctesting.LoadFixtureFromFile(kebRuntimeResponseFilePath)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		expectedRuntimes := new(runtime.RuntimesPage)
 		err = json.Unmarshal(runtimesResponse, expectedRuntimes)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		getRuntimesHandler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			// Success endpoint
 			g.Expect(req.URL.Path).To(gomega.Equal(expectedPathPrefixWith1Page))
 			_, err := rw.Write(runtimesResponse)
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 			rw.WriteHeader(http.StatusOK)
 		})
 
@@ -180,13 +181,13 @@ func TestGetAllRuntimes(t *testing.T) {
 
 		// Testing response which contains all the records
 		req, err := kebClient.NewRequest()
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		// when
 		gotRuntimes, err := kebClient.GetAllRuntimes(req)
 
 		// then
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 		g.Expect(*gotRuntimes).To(gomega.Equal(*expectedRuntimes))
 		g.Expect(gotRuntimes.TotalCount).To(gomega.Equal(expectedRuntimes.TotalCount))
 		g.Expect(len(gotRuntimes.Data)).To(gomega.Equal(4))
@@ -197,7 +198,7 @@ func TestGetAllRuntimes(t *testing.T) {
 		g.Expect(testutil.CollectAndCount(latencyMetric, histogramName)).Should(gomega.Equal(1))
 		// check if the required labels exists in the metric.
 		pMetric, err := kmctesting.PrometheusGatherAndReturn(latencyMetric, histogramName)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 		g.Expect(pMetric.GetMetric()).Should(gomega.HaveLen(expectedNumberOfMetrics))
 		gotLabel := pMetric.GetMetric()[0].GetLabel()
 		g.Expect(gotLabel).Should(gomega.HaveLen(expectedNumberOfLabels))
@@ -234,7 +235,7 @@ func TestGetAllRuntimes(t *testing.T) {
 
 		// Testing response which contains HTTP 500
 		req, err := kebClient.NewRequest()
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		// when
 		_, err = kebClient.GetAllRuntimes(req)
@@ -248,7 +249,7 @@ func TestGetAllRuntimes(t *testing.T) {
 		g.Expect(testutil.CollectAndCount(latencyMetric, histogramName)).Should(gomega.Equal(1))
 		// check if the required labels exists in the metric.
 		pMetric, err := kmctesting.PrometheusGatherAndReturn(latencyMetric, histogramName)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 		g.Expect(pMetric.GetMetric()).Should(gomega.HaveLen(expectedNumberOfMetrics))
 		gotLabel := pMetric.GetMetric()[0].GetLabel()
 		g.Expect(gotLabel).Should(gomega.HaveLen(expectedNumberOfLabels))

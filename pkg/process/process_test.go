@@ -75,7 +75,7 @@ func TestGetOldRecordIfMetricExists(t *testing.T) {
 	}
 	for _, record := range recordsToBeAdded {
 		err := cache.Add(record.SubAccountID, record, gocache.NoExpiration)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	}
 
 	p := Process{
@@ -85,20 +85,22 @@ func TestGetOldRecordIfMetricExists(t *testing.T) {
 
 	t.Run("old metric found for a subAccountID", func(t *testing.T) {
 		gotRecord, err := p.getOldRecordIfMetricExists(expectedSubAccIDToExist)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 		g.Expect(*gotRecord).To(gomega.Equal(expectedRecord))
 	})
 
 	t.Run("old metric not found for a subAccountID", func(t *testing.T) {
 		subAccIDWhichDoesNotExist := uuid.New().String()
 		_, err := p.getOldRecordIfMetricExists(subAccIDWhichDoesNotExist)
-		g.Expect(err).ShouldNot(gomega.BeNil())
+		g.Expect(err).Should(gomega.HaveOccurred())
+
 		g.Expect(err.Error()).To(gomega.Equal(fmt.Sprintf("subAccountID: %s not found", subAccIDWhichDoesNotExist)))
 	})
 
 	t.Run("old metric found for a subAccountID but does not have metric", func(t *testing.T) {
 		_, err := p.getOldRecordIfMetricExists(expectedSubAccIDWithNoMetrics)
-		g.Expect(err).ShouldNot(gomega.BeNil())
+		g.Expect(err).Should(gomega.HaveOccurred())
+
 		g.Expect(err.Error()).To(gomega.Equal(fmt.Sprintf("old metrics for subAccountID: %s not found", expectedSubAccIDWithNoMetrics)))
 	})
 }
@@ -108,11 +110,11 @@ func TestPollKEBForRuntimes(t *testing.T) {
 
 	t.Run("execute KEB poller for 2 times", func(t *testing.T) {
 		runtimesResponse, err := kmctesting.LoadFixtureFromFile(kebRuntimeResponseFilePath)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		expectedRuntimes := new(kebruntime.RuntimesPage)
 		err = json.Unmarshal(runtimesResponse, expectedRuntimes)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 		timesVisited := 0
 		expectedTimesVisited := 2
 		var newProcess *Process
@@ -122,7 +124,7 @@ func TestPollKEBForRuntimes(t *testing.T) {
 			t.Logf("time visited: %d", timesVisited)
 			g.Expect(req.URL.Path).To(gomega.Equal(expectedPathPrefix))
 			_, err := rw.Write(runtimesResponse)
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 			rw.WriteHeader(http.StatusOK)
 		})
 
@@ -367,7 +369,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		expectedCache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
 		runtimesPage, expectedCache, expectedQueue, err := AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage, provisionedSuccessfullySubAccIDs, expectedCache, expectedQueue)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		for _, failedID := range provisionedFailedSubAccIDs {
 			shootName := fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5))
@@ -408,7 +410,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		expectedCache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
 		runtimesPage, expectedCache, expectedQueue, err := AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage, provisionedSuccessfullySubAccIDs, expectedCache, expectedQueue)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		for _, failedID := range provisionedAndDeprovisionedSubAccIDs {
 			rntme := kmctesting.NewRuntimesDTO(failedID, fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)), kmctesting.WithProvisionedAndDeprovisionedStatus(kebruntime.StateDeprovisioned))
@@ -446,7 +448,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		oldRecord := NewRecord(subAccID, oldShootName, "foo")
 
 		err := p.Cache.Add(subAccID, oldRecord, gocache.NoExpiration)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		runtimesPageWithNoRuntimes := new(kebruntime.RuntimesPage)
 		expectedEmptyQueue := workqueue.NewDelayingQueue()
@@ -486,7 +488,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		oldRecord := NewRecord(subAccID, oldShootName, "foo")
 
 		err := p.Cache.Add(subAccID, oldRecord, gocache.NoExpiration)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		runtimesPage := new(kebruntime.RuntimesPage)
 		expectedQueue := workqueue.NewDelayingQueue()
@@ -509,7 +511,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		// expected cache changes after provisioning
 		newRecord := NewRecord(subAccID, newShootName, "")
 		err = expectedCache.Add(subAccID, newRecord, gocache.NoExpiration)
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 		runtimesPage.Data = []kebruntime.RuntimeDTO{rntme}
 		p.populateCacheAndQueue(skrRuntimesPageWithProvisioning)
@@ -638,16 +640,16 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 			cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 			// add both shoots to cache
 			err := cache.Add(tc.givenShoot1.SubAccountID, tc.givenShoot1, gocache.NoExpiration)
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 			// define target shoot to test.
 			err = cache.Add(tc.givenShoot2.SubAccountID, tc.givenShoot2, gocache.NoExpiration)
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 			// init queue.
 			queue := workqueue.NewDelayingQueue()
 			expectedCache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 			err = expectedCache.Add(tc.givenShoot1.SubAccountID, tc.givenShoot1, gocache.NoExpiration)
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 			// mock KEB response.
 			runtimesPage := new(kebruntime.RuntimesPage)
@@ -684,7 +686,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				tc.givenShoot1.SubAccountID,
 				tc.givenShoot1.GlobalAccountID,
 			)
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 			g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(1)))
 
 			// metric: oldMetricsPublishedGauge
@@ -695,7 +697,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				tc.givenShoot1.SubAccountID,
 				tc.givenShoot1.GlobalAccountID,
 			)
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 			g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(1)))
 
 			// check if metrics for de-provisioned shoot were deleted or not.
@@ -708,7 +710,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				tc.givenShoot2.SubAccountID,
 				tc.givenShoot2.GlobalAccountID,
 			)
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 			g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(0)))
 
 			// metric: oldMetricsPublishedGauge
@@ -719,7 +721,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				tc.givenShoot2.SubAccountID,
 				tc.givenShoot2.GlobalAccountID,
 			)
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 			g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(0)))
 		})
 	}
@@ -735,10 +737,10 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 
 	// cloud providers.
 	providersData, err := kmctesting.LoadFixtureFromFile(providersFile)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	config := &env.Config{PublicCloudSpecs: string(providersData)}
 	givenProviders, err := LoadPublicCloudSpecs(config)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 	// setup EDP server.
 	edpAllowedSubAccountID := uuid.New().String()
@@ -843,10 +845,10 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 			// populate cache.
 			cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 			err = cache.Add(tc.givenShoot.SubAccountID, tc.givenShoot, gocache.NoExpiration)
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 			// k8s fake clients.
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 			secretKCPStored := kmctesting.NewKCPStoredSecret(tc.givenShoot.RuntimeID, tc.givenShoot.KubeConfig)
 			secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
 			fakeNodeClient := skrnode.FakeNodeClient{}
@@ -884,7 +886,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				tc.givenShoot.SubAccountID,
 				tc.givenShoot.GlobalAccountID,
 			)
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 			// the metric will be incremented even in case of failure, so that is why
 			// it should be equal to the number of time the `processSubAccountID` is called.
 			g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(givenMethodRecalls)))
@@ -897,7 +899,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				tc.givenShoot.SubAccountID,
 				tc.givenShoot.GlobalAccountID,
 			)
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 			if tc.wantOldMetricReused {
 				// it should have kept increasing to track consecutive number of re-use.
 				g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(givenMethodRecalls)))
@@ -915,7 +917,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				tc.givenShoot.SubAccountID,
 				tc.givenShoot.GlobalAccountID,
 			)
-			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 			// check if the last published time has correct value.
 			// the timestamp will only be updated when the subAccount is successfully processed.
 			utcTime := testutil.ToFloat64(gotMetrics)
@@ -973,20 +975,20 @@ func TestExecute(t *testing.T) {
 	expectedRecord.Metric.ShootName = shootName
 
 	err := cache.Add(subAccID, newRecord, gocache.NoExpiration)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 	// Populate queue
 	queue := workqueue.NewDelayingQueue()
 	queue.Add(subAccID)
 
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
 
 	providersData, err := kmctesting.LoadFixtureFromFile(providersFile)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	config := &env.Config{PublicCloudSpecs: string(providersData)}
 	providers, err := LoadPublicCloudSpecs(config)
-	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(err).ShouldNot(gomega.HaveOccurred())
 	fakeNodeClient := skrnode.FakeNodeClient{}
 	fakePVCClient := skrpvc.FakePVCClient{}
 	fakeSvcClient := skrsvc.FakeSvcClient{}
@@ -1181,7 +1183,7 @@ func verifyKEBAllClustersCountMetricValue(expectedValue int, g *gomega.WithT, ru
 			runtimeData.SubAccountID,
 			runtimeData.GlobalAccountID)
 
-		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
 		// check the value of the metric
 		return int(testutil.ToFloat64(counter))
 	}).Should(gomega.Equal(expectedValue))
