@@ -23,6 +23,22 @@ DIRS_TO_CHECK = go list ./... | grep -v "$(VERIFY_IGNORE)"
 # DIRS_TO_IGNORE is a command used to determine which directories should not be verified
 DIRS_TO_IGNORE = go list ./... | grep "$(VERIFY_IGNORE)"
 
+# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
+#
+ifeq (,$(shell go env GOBIN))
+GOBIN=$(shell go env GOPATH)/bin
+else
+GOBIN=$(shell go env GOBIN)
+endif
+
+##@ Build Dependencies
+
+## Location to install dependencies to
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
+
+
 ##@ General
 
 # The help target prints out all targets with their descriptions organized
@@ -43,20 +59,20 @@ help: ## Display this help.
 ##@ Development
 
 .PHONY: lint
-lint: ## Check lint issues using `golangci-lint`
-	golangci-lint run --timeout 5m --config=./.golangci.yaml
+lint: golangci-lint ## Check lint issues using `golangci-lint`
+	golangci-lint run
 
 .PHONY: lint-compact
-lint-compact: ## Check lint issues using `golangci-lint` in compact result format
-	golangci-lint run --timeout 5m --config=./.golangci.yaml --print-issued-lines=false
+lint-compact: golangci-lint ## Check lint issues using `golangci-lint` in compact result format
+	golangci-lint run --print-issued-lines=false
 
 .PHONY: lint-fix
-lint-fix: ## Check and fix lint issues using `golangci-lint`
-	golangci-lint run --fix --timeout 5m --config=./.golangci.yaml
+lint-fix: golangci-lint ## Check and fix lint issues using `golangci-lint`
+	golangci-lint run --fix 
 
 .PHONY: lint-report
-lint-report: ## Check lint issues using `golangci-lint` then export them to a file, then print the list of linters used
-	golangci-lint run --timeout 5m --config=./.golangci.yaml --issues-exit-code 0 --out-format json > ./lint-report.json
+lint-report: golangci-lint ## Check lint issues using `golangci-lint` then export them to a file, then print the list of linters used
+	golangci-lint run --issues-exit-code 0 --out-format json > ./lint-report.json
 
 .PHONY: lint-report-issue-category
 lint-report-issue-category: ## Get lint issues categories
@@ -77,6 +93,12 @@ lint-report-count-issue: ## Count lint issues
 .PHONY: lint-report-clean
 lint-report-clean: ## Clean lint report
 	rm -f ./lint-report.json
+
+GOLANG_CI_LINT_VERSION ?= v1.57
+.PHONY: golangci-lint
+golangci-lint:
+	test -s $(LOCALBIN)/golangci-lint && $(LOCALBIN)/golangci-lint version | grep -q $(GOLANG_CI_LINT_VERSION) || \
+		GOBIN=$(LOCALBIN) go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANG_CI_LINT_VERSION)
 
 .PHONY: fmt
 fmt: ## Reformat files using `go fmt`
