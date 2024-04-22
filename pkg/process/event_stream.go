@@ -6,14 +6,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 )
 
 const (
 	nodeInstanceTypeLabel = "node.kubernetes.io/instance-type"
-	// storageRoundingFactor rounds of storage to 32. E.g. 17 -> 32, 33 -> 64
+	// storageRoundingFactor rounds of storage to 32. E.g. 17 -> 32, 33 -> 64.
 	storageRoundingFactor = 32
 
 	Azure = "azure"
@@ -94,7 +95,7 @@ func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
 	return metric, nil
 }
 
-// getTimestampNow returns the time now in the format of RFC3339
+// getTimestampNow returns the time now in the format of RFC3339.
 func getTimestampNow() string {
 	return time.Now().Format(time.RFC3339)
 }

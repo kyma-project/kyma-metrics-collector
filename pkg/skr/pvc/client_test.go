@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"testing"
 
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
-
 	"github.com/onsi/gomega"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	corev1 "k8s.io/api/core/v1"
@@ -15,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
 
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )

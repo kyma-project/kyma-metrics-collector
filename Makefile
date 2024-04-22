@@ -60,19 +60,19 @@ help: ## Display this help.
 
 .PHONY: lint
 lint: golangci-lint ## Check lint issues using `golangci-lint`
-	golangci-lint run
+	$(LOCALBIN)/golangci-lint run
 
 .PHONY: lint-compact
 lint-compact: golangci-lint ## Check lint issues using `golangci-lint` in compact result format
-	golangci-lint run --print-issued-lines=false
+	$(LOCALBIN)/golangci-lint run --print-issued-lines=false
 
 .PHONY: lint-fix
 lint-fix: golangci-lint ## Check and fix lint issues using `golangci-lint`
-	golangci-lint run --fix 
+	$(LOCALBIN)/golangci-lint run --fix 
 
 .PHONY: lint-report
 lint-report: golangci-lint ## Check lint issues using `golangci-lint` then export them to a file, then print the list of linters used
-	golangci-lint run --issues-exit-code 0 --out-format json > ./lint-report.json
+	$(LOCALBIN)/golangci-lint run --issues-exit-code 0 --out-format json > ./lint-report.json
 
 .PHONY: lint-report-issue-category
 lint-report-issue-category: ## Get lint issues categories

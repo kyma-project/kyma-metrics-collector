@@ -3,9 +3,10 @@ package commons
 import (
 	"strconv"
 
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 )
 
 const (
@@ -24,16 +25,14 @@ const (
 	actionLabel            = "action"
 )
 
-var (
-	TotalQueriesMetric = promauto.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: namespace,
-			Subsystem: subsystem,
-			Name:      TotalQueriesMetricName,
-			Help:      "Total number of queries to SKR to get the metrics of the cluster.",
-		},
-		[]string{actionLabel, successLabel, shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
-	)
+var TotalQueriesMetric = promauto.NewCounterVec(
+	prometheus.CounterOpts{
+		Namespace: namespace,
+		Subsystem: subsystem,
+		Name:      TotalQueriesMetricName,
+		Help:      "Total number of queries to SKR to get the metrics of the cluster.",
+	},
+	[]string{actionLabel, successLabel, shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
 )
 
 // DeleteMetrics deletes all the metrics for the provided shoot.

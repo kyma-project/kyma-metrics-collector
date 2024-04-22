@@ -19,17 +19,15 @@ const (
 	latencyMetricName = "request_duration_seconds"
 )
 
-var (
-	latencyMetric = promauto.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: Namespace,
-			Subsystem: Subsystem,
-			Name:      latencyMetricName,
-			Help:      "Duration of HTTP request to KEB in seconds.",
-			Buckets:   []float64{0.5, 1, 2, 3, 4, 5, 7.5, 10},
-		},
-		[]string{responseCodeLabel, requestURLLabel},
-	)
+var latencyMetric = promauto.NewHistogramVec(
+	prometheus.HistogramOpts{
+		Namespace: Namespace,
+		Subsystem: Subsystem,
+		Name:      latencyMetricName,
+		Help:      "Duration of HTTP request to KEB in seconds.",
+		Buckets:   []float64{0.5, 1, 2, 3, 4, 5, 7.5, 10},
+	},
+	[]string{responseCodeLabel, requestURLLabel},
 )
 
 func recordKEBLatency(duration time.Duration, statusCode int, destSvc string) {

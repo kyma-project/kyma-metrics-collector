@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
+	"github.com/onsi/gomega"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"go.uber.org/zap/zapcore"
 
+	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
-	"github.com/onsi/gomega"
 )
 
 const (
@@ -24,7 +24,7 @@ const (
 	testToken             = "token"
 	testEnv               = "env"
 
-	//Metrics related variable
+	//Metrics related variable.
 	histogramName = "kmc_edp_request_duration_seconds"
 )
 
@@ -78,8 +78,8 @@ func TestClient(t *testing.T) {
 	expectedNumberOfLabels := 2  // because 2 labels are set in the definition of latencyMetric metric.
 	pMetric, err := kmctesting.PrometheusGatherAndReturn(latencyMetric, histogramName)
 	g.Expect(err).Should(gomega.BeNil())
-	g.Expect(pMetric.Metric).Should(gomega.HaveLen(expectedNumberOfMetrics))
-	gotLabel := pMetric.Metric[0].Label
+	g.Expect(pMetric.GetMetric()).Should(gomega.HaveLen(expectedNumberOfMetrics))
+	gotLabel := pMetric.GetMetric()[0].GetLabel()
 	g.Expect(gotLabel).Should(gomega.HaveLen(expectedNumberOfLabels))
 	// response status label.
 	statusLabel := kmctesting.PrometheusFilterLabelPair(gotLabel, responseCodeLabel)
@@ -135,8 +135,8 @@ func TestClientRetry(t *testing.T) {
 	// ensure metric has expected label value.
 	pMetric, err := kmctesting.PrometheusGatherAndReturn(latencyMetric, histogramName)
 	g.Expect(err).Should(gomega.BeNil())
-	g.Expect(pMetric.Metric).Should(gomega.HaveLen(expectedNumberOfMetrics))
-	gotLabel := pMetric.Metric[0].Label
+	g.Expect(pMetric.GetMetric()).Should(gomega.HaveLen(expectedNumberOfMetrics))
+	gotLabel := pMetric.GetMetric()[0].GetLabel()
 	g.Expect(gotLabel).Should(gomega.HaveLen(expectedNumberOfLabels))
 	statusLabel := kmctesting.PrometheusFilterLabelPair(gotLabel, responseCodeLabel)
 	g.Expect(statusLabel).ShouldNot(gomega.BeNil())

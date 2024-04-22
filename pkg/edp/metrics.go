@@ -19,17 +19,15 @@ const (
 	latencyMetricName = "request_duration_seconds"
 )
 
-var (
-	latencyMetric = promauto.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: namespace,
-			Subsystem: subsystem,
-			Name:      latencyMetricName,
-			Help:      "Duration of HTTP request to EDP in seconds.",
-			Buckets:   []float64{0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1, 2},
-		},
-		[]string{responseCodeLabel, requestURLLabel},
-	)
+var latencyMetric = promauto.NewHistogramVec(
+	prometheus.HistogramOpts{
+		Namespace: namespace,
+		Subsystem: subsystem,
+		Name:      latencyMetricName,
+		Help:      "Duration of HTTP request to EDP in seconds.",
+		Buckets:   []float64{0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1, 2},
+	},
+	[]string{responseCodeLabel, requestURLLabel},
 )
 
 func recordEDPLatency(duration time.Duration, statusCode int, destSvc string) {

@@ -10,6 +10,13 @@ import (
 	"time"
 
 	kebruntime "github.com/kyma-project/kyma-environment-broker/common/runtime"
+	"github.com/patrickmn/go-cache"
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/util/workqueue"
+
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
@@ -17,12 +24,6 @@ import (
 	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
 	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
 	skrsvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/svc"
-	"github.com/patrickmn/go-cache"
-	"github.com/pkg/errors"
-	"go.uber.org/zap"
-	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/util/workqueue"
 )
 
 type Process struct {
@@ -381,7 +382,7 @@ func isRuntimeTrackable(runtime kebruntime.RuntimeDTO) bool {
 	return isTrackableState(runtime.Status.State) || isProvisionedStatus(runtime)
 }
 
-// getOrDefault returns the runtime state or a default value if runtimeStatus is nil
+// getOrDefault returns the runtime state or a default value if runtimeStatus is nil.
 func getOrDefault(runtimeStatus *kebruntime.Operation, defaultValue string) string {
 	if runtimeStatus != nil {
 		return runtimeStatus.State

@@ -11,25 +11,23 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus/testutil"
-
-	"k8s.io/client-go/kubernetes/fake"
-
-	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
-	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
-	skrsvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/svc"
-
 	kebruntime "github.com/kyma-project/kyma-environment-broker/common/runtime"
+	"github.com/onsi/gomega"
+	gocache "github.com/patrickmn/go-cache"
+	"github.com/prometheus/client_golang/prometheus/testutil"
+	"go.uber.org/zap/zapcore"
+	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/util/workqueue"
+
 	"github.com/kyma-project/kyma-metrics-collector/env"
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	kmckeb "github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
+	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
+	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
+	skrsvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/svc"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
-	"github.com/onsi/gomega"
-	gocache "github.com/patrickmn/go-cache"
-	"go.uber.org/zap/zapcore"
-	"k8s.io/client-go/util/workqueue"
 )
 
 const (
@@ -1151,7 +1149,7 @@ func NewMetric() *edp.ConsumptionMetrics {
 	}
 }
 
-// Helper function to check if a cluster is trackable
+// Helper function to check if a cluster is trackable.
 func isClusterTrackable(runtime *kebruntime.RuntimeDTO) bool {
 	// Check if the cluster is in a trackable state
 	trackableStates := map[kebruntime.State]bool{
@@ -1170,10 +1168,9 @@ func isClusterTrackable(runtime *kebruntime.RuntimeDTO) bool {
 	return false
 }
 
-// Helper function to check the value of the `kmc_process_fetched_clusters` metric using `ToFloat64`
+// Helper function to check the value of the `kmc_process_fetched_clusters` metric using `ToFloat64`.
 func verifyKEBAllClustersCountMetricValue(expectedValue int, g *gomega.WithT, runtimeData kebruntime.RuntimeDTO) bool {
 	return g.Eventually(func() int {
-
 		trackable := isClusterTrackable(&runtimeData)
 
 		counter, err := kebFetchedClusters.GetMetricWithLabelValues(
