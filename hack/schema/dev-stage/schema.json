@@ -1,0 +1,320 @@
+{
+    "jsonSchema": {
+        "description": "SKR Metering Schema.",
+        "properties": {
+            "runtime_id": {
+                "format": "string",
+                "examples": [
+                    "52e31334-4819-4f36-9651-8ccd2a29b880"
+                ],
+                "description": "Runtime Identifier",
+                "$id": "#/properties/runtime_id",
+                "default": "",
+                "title": "The Runtime Identifier Schema",
+                "type": "string"
+            },
+            "timestamp": {
+                "format": "date-time",
+                "examples": [
+                    "2020-03-25T09:16:41+00:00"
+                ],
+                "description": "Event Creation Timestamp",
+                "$id": "#/properties/timestamp",
+                "default": "",
+                "title": "The Timestamp Schema",
+                "type": "string"
+            },
+            "sub_account_id": {
+                "format": "string",
+                "examples": [
+                    "52e31334-4819-4f36-9651-8ccd2a29b881"
+                ],
+                "description": "Sub-Account Identifier",
+                "$id": "#/properties/sub_account_id",
+                "default": "",
+                "title": "The Sub-Account Identifier Schema",
+                "type": "string"
+            },
+            "shoot_name": {
+                "format": "string",
+                "examples": [
+                    "c-7ea3c81"
+                ],
+                "description": "Shoot Name",
+                "$id": "#/properties/shoot_name",
+                "default": "",
+                "title": "The Shoot Name Schema",
+                "type": "string"
+            },
+            "networking": {
+                "examples": [
+                    {
+                        "provisioned_vnets": 2,
+                        "provisioned_loadbalancers": 1,
+                        "provisioned_ips": 3
+                    }
+                ],
+                "description": "Some networking controlling data.",
+                "$id": "#/properties/networking",
+                "properties": {
+                    "provisioned_vnets": {
+                        "examples": [
+                            2
+                        ],
+                        "description": "Number of virtual networks",
+                        "$id": "#/properties/networking/properties/provisioned_vnets",
+                        "default": 0,
+                        "title": "The Provisioned_vnets Schema",
+                        "type": "integer"
+                    },
+                    "provisioned_ips": {
+                        "examples": [
+                            3
+                        ],
+                        "description": "Number of IPs",
+                        "$id": "#/properties/networking/properties/provisioned_ips",
+                        "default": 0,
+                        "title": "The Provisioned_ips Schema",
+                        "type": "integer"
+                    }
+                },
+                "default": {},
+                "title": "The Networking Schema",
+                "type": "object",
+                "required": [
+                    "provisioned_vnets",
+                    "provisioned_ips"
+                ]
+            },
+            "compute": {
+                "examples": [
+                    {
+                        "provisioned_cpus": 24,
+                        "provisioned_volumes": {
+                            "size_gb_rounded": 192,
+                            "count": 3,
+                            "size_gb_total": 150
+                        },
+                        "vm_types": [
+                            {
+                                "name": "Standard_D8_v3",
+                                "count": 3
+                            },
+                            {
+                                "name": "Standard_D6_v3",
+                                "count": 2
+                            }
+                        ],
+                        "provisioned_ram_gb": 96
+                    }
+                ],
+                "description": "Contains Azure Compute metrics",
+                "$id": "#/properties/compute",
+                "properties": {
+                    "vm_types": {
+                        "description": "A list of VM types that have been used for this SKR instance.",
+                        "items": {
+                            "examples": [
+                                {
+                                    "name": "Standard_D8_v3",
+                                    "count": 3
+                                },
+                                {
+                                    "name": "Standard_D6_v3",
+                                    "count": 2
+                                }
+                            ],
+                            "description": "The Azure instance type name and the provisioned quantity at the time of the event.",
+                            "$id": "#/properties/compute/properties/vm_types/items",
+                            "properties": {
+                                "name": {
+                                    "examples": [
+                                        "Standard_D8_v3"
+                                    ],
+                                    "description": "Name of the instance type",
+                                    "$id": "#/properties/compute/properties/vm_types/items/properties/name",
+                                    "default": "",
+                                    "title": "The Name Schema",
+                                    "type": "string"
+                                },
+                                "count": {
+                                    "examples": [
+                                        3
+                                    ],
+                                    "description": "Quantity of the instances",
+                                    "$id": "#/properties/compute/properties/vm_types/items/properties/count",
+                                    "default": 0,
+                                    "title": "The Count Schema",
+                                    "type": "integer"
+                                }
+                            },
+                            "default": {},
+                            "title": "The Items Schema",
+                            "type": "object",
+                            "required": [
+                                "name",
+                                "count"
+                            ]
+                        },
+                        "$id": "#/properties/compute/properties/vm_types",
+                        "default": [],
+                        "title": "The Vm_types Schema",
+                        "type": "array"
+                    },
+                    "provisioned_cpus": {
+                        "examples": [
+                            24
+                        ],
+                        "description": "The total sum of all CPUs provisioned from all instances (number of instances *  number of CPUs per instance)",
+                        "$id": "#/properties/compute/properties/provisioned_cpus",
+                        "default": 0,
+                        "title": "The Provisioned_cpus Schema",
+                        "type": "integer"
+                    },
+                    "provisioned_ram_gb": {
+                        "examples": [
+                            96
+                        ],
+                        "description": "The total sum of Memory (RAM) of all provisioned instances (number of instances * number of GB RAM per instance).",
+                        "$id": "#/properties/compute/properties/provisioned_ram_gb",
+                        "default": 0,
+                        "title": "The Provisioned_ram_gb Schema",
+                        "type": "integer"
+                    },
+                    "provisioned_nfs_volumes": {
+                        "examples": [
+                            {
+                                "size_gb_rounded": 192,
+                                "count": 3,
+                                "size_gb_total": 150
+                            }
+                        ],
+                        "description": "Volumes (NFS) provisioned.",
+                        "$id": "#/properties/compute/properties/provisioned_nfs_volumes",
+                        "properties": {
+                            "size_gb_total": {
+                                "examples": [
+                                    150
+                                ],
+                                "description": "The total GB disk space requested by a kyma instance",
+                                "$id": "#/properties/compute/properties/provisioned_nfs_volumes/properties/size_gb_total",
+                                "default": 0,
+                                "title": "The Size_gb_total Schema",
+                                "type": "integer"
+                            },
+                            "count": {
+                                "examples": [
+                                    3
+                                ],
+                                "description": "The number of disks provisioned.",
+                                "$id": "#/properties/compute/properties/provisioned_nfs_volumes/properties/count",
+                                "default": 0,
+                                "title": "The Count Schema",
+                                "type": "integer"
+                            },
+                            "size_gb_rounded": {
+                                "examples": [
+                                    192
+                                ],
+                                "description": "Azure charges disk in 32GB blocks. If one provisions e.g. 16GB, he still pays 32 GB. This value here is rounding up each volume to the next y 32 dividable number and sums these values up.",
+                                "$id": "#/properties/compute/properties/provisioned_nfs_volumes/properties/size_gb_rounded",
+                                "default": 0,
+                                "title": "The Size_gb_rounded Schema",
+                                "type": "integer"
+                            }
+                        },
+                        "default": {},
+                        "title": "The Provisioned_nfs_volumes Schema",
+                        "type": "object",
+                        "required": [
+                            "size_gb_total",
+                            "count",
+                            "size_gb_rounded"
+                        ]
+                    },
+                    "provisioned_volumes": {
+                        "examples": [
+                            {
+                                "size_gb_rounded": 192,
+                                "count": 3,
+                                "size_gb_total": 150
+                            }
+                        ],
+                        "description": "Volumes (Disk) provisioned.",
+                        "$id": "#/properties/compute/properties/provisioned_volumes",
+                        "properties": {
+                            "size_gb_total": {
+                                "examples": [
+                                    150
+                                ],
+                                "description": "The total GB disk space requested by a kyma instance",
+                                "$id": "#/properties/compute/properties/provisioned_volumes/properties/size_gb_total",
+                                "default": 0,
+                                "title": "The Size_gb_total Schema",
+                                "type": "integer"
+                            },
+                            "count": {
+                                "examples": [
+                                    3
+                                ],
+                                "description": "The number of disks provisioned.",
+                                "$id": "#/properties/compute/properties/provisioned_volumes/properties/count",
+                                "default": 0,
+                                "title": "The Count Schema",
+                                "type": "integer"
+                            },
+                            "size_gb_rounded": {
+                                "examples": [
+                                    192
+                                ],
+                                "description": "Azure charges disk in 32GB blocks. If one provisions e.g. 16GB, he still pays 32 GB. This value here is rounding up each volume to the next y 32 dividable number and sums these values up.",
+                                "$id": "#/properties/compute/properties/provisioned_volumes/properties/size_gb_rounded",
+                                "default": 0,
+                                "title": "The Size_gb_rounded Schema",
+                                "type": "integer"
+                            }
+                        },
+                        "default": {},
+                        "title": "The Provisioned_volumes Schema",
+                        "type": "object",
+                        "required": [
+                            "size_gb_total",
+                            "count",
+                            "size_gb_rounded"
+                        ]
+                    }
+                },
+                "default": {},
+                "title": "The Compute Schema",
+                "type": "object",
+                "required": [
+                    "vm_types",
+                    "provisioned_cpus",
+                    "provisioned_ram_gb",
+                    "provisioned_volumes"
+                ]
+            }
+        },
+        "title": "SKR Metering Schema",
+        "type": "object",
+        "required": [
+            "timestamp",
+            "compute",
+            "networking"
+        ]
+    },
+    "eventTimeField": "event.timestamp",
+    "storage": {},
+    "storageFormat": "v1",
+    "minimumRetentionPolicy": "P0D",
+    "namespace": {
+        "account": {
+            "name": "kyma"
+        },
+        "name": "dev"
+    },
+    "maximumRetentionPolicy": "P10Y",
+    "name": "kmc-consumption-metrics$1",
+    "deduplicationStrategy": "takeAny",
+    "defaultRetentionPolicy": "P10Y"
+}

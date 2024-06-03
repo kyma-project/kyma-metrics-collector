@@ -181,6 +181,27 @@ func secureRandomBytes(length int) []byte {
 	return randomBytes
 }
 
+func Get3PVCs1NFS() *corev1.PersistentVolumeClaimList {
+	pv5GInFooNs := GetPV("foo-5G", "foo", "5Gi")
+	pv10GInFooNs := GetPV("foo-10G", "foo", "10Gi")
+	pv20GInBarNs := GetPV("foo-20G", "bar", "20Gi")
+	pv20GInBarNsNFS := GetNFSPV("foo-20G", "bar", "20Gi")
+
+	return &corev1.PersistentVolumeClaimList{
+		TypeMeta: metaV1.TypeMeta{
+			Kind:       "PersistentVolumeClaimList",
+			APIVersion: "v1",
+		},
+		ListMeta: metaV1.ListMeta{},
+		Items: []corev1.PersistentVolumeClaim{
+			*pv5GInFooNs,
+			*pv10GInFooNs,
+			*pv20GInBarNs,
+			*pv20GInBarNsNFS,
+		},
+	}
+}
+
 func Get3PVCs() *corev1.PersistentVolumeClaimList {
 	pv5GInFooNs := GetPV("foo-5G", "foo", "5Gi")
 	pv10GInFooNs := GetPV("foo-10G", "foo", "10Gi")
@@ -226,6 +247,37 @@ func GetPV(name, namespace, capacity string) *corev1.PersistentVolumeClaim {
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			Resources: corev1.VolumeResourceRequirements{
+				Limits: nil,
+				Requests: corev1.ResourceList{
+					"storage": resource.MustParse(capacity),
+				},
+			},
+		},
+		Status: corev1.PersistentVolumeClaimStatus{
+			Phase: corev1.ClaimBound,
+			Capacity: corev1.ResourceList{
+				"storage": resource.MustParse(capacity),
+			},
+			Conditions: nil,
+		},
+	}
+}
+
+func GetNFSPV(name, namespace, capacity string) *corev1.PersistentVolumeClaim {
+	return &corev1.PersistentVolumeClaim{
+		TypeMeta: metaV1.TypeMeta{
+			Kind:       "PersistentVolumeClaim",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Annotations: map[string]string{
+				"volume.beta.kubernetes.io/storage-class": "nfs",
+			},
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
 			Resources: corev1.VolumeResourceRequirements{

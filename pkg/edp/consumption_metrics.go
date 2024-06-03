@@ -19,10 +19,11 @@ type VMType struct {
 }
 
 type Compute struct {
-	VMTypes            []VMType           `json:"vm_types"            validate:"required"`
-	ProvisionedCpus    int                `json:"provisioned_cpus"    validate:"numeric"`
-	ProvisionedRAMGb   float64            `json:"provisioned_ram_gb"  validate:"numeric"`
-	ProvisionedVolumes ProvisionedVolumes `json:"provisioned_volumes" validate:"required"`
+	VMTypes               []VMType           `json:"vm_types"            validate:"required"`
+	ProvisionedCpus       int                `json:"provisioned_cpus"    validate:"numeric"`
+	ProvisionedRAMGb      float64            `json:"provisioned_ram_gb"  validate:"numeric"`
+	ProvisionedVolumes    ProvisionedVolumes `json:"provisioned_volumes" validate:"required"`
+	ProvisionedNFSVolumes ProvisionedVolumes `json:"provisioned_nfs_volumes" validate:"optional"`
 }
 
 type ProvisionedVolumes struct {

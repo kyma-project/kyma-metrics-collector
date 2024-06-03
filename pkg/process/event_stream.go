@@ -50,6 +50,10 @@ func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
 	pvcStorageRounded := int64(0)
 	volumeCount := 0
 
+	nfsPVCStorage := int64(0)
+	nfsPVCStorageRounded := int64(0)
+	nfsVolumeCount := 0
+
 	for _, node := range inp.nodeList.Items {
 		nodeType := node.Labels[nodeInstanceTypeLabel]
 		nodeType = strings.ToLower(nodeType)
@@ -67,6 +71,15 @@ func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
 	if inp.pvcList != nil {
 		// Calculate storage from PVCs
 		for _, pvc := range inp.pvcList.Items {
+			if pvc.GetObjectMeta().GetAnnotations()["volume.beta.kubernetes.io/storage-class"] == "nfs" {
+				if pvc.Status.Phase == corev1.ClaimBound {
+					currPVC := getSizeInGB(pvc.Status.Capacity.Storage())
+					nfsPVCStorage += currPVC
+					nfsPVCStorageRounded += getVolumeRoundedToFactor(currPVC)
+					nfsVolumeCount += 1
+				}
+				continue
+			}
 			if pvc.Status.Phase == corev1.ClaimBound {
 				currPVC := getSizeInGB(pvc.Status.Capacity.Storage())
 				pvcStorage += currPVC
@@ -84,6 +97,10 @@ func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
 	metric.Compute.ProvisionedVolumes.SizeGbTotal = pvcStorage
 	metric.Compute.ProvisionedVolumes.SizeGbRounded = pvcStorageRounded
 	metric.Compute.ProvisionedVolumes.Count = volumeCount
+
+	metric.Compute.ProvisionedNFSVolumes.SizeGbTotal = nfsPVCStorage
+	metric.Compute.ProvisionedNFSVolumes.SizeGbRounded = nfsPVCStorageRounded
+	metric.Compute.ProvisionedNFSVolumes.Count = nfsVolumeCount
 
 	for vmType, count := range vmTypes {
 		metric.Compute.VMTypes = append(metric.Compute.VMTypes, edp.VMType{

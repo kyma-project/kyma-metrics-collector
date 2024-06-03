@@ -27,6 +27,37 @@ func TestParse(t *testing.T) {
 		expectedErr     bool
 	}{
 		{
+			name: "with Azure, 2 vm types, 3 pvcs(5,10 and 20Gi), 1 NFS pvc (20Gi) and 2 svcs(1 clusterIP and 1 LoadBalancer)",
+			input: Input{
+				provider: Azure,
+				nodeList: kmctesting.Get2Nodes(),
+				pvcList:  kmctesting.Get3PVCs1NFS(),
+				svcList:  kmctesting.Get2SvcsOfDiffTypes(),
+			},
+			providers: *providers,
+			expectedMetrics: edp.ConsumptionMetrics{
+				// ResourceGroups: nil,
+				Compute: edp.Compute{
+					VMTypes: []edp.VMType{{
+						Name:  "standard_d8_v3",
+						Count: 2,
+					}},
+					ProvisionedCpus:  16,
+					ProvisionedRAMGb: 64,
+					ProvisionedVolumes: edp.ProvisionedVolumes{
+						SizeGbTotal:   35,
+						Count:         3,
+						SizeGbRounded: 96,
+					},
+					ProvisionedNFSVolumes: edp.ProvisionedVolumes{
+						SizeGbTotal:   20,
+						Count:         1,
+						SizeGbRounded: 32,
+					},
+				},
+			},
+		},
+		{
 			name: "with Azure, 2 vm types, 3 pvcs(5,10 and 20Gi) and 2 svcs(1 clusterIP and 1 LoadBalancer)",
 			input: Input{
 				provider: Azure,
