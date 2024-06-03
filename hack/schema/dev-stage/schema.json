@@ -181,57 +181,6 @@
                         "title": "The Provisioned_ram_gb Schema",
                         "type": "integer"
                     },
-                    "provisioned_nfs_volumes": {
-                        "examples": [
-                            {
-                                "size_gb_rounded": 192,
-                                "count": 3,
-                                "size_gb_total": 150
-                            }
-                        ],
-                        "description": "Volumes (NFS) provisioned.",
-                        "$id": "#/properties/compute/properties/provisioned_nfs_volumes",
-                        "properties": {
-                            "size_gb_total": {
-                                "examples": [
-                                    150
-                                ],
-                                "description": "The total GB disk space requested by a kyma instance",
-                                "$id": "#/properties/compute/properties/provisioned_nfs_volumes/properties/size_gb_total",
-                                "default": 0,
-                                "title": "The Size_gb_total Schema",
-                                "type": "integer"
-                            },
-                            "count": {
-                                "examples": [
-                                    3
-                                ],
-                                "description": "The number of disks provisioned.",
-                                "$id": "#/properties/compute/properties/provisioned_nfs_volumes/properties/count",
-                                "default": 0,
-                                "title": "The Count Schema",
-                                "type": "integer"
-                            },
-                            "size_gb_rounded": {
-                                "examples": [
-                                    192
-                                ],
-                                "description": "Azure charges disk in 32GB blocks. If one provisions e.g. 16GB, he still pays 32 GB. This value here is rounding up each volume to the next y 32 dividable number and sums these values up.",
-                                "$id": "#/properties/compute/properties/provisioned_nfs_volumes/properties/size_gb_rounded",
-                                "default": 0,
-                                "title": "The Size_gb_rounded Schema",
-                                "type": "integer"
-                            }
-                        },
-                        "default": {},
-                        "title": "The Provisioned_nfs_volumes Schema",
-                        "type": "object",
-                        "required": [
-                            "size_gb_total",
-                            "count",
-                            "size_gb_rounded"
-                        ]
-                    },
                     "provisioned_volumes": {
                         "examples": [
                             {

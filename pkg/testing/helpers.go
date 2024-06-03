@@ -181,10 +181,7 @@ func secureRandomBytes(length int) []byte {
 	return randomBytes
 }
 
-func Get3PVCs1NFS() *corev1.PersistentVolumeClaimList {
-	pv5GInFooNs := GetPV("foo-5G", "foo", "5Gi")
-	pv10GInFooNs := GetPV("foo-10G", "foo", "10Gi")
-	pv20GInBarNs := GetPV("foo-20G", "bar", "20Gi")
+func Get1NFSPVC() *corev1.PersistentVolumeClaimList {
 	pv20GInBarNsNFS := GetNFSPV("foo-20G", "bar", "20Gi")
 
 	return &corev1.PersistentVolumeClaimList{
@@ -194,9 +191,6 @@ func Get3PVCs1NFS() *corev1.PersistentVolumeClaimList {
 		},
 		ListMeta: metaV1.ListMeta{},
 		Items: []corev1.PersistentVolumeClaim{
-			*pv5GInFooNs,
-			*pv10GInFooNs,
-			*pv20GInBarNs,
 			*pv20GInBarNsNFS,
 		},
 	}
