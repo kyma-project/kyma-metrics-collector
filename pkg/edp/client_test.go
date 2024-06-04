@@ -24,7 +24,7 @@ const (
 	testToken             = "token"
 	testEnv               = "env"
 
-	//Metrics related variable.
+	// Metrics related variable.
 	histogramName = "kmc_edp_request_duration_seconds"
 )
 

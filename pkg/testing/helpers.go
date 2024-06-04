@@ -269,8 +269,10 @@ func GetNFSPV(name, namespace, capacity string) *corev1.PersistentVolumeClaim {
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
-			Annotations: map[string]string{
-				"volume.beta.kubernetes.io/storage-class": "nfs",
+			Labels: map[string]string{
+				"app.kubernetes.io/component":  "cloud-manager",
+				"app.kubernetes.io/part-of":    "kyma",
+				"app.kubernetes.io/managed-by": "cloud-manager",
 			},
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{

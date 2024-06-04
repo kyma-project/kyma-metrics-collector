@@ -17,7 +17,7 @@ const (
 	// storageRoundingFactor rounds of storage to 32. E.g. 17 -> 32, 33 -> 64.
 	storageRoundingFactor = 32
 
-	// nfsPriceMultiplier is the factor by which the NFS PVCs are multiplied to compensate for the higher price
+	// nfsPriceMultiplier is the factor by which the NFS PVCs are multiplied to compensate for the higher price.
 	nfsPriceMultiplier = 3
 
 	Azure = "azure"
@@ -25,6 +25,12 @@ const (
 	GCP   = "gcp"
 	CCEE  = "sapconvergedcloud"
 )
+
+var nfsLabels = map[string]string{
+	"app.kubernetes.io/component":  "cloud-manager",
+	"app.kubernetes.io/part-of":    "kyma",
+	"app.kubernetes.io/managed-by": "cloud-manager",
+}
 
 type EventStream struct {
 	KubeConfig string
@@ -70,7 +76,8 @@ func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
 	if inp.pvcList != nil {
 		// Calculate storage from PVCs
 		for _, pvc := range inp.pvcList.Items {
-			if pvc.GetObjectMeta().GetAnnotations()["volume.beta.kubernetes.io/storage-class"] == "nfs" {
+			// if the pvc has all labels defined in nfsLabels then it is an NFS PVC
+			if hasAllLabels(pvc.Labels, nfsLabels) {
 				if pvc.Status.Phase == corev1.ClaimBound {
 					currPVC := getSizeInGB(pvc.Status.Capacity.Storage())
 					// for NFS PVCs we multiply the used capacity by 3 to compensate for the higher price
@@ -107,6 +114,16 @@ func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
 	}
 
 	return metric, nil
+}
+
+// hasAllLabels checks if the labels map contains all the labels in want.
+func hasAllLabels(has, want map[string]string) bool {
+	for k, v := range want {
+		if has[k] != v {
+			return false
+		}
+	}
+	return true
 }
 
 // getTimestampNow returns the time now in the format of RFC3339.
