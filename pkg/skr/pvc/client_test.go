@@ -18,10 +18,6 @@ import (
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
 
-const (
-	totalQueriesMetricFullName = "kmc_skr_query_total"
-)
-
 func TestList(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 	// given

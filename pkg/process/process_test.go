@@ -47,6 +47,8 @@ const (
 	testToken             = "token"
 	testEnv               = "env"
 	retryCount            = 1
+
+	fecthedClustersMetricName = "kmc_process_fetched_clusters"
 )
 
 func TestGetOldRecordIfMetricExists(t *testing.T) {
@@ -172,7 +174,7 @@ func TestPollKEBForRuntimes(t *testing.T) {
 		}, 10*time.Second).Should(gomega.Equal(expectedTimesVisited))
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
+		metricName := fecthedClustersMetricName
 		numberOfAllClusters := 4
 		expectedMetricValue := 1
 		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
@@ -380,7 +382,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(areQueuesEqual(p.Queue, expectedQueue)).To(gomega.BeTrue())
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
+		metricName := fecthedClustersMetricName
 		numberOfAllClusters := 4
 		expectedMetricValue := 1
 		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
@@ -420,7 +422,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(areQueuesEqual(p.Queue, expectedQueue)).To(gomega.BeTrue())
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
+		metricName := fecthedClustersMetricName
 		numberOfAllClusters := 4
 		expectedMetricValue := 1
 		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
@@ -459,7 +461,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(areQueuesEqual(p.Queue, expectedEmptyQueue)).To(gomega.BeTrue())
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
+		metricName := fecthedClustersMetricName
 		numberOfAllClusters := 0
 		expectedMetricValue := 0
 		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
@@ -518,7 +520,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(gotSubAccID).To(gomega.Equal(subAccID))
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
+		metricName := fecthedClustersMetricName
 		// expecting number of all clusters to be 1, as deprovisioned shoot is removed
 		// only counting the new shoot
 		numberOfAllClusters := 1
@@ -869,7 +871,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 
 			// when
 			// calling the method multiple times to generate testable metrics.
-			for i := 0; i < givenMethodRecalls; i++ {
+			for i := range givenMethodRecalls {
 				givenProcess.processSubAccountID(tc.givenShoot.SubAccountID, i)
 			}
 
