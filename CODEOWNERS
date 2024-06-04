@@ -19,7 +19,7 @@
 # The order is important. The last matching pattern in the file has the most precedence.
 
 # These are the default owners for the whole content of the repository. The default owners are automatically added as reviewers when you open a pull request unless different owners are specified in the file.
-* @kyma-project/eventing
+* @kyma-project/eventing @kyma-project/observability
 
 *.md @kyma-project/technical-writers
 
