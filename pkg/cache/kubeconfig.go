@@ -86,8 +86,8 @@ func getKubeConfigFromSecret(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interfac
 // getKubeConfigSecret gets the kubeconfig secret from the cluster.
 func getKubeConfigSecret(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interface,
 	runtimeID, secretResourceName string,
-) (secret *corev1.Secret, err error) {
-	secret, err = coreV1.Secrets("kcp-system").Get(context.Background(), secretResourceName, metav1.GetOptions{})
+) (*corev1.Secret, error) {
+	secret, err := coreV1.Secrets("kcp-system").Get(context.Background(), secretResourceName, metav1.GetOptions{})
 	if err != nil {
 		if k8serr.IsNotFound(err) { // accepted failure
 			logger.Debugf("kubeconfig cache cannot find a kubeconfig-secret '%s' for cluster with runtimeID %s: %s",

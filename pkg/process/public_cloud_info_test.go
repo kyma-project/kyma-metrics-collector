@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kyma-project/kyma-metrics-collector/env"
-
-	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 	"github.com/onsi/gomega"
+
+	"github.com/kyma-project/kyma-metrics-collector/env"
+	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
 
 const (

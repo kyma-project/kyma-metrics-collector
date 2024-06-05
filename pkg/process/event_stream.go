@@ -6,21 +6,31 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 )
 
 const (
 	nodeInstanceTypeLabel = "node.kubernetes.io/instance-type"
-	// storageRoundingFactor rounds of storage to 32. E.g. 17 -> 32, 33 -> 64
+	// storageRoundingFactor rounds of storage to 32. E.g. 17 -> 32, 33 -> 64.
 	storageRoundingFactor = 32
+
+	// nfsPriceMultiplier is the factor by which the NFS PVCs are multiplied to compensate for the higher price.
+	nfsPriceMultiplier = 3
 
 	Azure = "azure"
 	AWS   = "aws"
 	GCP   = "gcp"
 	CCEE  = "sapconvergedcloud"
 )
+
+var nfsLabels = map[string]string{
+	"app.kubernetes.io/component":  "cloud-manager",
+	"app.kubernetes.io/part-of":    "kyma",
+	"app.kubernetes.io/managed-by": "cloud-manager",
+}
 
 type EventStream struct {
 	KubeConfig string
@@ -66,6 +76,18 @@ func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
 	if inp.pvcList != nil {
 		// Calculate storage from PVCs
 		for _, pvc := range inp.pvcList.Items {
+			// if the pvc has all labels defined in nfsLabels then it is an NFS PVC
+			if hasAllLabels(pvc.Labels, nfsLabels) {
+				if pvc.Status.Phase == corev1.ClaimBound {
+					currPVC := getSizeInGB(pvc.Status.Capacity.Storage())
+					// for NFS PVCs we multiply the used capacity by 3 to compensate for the higher price
+					nfsPVCStorage := currPVC * nfsPriceMultiplier
+					pvcStorage += nfsPVCStorage
+					pvcStorageRounded += getVolumeRoundedToFactor(nfsPVCStorage)
+					volumeCount += 1
+				}
+				continue
+			}
 			if pvc.Status.Phase == corev1.ClaimBound {
 				currPVC := getSizeInGB(pvc.Status.Capacity.Storage())
 				pvcStorage += currPVC
@@ -94,7 +116,17 @@ func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
 	return metric, nil
 }
 
-// getTimestampNow returns the time now in the format of RFC3339
+// hasAllLabels checks if the labels map contains all the labels in want.
+func hasAllLabels(has, want map[string]string) bool {
+	for k, v := range want {
+		if has[k] != v {
+			return false
+		}
+	}
+	return true
+}
+
+// getTimestampNow returns the time now in the format of RFC3339.
 func getTimestampNow() string {
 	return time.Now().Format(time.RFC3339)
 }

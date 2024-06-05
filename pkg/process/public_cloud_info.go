@@ -33,7 +33,7 @@ type Feature struct {
 
 type MachineInfo map[string]json.RawMessage
 
-func (p Providers) GetFeature(cloudProvider, vmType string) (f *Feature) {
+func (p Providers) GetFeature(cloudProvider, vmType string) *Feature {
 	switch cloudProvider {
 	case AWS:
 		if feature, ok := p.AWS[vmType]; ok {
@@ -55,7 +55,7 @@ func (p Providers) GetFeature(cloudProvider, vmType string) (f *Feature) {
 	return nil
 }
 
-// LoadPublicCloudSpecs loads string data to Providers object from an env var
+// LoadPublicCloudSpecs loads string data to Providers object from an env var.
 func LoadPublicCloudSpecs(cfg *env.Config) (*Providers, error) {
 	if cfg.PublicCloudSpecs == "" {
 		return nil, fmt.Errorf("public cloud specification is not configured")

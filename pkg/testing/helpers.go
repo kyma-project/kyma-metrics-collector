@@ -9,12 +9,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-	dto "github.com/prometheus/client_model/go"
-
 	"github.com/gorilla/mux"
 	kebruntime "github.com/kyma-project/kyma-environment-broker/common/runtime"
 	"github.com/onsi/gomega"
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -182,6 +181,21 @@ func secureRandomBytes(length int) []byte {
 	return randomBytes
 }
 
+func Get1NFSPVC() *corev1.PersistentVolumeClaimList {
+	pv20GInBarNsNFS := GetNFSPV("foo-20G", "bar", "20Gi")
+
+	return &corev1.PersistentVolumeClaimList{
+		TypeMeta: metaV1.TypeMeta{
+			Kind:       "PersistentVolumeClaimList",
+			APIVersion: "v1",
+		},
+		ListMeta: metaV1.ListMeta{},
+		Items: []corev1.PersistentVolumeClaim{
+			*pv20GInBarNsNFS,
+		},
+	}
+}
+
 func Get3PVCs() *corev1.PersistentVolumeClaimList {
 	pv5GInFooNs := GetPV("foo-5G", "foo", "5Gi")
 	pv10GInFooNs := GetPV("foo-10G", "foo", "10Gi")
@@ -227,6 +241,39 @@ func GetPV(name, namespace, capacity string) *corev1.PersistentVolumeClaim {
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			Resources: corev1.VolumeResourceRequirements{
+				Limits: nil,
+				Requests: corev1.ResourceList{
+					"storage": resource.MustParse(capacity),
+				},
+			},
+		},
+		Status: corev1.PersistentVolumeClaimStatus{
+			Phase: corev1.ClaimBound,
+			Capacity: corev1.ResourceList{
+				"storage": resource.MustParse(capacity),
+			},
+			Conditions: nil,
+		},
+	}
+}
+
+func GetNFSPV(name, namespace, capacity string) *corev1.PersistentVolumeClaim {
+	return &corev1.PersistentVolumeClaim{
+		TypeMeta: metaV1.TypeMeta{
+			Kind:       "PersistentVolumeClaim",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels: map[string]string{
+				"app.kubernetes.io/component":  "cloud-manager",
+				"app.kubernetes.io/part-of":    "kyma",
+				"app.kubernetes.io/managed-by": "cloud-manager",
+			},
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
 			Resources: corev1.VolumeResourceRequirements{

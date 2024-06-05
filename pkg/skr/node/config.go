@@ -6,6 +6,4 @@ type ConfigInf interface {
 	NewClient(kmccache.Record) (*Client, error)
 }
 
-type Config struct {
-	kubeconfig string
-}
+type Config struct{}

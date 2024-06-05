@@ -6,22 +6,16 @@ import (
 	"strconv"
 	"testing"
 
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
-
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	corev1 "k8s.io/api/core/v1"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
-	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 	"github.com/onsi/gomega"
 	"github.com/prometheus/client_golang/prometheus/testutil"
+	corev1 "k8s.io/api/core/v1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
-)
 
-const (
-	totalQueriesMetricFullName = "kmc_skr_query_total"
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
+	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
+	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
 
 func TestList(t *testing.T) {

@@ -11,25 +11,23 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus/testutil"
-
-	"k8s.io/client-go/kubernetes/fake"
-
-	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
-	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
-	skrsvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/svc"
-
 	kebruntime "github.com/kyma-project/kyma-environment-broker/common/runtime"
+	"github.com/onsi/gomega"
+	gocache "github.com/patrickmn/go-cache"
+	"github.com/prometheus/client_golang/prometheus/testutil"
+	"go.uber.org/zap/zapcore"
+	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/util/workqueue"
+
 	"github.com/kyma-project/kyma-metrics-collector/env"
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	kmckeb "github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
+	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
+	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
+	skrsvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/svc"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
-	"github.com/onsi/gomega"
-	gocache "github.com/patrickmn/go-cache"
-	"go.uber.org/zap/zapcore"
-	"k8s.io/client-go/util/workqueue"
 )
 
 const (
@@ -49,6 +47,8 @@ const (
 	testToken             = "token"
 	testEnv               = "env"
 	retryCount            = 1
+
+	fecthedClustersMetricName = "kmc_process_fetched_clusters"
 )
 
 func TestGetOldRecordIfMetricExists(t *testing.T) {
@@ -174,7 +174,7 @@ func TestPollKEBForRuntimes(t *testing.T) {
 		}, 10*time.Second).Should(gomega.Equal(expectedTimesVisited))
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
+		metricName := fecthedClustersMetricName
 		numberOfAllClusters := 4
 		expectedMetricValue := 1
 		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
@@ -382,7 +382,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(areQueuesEqual(p.Queue, expectedQueue)).To(gomega.BeTrue())
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
+		metricName := fecthedClustersMetricName
 		numberOfAllClusters := 4
 		expectedMetricValue := 1
 		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
@@ -422,7 +422,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(areQueuesEqual(p.Queue, expectedQueue)).To(gomega.BeTrue())
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
+		metricName := fecthedClustersMetricName
 		numberOfAllClusters := 4
 		expectedMetricValue := 1
 		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
@@ -461,7 +461,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(areQueuesEqual(p.Queue, expectedEmptyQueue)).To(gomega.BeTrue())
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
+		metricName := fecthedClustersMetricName
 		numberOfAllClusters := 0
 		expectedMetricValue := 0
 		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
@@ -520,7 +520,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(gotSubAccID).To(gomega.Equal(subAccID))
 
 		// Ensure metric exists
-		metricName := "kmc_process_fetched_clusters"
+		metricName := fecthedClustersMetricName
 		// expecting number of all clusters to be 1, as deprovisioned shoot is removed
 		// only counting the new shoot
 		numberOfAllClusters := 1
@@ -871,7 +871,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 
 			// when
 			// calling the method multiple times to generate testable metrics.
-			for i := 0; i < givenMethodRecalls; i++ {
+			for i := range givenMethodRecalls {
 				givenProcess.processSubAccountID(tc.givenShoot.SubAccountID, i)
 			}
 
@@ -1151,7 +1151,7 @@ func NewMetric() *edp.ConsumptionMetrics {
 	}
 }
 
-// Helper function to check if a cluster is trackable
+// Helper function to check if a cluster is trackable.
 func isClusterTrackable(runtime *kebruntime.RuntimeDTO) bool {
 	// Check if the cluster is in a trackable state
 	trackableStates := map[kebruntime.State]bool{
@@ -1170,10 +1170,9 @@ func isClusterTrackable(runtime *kebruntime.RuntimeDTO) bool {
 	return false
 }
 
-// Helper function to check the value of the `kmc_process_fetched_clusters` metric using `ToFloat64`
+// Helper function to check the value of the `kmc_process_fetched_clusters` metric using `ToFloat64`.
 func verifyKEBAllClustersCountMetricValue(expectedValue int, g *gomega.WithT, runtimeData kebruntime.RuntimeDTO) bool {
 	return g.Eventually(func() int {
-
 		trackable := isClusterTrackable(&runtimeData)
 
 		counter, err := kebFetchedClusters.GetMetricWithLabelValues(
