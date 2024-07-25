@@ -7,24 +7,24 @@ updates:
   - package-ecosystem: "gomod" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "07:00"
+      interval: "daily"
     commit-message:
       prefix: "deps(dependabot)"
+    groups:
+      k8s:
+        patterns:
+          - "k8s.io/*"
+
+
   - package-ecosystem: "docker" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "07:00"
+      interval: "daily"
     commit-message:
       prefix: "deps(dependabot)"
   - package-ecosystem: "github-actions" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "07:00"
+      interval: "daily"
     commit-message:
       prefix: "deps(dependabot)"
