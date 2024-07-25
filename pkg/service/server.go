@@ -1,17 +1,15 @@
 package service
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"go.uber.org/zap"
-
-	"context"
-
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 )
@@ -31,7 +29,6 @@ type Server struct {
 
 // Start starts the HTTP server and shut it down when stop channel is closed.
 func (s *Server) Start() {
-
 	server := http.Server{
 		Addr:         s.Addr,
 		Handler:      s.Router,

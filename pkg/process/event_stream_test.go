@@ -3,13 +3,12 @@ package process
 import (
 	"testing"
 
+	"github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/kyma-project/kyma-metrics-collector/env"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
-
-	"github.com/onsi/gomega"
 )
 
 func TestParse(t *testing.T) {
@@ -28,6 +27,32 @@ func TestParse(t *testing.T) {
 		expectedErr     bool
 	}{
 		{
+			name: "with Azure, 2 vm types, 1 NFS pvc (20Gi) and 2 svcs(1 clusterIP and 1 LoadBalancer)",
+			input: Input{
+				provider: Azure,
+				nodeList: kmctesting.Get2Nodes(),
+				pvcList:  kmctesting.Get1NFSPVC(),
+				svcList:  kmctesting.Get2SvcsOfDiffTypes(),
+			},
+			providers: *providers,
+			expectedMetrics: edp.ConsumptionMetrics{
+				// ResourceGroups: nil,
+				Compute: edp.Compute{
+					VMTypes: []edp.VMType{{
+						Name:  "standard_d8_v3",
+						Count: 2,
+					}},
+					ProvisionedCpus:  16,
+					ProvisionedRAMGb: 64,
+					ProvisionedVolumes: edp.ProvisionedVolumes{
+						SizeGbTotal:   60,
+						Count:         1,
+						SizeGbRounded: 64,
+					},
+				},
+			},
+		},
+		{
 			name: "with Azure, 2 vm types, 3 pvcs(5,10 and 20Gi) and 2 svcs(1 clusterIP and 1 LoadBalancer)",
 			input: Input{
 				provider: Azure,
@@ -37,7 +62,7 @@ func TestParse(t *testing.T) {
 			},
 			providers: *providers,
 			expectedMetrics: edp.ConsumptionMetrics{
-				//ResourceGroups: nil,
+				// ResourceGroups: nil,
 				Compute: edp.Compute{
 					VMTypes: []edp.VMType{{
 						Name:  "standard_d8_v3",
@@ -61,7 +86,7 @@ func TestParse(t *testing.T) {
 			},
 			providers: *providers,
 			expectedMetrics: edp.ConsumptionMetrics{
-				//ResourceGroups: nil,
+				// ResourceGroups: nil,
 				Compute: edp.Compute{
 					VMTypes: []edp.VMType{{
 						Name:  "standard_d8_v3",

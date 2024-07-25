@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
-
-	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+
+	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 )
 
 type Client struct {
@@ -122,7 +122,6 @@ func (eClient Client) Send(req *http.Request, payload []byte) (*http.Response, e
 		},
 		retryOptions...,
 	)
-
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to POST event to EDP")
 	}
