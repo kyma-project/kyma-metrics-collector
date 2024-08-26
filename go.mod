@@ -6,7 +6,7 @@ require (
 	github.com/avast/retry-go/v4 v4.5.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
-	github.com/jellydator/ttlcache/v3 v3.2.0
+	github.com/jellydator/ttlcache/v3 v3.2.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kyma-project/kyma-environment-broker v0.0.1
 	github.com/onsi/gomega v1.31.1
@@ -56,7 +56,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.16.0 // indirect
-	golang.org/x/sync v0.3.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
