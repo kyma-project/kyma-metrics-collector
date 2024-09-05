@@ -1,7 +1,13 @@
 # Kyma Metrics Collector
 
+## Status
+
+[![REUSE status](https://api.reuse.software/badge/github.com/kyma-project/kyma-metrics-collector)](https://api.reuse.software/info/github.com/kyma-project/kyma-metrics-collector)
+
+![GitHub tag checks state](https://img.shields.io/github/checks-status/kyma-project/kyma-metrics-collector/main?label=kyma-metrics-collector&link=https%3A%2F%2Fgithub.com%2Fkyma-project%2Fkyma-metrics-collector%2Fcommits%2Fmain)
+
 ## Overview
-Kyma Metrics Collector (KMC) is a component that scrapes all Kyma clusters to generate metrics. These metrics are sent to Event Data Platform [(EDP)](https://pages.github.tools.sap/edp/edp-docs/docs/overview/tutorial/) as an event stream and used for billing information.
+Kyma Metrics Collector (KMC) is a component that scrapes all Kyma clusters to generate metrics. These metrics are sent to an SAP internal tool called Event Data Platform (EDP) as an event stream and used for billing information.
 
 ## Functionality
 The basic flow for KMC is as follows:
@@ -9,7 +15,7 @@ The basic flow for KMC is as follows:
  * KMC adds the runtimes to a queue to work through them. If an error occurs, KMC re-queues the affected runtime.
  * Information on PVCs, SVCs and Nodes is retrieved from SAP BTP, Kyma runtime (SKR).
  * This information is sent to EDP as an event stream.
- * For every process step, internal metrics are collected with [Prometheus](https://prometheus.io/docs/introduction/overview/) and alerts have been configured to trigger if any part of the functionality malfunctions. See the [metrics.md](metrics.md) file.
+ * For every process step, internal metrics are exposed with the [Prometheus client library](https://github.com/prometheus/client_golang). See the [metrics.md](metrics.md) file for exposed metrics.
 
 ## Usage
 
