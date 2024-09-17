@@ -94,7 +94,7 @@ lint-report-count-issue: ## Count lint issues
 lint-report-clean: ## Clean lint report
 	rm -f ./lint-report.json
 
-GOLANG_CI_LINT_VERSION ?= v1.57
+GOLANG_CI_LINT_VERSION ?= v1.61
 .PHONY: golangci-lint
 golangci-lint:
 	test -s $(LOCALBIN)/golangci-lint && $(LOCALBIN)/golangci-lint version | grep -q $(GOLANG_CI_LINT_VERSION) || \
