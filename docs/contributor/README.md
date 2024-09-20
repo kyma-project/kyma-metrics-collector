@@ -9,7 +9,7 @@ Every Kyma cluster is running in a hyperscaler account dedicated for the related
 [!arch](./assets/arch.drawio.svg)
 
 For that the following steps are undertaken periodically:
-1. KMC workers fetche the list of billable clusters from [Kyma Environment Broker (KEB)](https://github.com/kyma-project/kyma-environment-broker/tree/main) and adds them to a queue to work through them. If an error occurs, KMC re-queues the affected runtime. For every process step following, internal metrics are exposed with the [Prometheus client library](https://github.com/prometheus/client_golang). See the [metrics.md](./metrics.md) file for exposed metrics.
+1. KMC workers fetch the list of billable clusters from [Kyma Environment Broker (KEB)](https://github.com/kyma-project/kyma-environment-broker/tree/main) and adds them to a queue to work through them. If an error occurs, KMC re-queues the affected runtime. For every process step following, internal metrics are exposed with the [Prometheus client library](https://github.com/prometheus/client_golang). See the [metrics.md](./metrics.md) file for exposed metrics.
 2. KMC fetches the kubeconfig for every cluster from the control plane resources
 3. KMC retrieves specific Kubernetes resources from the APIServer of every cluster using the related kubeconfig
 4. KMC maps the retrieved Kubernetes resources to a Memory/CPU/Storage value and send it to EDP as event stream
