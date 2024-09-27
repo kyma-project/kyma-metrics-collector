@@ -6,6 +6,8 @@ changelog:
     - title: Enhancement
       labels:
         - kind/enhancement # Use it when you modify or improve an existing feature
+        - kind/docs
+        - kind/chore # Use it when you fix a bug
     - title: Fixed bugs
       labels:
         - kind/bug # Use it when you fix a bug
