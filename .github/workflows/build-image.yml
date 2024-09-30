@@ -1,0 +1,52 @@
+name: Build Image
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - "main"
+      - "release-[0-9]+.[0-9]+"
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'OWNERS'
+      - 'CODEOWNERS'
+  push:
+    branches:
+      - "main"
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+(-.*)?"
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'OWNERS'
+      - 'CODEOWNERS'
+jobs:
+  envs:
+    runs-on: ubuntu-latest
+    outputs:
+      tags: ${{ steps.create-tags.outputs.tags }}
+
+    steps:
+      - name: create tags
+        id: create-tags
+        run: |
+          if [[ $GITHUB_EVENT_NAME == 'push' ]]; then
+            echo 'TAGS=${{ github.ref_name }}' >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo 'tags<<TAGS'
+              echo 'PR-${{ github.event.pull_request.number }}'
+              echo '${{ github.event.pull_request.head.sha }}'
+              echo 'TAGS'
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+  build-image:
+    needs: envs
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    with:
+      name: kyma-metrics-collector
+      dockerfile: Dockerfile
+      context: .
+      tags: ${{ needs.envs.outputs.tags }}
