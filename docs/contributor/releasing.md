@@ -2,7 +2,7 @@
 
 ## Release Process
 
-This release process covers the steps to release new major and minor versions for the component.
+This release process covers the steps to release new major and minor versions for the Kyma Metrics Collector.
 
 1. Trigger a new release by manually triggering the "Create release" Github action and provide a proper release tag as argument, like "1.2.0". The action will perform the following steps:
   - Verify the tag
