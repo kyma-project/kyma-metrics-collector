@@ -1,30 +1,32 @@
-# Overview
+# Contributing to Kyma Metrics Collector
 
-The Kyma Control Plane is billing hyperscaler resources used by SKRs using the Kyma Metrics Collector being integrated with Unified Metering via EDP.
+## Overview
+
+To bill hyperscaler resources used by SKR clusters, the Kyma Control Plane (KCP) uses the Kyma Metrics Collector (KMC), which is integrated with Unified Metering using Event Data Platform (EDP).
 
 ## Architecture
 
-Every Kyma cluster is running in a hyperscaler account dedicated for the related global account. So it is shared with many cluster of the same customer. The hyperscaler account is payed by Kyma and individual resource usage gets charged to the customer. The bill to the end user contains one entry, listing the consumed Capacity Units (CU) without any further breakdown. The bill gets created by the Unified Metering service.
+Every SKR cluster runs in a hyperscaler account dedicated for the related global account, so it is shared between many clusters of the same customer. The hyperscaler account is payed by Kyma, and individual resource usage is charged to the customer. The bill to the end user contains one entry, listing the consumed capacity units (CU) without any further breakdown. The bill is created by the Unified Metering service.
 
 [!arch](./assets/arch.drawio.svg)
 
-For that the following steps are undertaken periodically:
-1. KMC workers fetch the list of billable clusters from [Kyma Environment Broker (KEB)](https://github.com/kyma-project/kyma-environment-broker/tree/main) and adds them to a queue to work through them. If an error occurs, KMC re-queues the affected runtime. For every process step following, internal metrics are exposed with the [Prometheus client library](https://github.com/prometheus/client_golang). See the [metrics.md](./metrics.md) file for exposed metrics.
-2. KMC fetches the kubeconfig for every cluster from the control plane resources
-3. KMC retrieves specific Kubernetes resources from the APIServer of every cluster using the related kubeconfig
-4. KMC maps the retrieved Kubernetes resources to a Memory/CPU/Storage value and send it to EDP as event stream
-5. EDP is calculating the consumed CUs based on the consumed CPU or storage by a fixed formula and sends the consumed CUs to Unified Metering
+The following steps happen periodically:
+1. KMC workers fetch the list of billable SKR clusters from [Kyma Environment Broker (KEB)](https://github.com/kyma-project/kyma-environment-broker/tree/main) and add them to a queue to work through them. If an error occurs, KMC re-queues the affected SKR cluster. For every process step, internal metrics are exposed with the [Prometheus client library](https://github.com/prometheus/client_golang). For details about the exposed metrics, see the [metrics.md](./metrics.md) file.
+2. KMC fetches the kubeconfig for every SKR cluster from the control plane resources.
+3. KMC fetches specific Kubernetes resources from the APIServer of every SKR cluster using the related kubeconfig.
+4. KMC maps the retrieved Kubernetes resources to a memory/CPU/storage value and sends the value to EDP as event stream.
+5. EDP calculates the consumed CUs based on the consumed CPU or storage with a fixed formula and sends the consumed CUs to Unified Metering.
 
-KMC retrieves the amount of following resource types from the SKR APIServer:
-- node type - via the labeled machine type it maps how much memory and cpu the node provides and maps it to an amount of CPU
-- storage - for every storage it determines the provisioned GB value
+KMC fetches the amount of the following resource types from the SKR APIServer:
+- node type - using the labeled machine type, KMC maps how much memory and CPU the node provides and maps it to an amount of CPU.
+- storage - for every storage, KMC determines the provisioned GB value.
 - services - not in use at the moment
 
 ## EDP interface
 
-The data send to EDP has to adhere to the following [schema](./assets/edp.json).
+The data sent to EDP must adhere to the schema you see in [edp.json](./assets/edp.json).
 
-An example payload looks like this:
+See the following example payload:
 
 ```json
 {

@@ -9,7 +9,7 @@
 ## Overview
 Kyma Metrics Collector (KMC) is a component that scrapes all Kyma clusters to generate metrics. These metrics are sent to an SAP internal tool called Event Data Platform (EDP) as an event stream and used for billing information.
 
-More information on functionality and architecture can be found [here](./docs/contributor/README.md).
+Learn more about functionality and architecture in the [Contributor README](./docs/contributor/README.md).
 
 ## Usage
 
