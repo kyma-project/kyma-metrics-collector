@@ -11,6 +11,9 @@ on:
       - edited
       - synchronize
       - labeled
+      - unlabeled
+      - milestoned
+
   workflow_dispatch:
 
 jobs:
@@ -21,7 +24,7 @@ jobs:
         if: always()
         run: |
           gh api --jq '.labels.[].name' /repos/${{ github.repository }}/pulls/${{ github.event.number }} | \
-          grep -q '^area/' || (echo "area label missing"; exit 1)
+          grep -q '^area\/' || (echo "area label missing"; exit 1)
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -29,11 +32,12 @@ jobs:
         if: always()
         run: |
           gh api --jq '.labels.[].name' /repos/${{ github.repository }}/pulls/${{ github.event.number }} | \
-          grep -q '^kind/' || (echo "kind label missing"; exit 1)
+          grep -q '^kind\/' || (echo "kind label missing"; exit 1)
         env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Check if kind label matches pr title prefix
+        if: always()
         run: |
           kind_label=$( gh api --jq '.labels.[].name' /repos/${{ github.repository }}/pulls/${{ github.event.number }} | grep '^kind/')
           kind_label_to_pr_title_prefix='{"kind/bug":"fix","kind/feature":"feat","kind/docs":"docs","kind/chore":"chore","kind/flaky-test":"test","kind/missing-test":"test","kind/failing-test":"test","kind/deps":"deps"}'
@@ -42,13 +46,23 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
+      - name: Check that there is no do-not-merge label
+        if: always()
+        run: |
+          labels=$(gh api --jq '.labels.[]' /repos/${{ github.repository }}/pulls/${{ github.event.number }} )
+          echo "Labels found: $( echo $labels | jq -r '.name' )"
+
+          ! echo "$labels" | jq 'select(.name | startswith("do-not-merge"))' | jq -n "input.name"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
   pr-title-check:
     runs-on: ubuntu-latest
     steps:
       - name: Validate title
-        uses: amannn/action-semantic-pull-request@0723387faaf9b38adef4775cd42cfd5155ed6017
+        uses: amannn/action-semantic-pull-request@47b15d52c5c30e94a17ec87eb8dd51ff5221fed9
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           types: |
             deps

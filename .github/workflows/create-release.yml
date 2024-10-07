@@ -72,7 +72,19 @@ jobs:
   run-unit-tests:
     name: Unit tests
     needs: validate-release
-    uses: kyma-project/eventing-tools/.github/workflows/unit-test-reusable.yml@main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: Run tests
+        run: make test
 
   bump-sec-scanners-config:
     name: Bump sec-scanners-config

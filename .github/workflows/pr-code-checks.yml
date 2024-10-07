@@ -1,0 +1,70 @@
+name: PR Code Checks
+
+on:
+  pull_request:
+    branches:
+      - "main"
+      - "release-*"
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+      - "sec-scanners-config.yaml"
+      - CODEOWNERS
+      - LICENSE
+      - LICENSES
+      - OWNERS
+      - OWNERS_ALIASES
+      - PROJECT
+  workflow_dispatch:
+
+env:
+  GITLEAKS_VERSION: 8.18.2
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: Run tests
+        run: make test
+
+  linting:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: Run linting
+        uses: golangci/golangci-lint-action@v6.1.0
+        with:
+          install-mode: binary
+          version: latest
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch gitleaks ${{ env.GITLEAKS_VERSION }}
+        run: curl -Lso gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v${{ env.GITLEAKS_VERSION }}/gitleaks_${{ env.GITLEAKS_VERSION }}_linux_x64.tar.gz && tar -xvzf ./gitleaks.tar.gz
+      - name: Run gitleaks
+        # Scan commits between base and head of the pull request
+        run: ./gitleaks detect --log-opts=${PULL_BASE_SHA}...${PULL_HEAD_SHA} --verbose --redact
+        env:
+          PULL_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PULL_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
