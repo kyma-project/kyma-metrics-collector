@@ -201,7 +201,6 @@ func TestGetFeature(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(fmt.Sprintf("%s-%s", tc.cloudProvider, tc.vmType), func(t *testing.T) {
 			gotFeature := providers.GetFeature(tc.cloudProvider, tc.vmType)
 			if tc.wantNil {

@@ -216,7 +216,6 @@ func TestIsProvisionedStatus(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// when
 			isProvisioned := isProvisionedStatus(tc.givenRuntime)
@@ -289,7 +288,6 @@ func TestIsTrackableState(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// when
 			isTrackable := isTrackableState(tc.givenRuntimeState)
@@ -336,7 +334,6 @@ func TestIsRuntimeTrackable(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// when
 			isRuntimeTrackable := isRuntimeTrackable(tc.givenRuntime)
@@ -620,7 +617,6 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// given
 			// reset metrics.
@@ -834,7 +830,6 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			// given
 			testStartTimeUnix := time.Now().Unix()
