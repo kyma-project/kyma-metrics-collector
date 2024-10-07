@@ -1,0 +1,18 @@
+name: Setup Golang
+description: Configures Golang with caching
+
+runs:
+  using: "composite"
+
+  steps:
+    # uses the go version from go.mod.
+    # Run this step after the checkout step!
+    - name: Setup Golang
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: "go.mod"
+        cache: true
+
+    - name: Install Tools
+      shell: bash
+      run: make install-tools
