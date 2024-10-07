@@ -10,12 +10,17 @@ Every SKR cluster runs in a hyperscaler account dedicated for the related global
 
 [!arch](./assets/arch.drawio.svg)
 
+The following step happens ones per every SKR registration and deregistration
+
+1. KEB registers/unregisters a new tenant in EDP
+
 The following steps happen periodically:
-1. KMC workers fetch the list of billable SKR clusters from [Kyma Environment Broker (KEB)](https://github.com/kyma-project/kyma-environment-broker/tree/main) and add them to a queue to work through them. If an error occurs, KMC re-queues the affected SKR cluster. For every process step, internal metrics are exposed with the [Prometheus client library](https://github.com/prometheus/client_golang). For details about the exposed metrics, see the [metrics.md](./metrics.md) file.
+
+2. KMC workers fetch the list of billable SKR clusters from [Kyma Environment Broker (KEB)](https://github.com/kyma-project/kyma-environment-broker/tree/main) and add them to a queue to work through them. If an error occurs, KMC re-queues the affected SKR cluster. For every process step, internal metrics are exposed with the [Prometheus client library](https://github.com/prometheus/client_golang). For details about the exposed metrics, see the [metrics.md](./metrics.md) file.
 2. KMC fetches the kubeconfig for every SKR cluster from the control plane resources.
-3. KMC fetches specific Kubernetes resources from the APIServer of every SKR cluster using the related kubeconfig.
-4. KMC maps the retrieved Kubernetes resources to a memory/CPU/storage value and sends the value to EDP as event stream.
-5. EDP calculates the consumed CUs based on the consumed CPU or storage with a fixed formula and sends the consumed CUs to Unified Metering.
+2. KMC fetches specific Kubernetes resources from the APIServer of every SKR cluster using the related kubeconfig.
+2. KMC maps the retrieved Kubernetes resources to a memory/CPU/storage value and sends the value to EDP as event stream.
+2. EDP calculates the consumed CUs based on the consumed CPU or storage with a fixed formula and sends the consumed CUs to Unified Metering.
 
 KMC fetches the amount of the following resource types from the SKR APIServer:
 - node type - using the labeled machine type, KMC maps how much memory and CPU the node provides and maps it to an amount of CPU.
