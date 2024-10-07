@@ -20,7 +20,8 @@ import (
 )
 
 const (
-	timeout = 10 * time.Second
+	timeout           = 10 * time.Second
+	defaultServerPort = 80
 )
 
 type NewRuntimeOpts func(*kebruntime.RuntimeDTO)
@@ -156,8 +157,9 @@ const (
 )
 
 func GenerateRandomAlphaString(length int) string {
+	const bufferScalingFactor = 1.3
 	result := make([]byte, length)
-	bufferSize := int(float64(length) * 1.3)
+	bufferSize := int(float64(length) * bufferScalingFactor)
 	for i, j, randomBytes := 0, 0, []byte{}; i < length; j++ {
 		if j%bufferSize == 0 {
 			randomBytes = secureRandomBytes(bufferSize)
@@ -344,7 +346,7 @@ func WithClusterIP(service *corev1.Service) {
 			{
 				Name:     "test",
 				Protocol: "tcp",
-				Port:     80,
+				Port:     defaultServerPort,
 			},
 		},
 	}

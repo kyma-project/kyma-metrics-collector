@@ -153,7 +153,7 @@ func TestPollKEBForRuntimes(t *testing.T) {
 			Config:     config,
 		}
 
-		queue := workqueue.NewDelayingQueue()
+		queue := workqueue.TypedNewDelayingQueue[string]()
 		cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 		newProcess = &Process{
 			KEBClient:      kebClient,
@@ -357,7 +357,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		provisionedSuccessfullySubAccIDs := []string{uuid.New().String(), uuid.New().String()}
 		provisionedFailedSubAccIDs := []string{uuid.New().String(), uuid.New().String()}
 		cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
-		queue := workqueue.NewDelayingQueue()
+		queue := workqueue.TypedNewDelayingQueue[string]()
 		p := Process{
 			Queue:  queue,
 			Cache:  cache,
@@ -365,7 +365,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		}
 		runtimesPage := new(kebruntime.RuntimesPage)
 
-		expectedQueue := workqueue.NewDelayingQueue()
+		expectedQueue := workqueue.TypedNewDelayingQueue[string]()
 		expectedCache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
 		runtimesPage, expectedCache, expectedQueue, err := AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage, provisionedSuccessfullySubAccIDs, expectedCache, expectedQueue)
@@ -398,7 +398,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		provisionedSuccessfullySubAccIDs := []string{uuid.New().String(), uuid.New().String()}
 		provisionedAndDeprovisionedSubAccIDs := []string{uuid.New().String(), uuid.New().String()}
 		cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
-		queue := workqueue.NewDelayingQueue()
+		queue := workqueue.TypedNewDelayingQueue[string]()
 		p := Process{
 			Queue:  queue,
 			Cache:  cache,
@@ -406,7 +406,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		}
 		runtimesPage := new(kebruntime.RuntimesPage)
 
-		expectedQueue := workqueue.NewDelayingQueue()
+		expectedQueue := workqueue.TypedNewDelayingQueue[string]()
 		expectedCache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
 		runtimesPage, expectedCache, expectedQueue, err := AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage, provisionedSuccessfullySubAccIDs, expectedCache, expectedQueue)
@@ -437,7 +437,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 
 		subAccID := uuid.New().String()
 		cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
-		queue := workqueue.NewDelayingQueue()
+		queue := workqueue.TypedNewDelayingQueue[string]()
 		oldShootName := fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5))
 
 		p := Process{
@@ -451,7 +451,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(err).Should(gomega.BeNil())
 
 		runtimesPageWithNoRuntimes := new(kebruntime.RuntimesPage)
-		expectedEmptyQueue := workqueue.NewDelayingQueue()
+		expectedEmptyQueue := workqueue.TypedNewDelayingQueue[string]()
 		expectedEmptyCache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
 		runtimesPageWithNoRuntimes.Data = []kebruntime.RuntimeDTO{}
@@ -476,7 +476,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 
 		subAccID := uuid.New().String()
 		cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
-		queue := workqueue.NewDelayingQueue()
+		queue := workqueue.TypedNewDelayingQueue[string]()
 		oldShootName := fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5))
 		newShootName := fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5))
 
@@ -491,7 +491,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(err).Should(gomega.BeNil())
 
 		runtimesPage := new(kebruntime.RuntimesPage)
-		expectedQueue := workqueue.NewDelayingQueue()
+		expectedQueue := workqueue.TypedNewDelayingQueue[string]()
 		expectedCache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
 		rntme := kmctesting.NewRuntimesDTO(subAccID, oldShootName, kmctesting.WithProvisionedAndDeprovisionedStatus(kebruntime.StateDeprovisioned))
@@ -646,7 +646,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 			g.Expect(err).Should(gomega.BeNil())
 
 			// init queue.
-			queue := workqueue.NewDelayingQueue()
+			queue := workqueue.TypedNewDelayingQueue[string]()
 			expectedCache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 			err = expectedCache.Add(tc.givenShoot1.SubAccountID, tc.givenShoot1, gocache.NoExpiration)
 			g.Expect(err).Should(gomega.BeNil())
@@ -858,7 +858,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 			// initiate process instance.
 			givenProcess := &Process{
 				EDPClient:         edpClient,
-				Queue:             workqueue.NewDelayingQueue(),
+				Queue:             workqueue.TypedNewDelayingQueue[string](),
 				SecretCacheClient: secretCacheClient.CoreV1(),
 				Cache:             cache,
 				Providers:         givenProviders,
@@ -978,7 +978,7 @@ func TestExecute(t *testing.T) {
 	g.Expect(err).Should(gomega.BeNil())
 
 	// Populate queue
-	queue := workqueue.NewDelayingQueue()
+	queue := workqueue.TypedNewDelayingQueue[string]()
 	queue.Add(subAccID)
 
 	g.Expect(err).Should(gomega.BeNil())
@@ -1076,7 +1076,7 @@ func NewRecord(subAccId, shootName, kubeconfig string) kmccache.Record {
 	}
 }
 
-func areQueuesEqual(src, dest workqueue.DelayingInterface) bool {
+func areQueuesEqual(src, dest workqueue.TypedDelayingInterface[string]) bool {
 	if src.Len() != dest.Len() {
 		return false
 	}
@@ -1090,7 +1090,7 @@ func areQueuesEqual(src, dest workqueue.DelayingInterface) bool {
 	return true
 }
 
-func AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage *kebruntime.RuntimesPage, successfulIDs []string, expectedCache *gocache.Cache, expectedQueue workqueue.DelayingInterface) (*kebruntime.RuntimesPage, *gocache.Cache, workqueue.DelayingInterface, error) {
+func AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage *kebruntime.RuntimesPage, successfulIDs []string, expectedCache *gocache.Cache, expectedQueue workqueue.TypedDelayingInterface[string]) (*kebruntime.RuntimesPage, *gocache.Cache, workqueue.TypedDelayingInterface[string], error) {
 	for _, successfulID := range successfulIDs {
 		shootID := kmctesting.GenerateRandomAlphaString(5)
 		shootName := fmt.Sprintf("shoot-%s", shootID)

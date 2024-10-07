@@ -86,7 +86,7 @@ func main() {
 
 	edpClient := edp.NewClient(edpConfig, logger)
 
-	queue := workqueue.NewDelayingQueue()
+	queue := workqueue.TypedNewDelayingQueue[string]()
 
 	kmcProcess := kmcprocess.Process{
 		KEBClient:         kebClient,

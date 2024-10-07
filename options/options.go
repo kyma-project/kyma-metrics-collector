@@ -10,6 +10,14 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+const (
+	DefaultScrapeInterval = 3 * time.Minute
+	DefaultWorkerPoolSize = 5
+	DefaultDebugPort      = 0
+	DefaultListenAddr     = 8080
+	DefaultLogLevel       = zapcore.InfoLevel
+)
+
 type Options struct {
 	KEBPollWaitDuration time.Duration
 	KEBReqTimeout       time.Duration
@@ -23,11 +31,11 @@ type Options struct {
 
 func ParseArgs() *Options {
 	var logLevel zapcore.Level
-	scrapeInterval := flag.Duration("scrape-interval", 3*time.Minute, "The wait duration of the interval between 2 executions of metrics generation")
-	workerPoolSize := flag.Int("worker-pool-size", 5, "The number of workers in the pool")
-	logLevelStr := flag.String("log-level", "info", "The log-level of the application. E.g. fatal, error, info, debug etc")
-	listenAddr := flag.Int("listen-addr", 8080, "The application starts server in this port to serve the metrics and healthz endpoints")
-	debugPort := flag.Int("debug-port", 0, "The custom port to debug when needed")
+	scrapeInterval := flag.Duration("scrape-interval", DefaultScrapeInterval, "The wait duration of the interval between 2 executions of metrics generation")
+	workerPoolSize := flag.Int("worker-pool-size", DefaultWorkerPoolSize, "The number of workers in the pool")
+	logLevelStr := flag.String("log-level", DefaultLogLevel.String(), "The log-level of the application. E.g. fatal, error, info, debug etc")
+	listenAddr := flag.Int("listen-addr", DefaultListenAddr, "The application starts server in this port to serve the metrics and healthz endpoints")
+	debugPort := flag.Int("debug-port", DefaultDebugPort, "The custom port to debug when needed")
 	flag.Parse()
 
 	err := logLevel.Set(*logLevelStr)

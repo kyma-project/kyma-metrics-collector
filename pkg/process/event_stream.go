@@ -26,6 +26,10 @@ const (
 	CCEE  = "sapconvergedcloud"
 )
 
+const (
+	GiB = 1 << (10 * 3) //nolint:mnd // 1 GiB = 1024^3 bytes
+)
+
 var nfsLabels = map[string]string{
 	"app.kubernetes.io/component":  "cloud-manager",
 	"app.kubernetes.io/part-of":    "kyma",
@@ -140,9 +144,8 @@ func getVolumeRoundedToFactor(size int64) int64 {
 func getSizeInGB(value *resource.Quantity) int64 {
 	// Converting to milli to normalize
 	milliVal := value.MilliValue()
-	gbUnit := math.Pow(2, 30)
 
 	// Converting back from milli to original
-	gVal := int64((float64(milliVal) / float64(gbUnit)) / 1000)
+	gVal := int64((float64(milliVal) / GiB) / 1000) //nolint:mnd // 1000 is the factor to convert from milli to original
 	return gVal
 }
