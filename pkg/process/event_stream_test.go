@@ -162,7 +162,6 @@ func TestParse(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			gotMetrics, err := tc.input.Parse(&tc.providers)
 			if !tc.expectedErr {

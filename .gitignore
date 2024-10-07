@@ -42,5 +42,4 @@ vendor/
 
 # Lint files
 lint-report.json
-.golangci.yaml
 .act

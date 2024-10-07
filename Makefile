@@ -31,13 +31,31 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-##@ Build Dependencies
+# Setting SHELL to bash allows bash commands to be executed by recipes.
+# Options are set to exit when a recipe line exits non-zero or a piped command fails.
+SHELL = /usr/bin/env bash -o pipefail
+.SHELLFLAGS = -ec
 
-## Location to install dependencies to
-LOCALBIN ?= $(shell pwd)/bin
-$(LOCALBIN):
-	mkdir -p $(LOCALBIN)
+SRC_ROOT := $(shell git rev-parse --show-toplevel)
+TOOLS_MOD_DIR    := $(SRC_ROOT)/internal/tools
+TOOLS_MOD_REGEX  := "\s+_\s+\".*\""
+TOOLS_PKG_NAMES  := $(shell grep -E $(TOOLS_MOD_REGEX) < $(TOOLS_MOD_DIR)/tools.go | tr -d " _\"")
+TOOLS_BIN_DIR    := $(SRC_ROOT)/bin
+# Strip off versions (e.g. /v2) from pkg names
+TOOLS_PKG_NAMES_CLEAN  := $(shell grep -E $(TOOLS_MOD_REGEX) < $(TOOLS_MOD_DIR)/tools.go | tr -d " _\"" | sed "s/\/v[0-9].*$$//")
+TOOLS_BIN_NAMES  := $(addprefix $(TOOLS_BIN_DIR)/, $(notdir $(TOOLS_PKG_NAMES_CLEAN)))
 
+.PHONY: install-tools
+install-tools: $(TOOLS_BIN_NAMES)
+
+$(TOOLS_BIN_DIR):
+	mkdir -p $@
+
+$(TOOLS_BIN_NAMES): $(TOOLS_BIN_DIR) $(TOOLS_MOD_DIR)/go.mod
+	cd $(TOOLS_MOD_DIR) && go build -o $@ -trimpath $(filter $(filter %/$(notdir $@),$(TOOLS_PKG_NAMES_CLEAN))%,$(TOOLS_PKG_NAMES))
+
+## Tools
+GOLANGCI_LINT    := $(TOOLS_BIN_DIR)/golangci-lint
 
 ##@ General
 
@@ -59,20 +77,20 @@ help: ## Display this help.
 ##@ Development
 
 .PHONY: lint
-lint: golangci-lint ## Check lint issues using `golangci-lint`
-	$(LOCALBIN)/golangci-lint run
+lint: $(GOLANGCI_LINT) ## Check lint issues using `golangci-lint`
+	$(TOOLS_BIN_DIR)/golangci-lint run
 
 .PHONY: lint-compact
-lint-compact: golangci-lint ## Check lint issues using `golangci-lint` in compact result format
-	$(LOCALBIN)/golangci-lint run --print-issued-lines=false
+lint-compact: $(GOLANGCI_LINT) ## Check lint issues using `golangci-lint` in compact result format
+	$(TOOLS_BIN_DIR)/golangci-lint run --print-issued-lines=false
 
 .PHONY: lint-fix
-lint-fix: golangci-lint ## Check and fix lint issues using `golangci-lint`
-	$(LOCALBIN)/golangci-lint run --fix 
+lint-fix: $(GOLANGCI_LINT) ## Check and fix lint issues using `golangci-lint`
+	$(TOOLS_BIN_DIR)/golangci-lint run --fix
 
 .PHONY: lint-report
-lint-report: golangci-lint ## Check lint issues using `golangci-lint` then export them to a file, then print the list of linters used
-	$(LOCALBIN)/golangci-lint run --issues-exit-code 0 --out-format json > ./lint-report.json
+lint-report: $(GOLANGCI_LINT)golangci-lint ## Check lint issues using `golangci-lint` then export them to a file, then print the list of linters used
+	$(TOOLS_BIN_DIR)/golangci-lint run --issues-exit-code 0 --out-format json > ./lint-report.json
 
 .PHONY: lint-report-issue-category
 lint-report-issue-category: ## Get lint issues categories
@@ -93,12 +111,6 @@ lint-report-count-issue: ## Count lint issues
 .PHONY: lint-report-clean
 lint-report-clean: ## Clean lint report
 	rm -f ./lint-report.json
-
-GOLANG_CI_LINT_VERSION ?= v1.61
-.PHONY: golangci-lint
-golangci-lint:
-	test -s $(LOCALBIN)/golangci-lint && $(LOCALBIN)/golangci-lint version | grep -q $(GOLANG_CI_LINT_VERSION) || \
-		GOBIN=$(LOCALBIN) go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANG_CI_LINT_VERSION)
 
 .PHONY: fmt
 fmt: ## Reformat files using `go fmt`
