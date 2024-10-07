@@ -29,7 +29,7 @@ import (
 type Process struct {
 	KEBClient         *keb.Client
 	EDPClient         *edp.Client
-	Queue             workqueue.DelayingInterface
+	Queue             workqueue.TypedDelayingInterface[string]
 	SecretCacheClient v1.CoreV1Interface
 	Cache             *cache.Cache
 	Providers         *Providers
