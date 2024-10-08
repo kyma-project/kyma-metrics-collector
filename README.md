@@ -7,7 +7,7 @@
 ![GitHub tag checks state](https://img.shields.io/github/checks-status/kyma-project/kyma-metrics-collector/main?label=kyma-metrics-collector&link=https%3A%2F%2Fgithub.com%2Fkyma-project%2Fkyma-metrics-collector%2Fcommits%2Fmain)
 
 ## Overview
-Kyma Metrics Collector (KMC) is a component that scrapes all Kyma clusters to generate metrics. These metrics are sent to an SAP internal tool called Event Data Platform (EDP) as an event stream and used for billing information.
+Kyma Metrics Collector (KMC) is a component that scrapes all Kyma clusters to generate metrics. These metrics are sent to an SAP-internal tool called Event Data Platform (EDP) as an event stream and used for billing information.
 
 Learn more about functionality and architecture in the [Contributor README](./docs/contributor/README.md).
 

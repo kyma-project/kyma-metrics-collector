@@ -6,13 +6,13 @@ To bill hyperscaler resources used by SKR clusters, the Kyma Control Plane (KCP)
 
 ## Architecture
 
-Every SKR cluster runs in a hyperscaler account dedicated for the related global account, so it is shared between many clusters of the same customer. The hyperscaler account is payed by Kyma, and individual resource usage is charged to the customer. The bill to the end user contains one entry, listing the consumed capacity units (CU) without any further breakdown. The bill is created by the Unified Metering service.
+Every SKR cluster runs in a hyperscaler account dedicated to the related global account, so it is shared between many clusters of the same customer. The hyperscaler account is paid by Kyma, and individual resource usage is charged to the customer. The bill to the end user contains one entry, listing the consumed capacity units (CU) without any further breakdown. The bill is created by the Unified Metering service.
 
 [!arch](./assets/arch.drawio.svg)
 
-The following step happens ones per every SKR registration and deregistration
+The following step happens once for every SKR registration and deregistration:
 
-1. KEB registers/unregisters a new tenant in EDP
+1. KEB registers/unregisters a new tenant in EDP.
 
 The following steps happen periodically:
 
@@ -25,7 +25,7 @@ The following steps happen periodically:
 KMC fetches the amount of the following resource types from the SKR APIServer:
 - node type - using the labeled machine type, KMC maps how much memory and CPU the node provides and maps it to an amount of CPU.
 - storage - for every storage, KMC determines the provisioned GB value.
-- services - not in use at the moment
+- services - this resource type is not used currently, it's dropped after fetching
 
 ## EDP interface
 
