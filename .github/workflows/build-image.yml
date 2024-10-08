@@ -21,6 +21,7 @@ on:
       - '**/*.md'
       - 'OWNERS'
       - 'CODEOWNERS'
+  merge_group:
 jobs:
   envs:
     runs-on: ubuntu-latest

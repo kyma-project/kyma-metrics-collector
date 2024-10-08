@@ -16,6 +16,7 @@ on:
       - OWNERS_ALIASES
       - PROJECT
   workflow_dispatch:
+  merge_group:
 
 env:
   GITLEAKS_VERSION: 8.18.2
