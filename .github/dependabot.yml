@@ -18,6 +18,16 @@ updates:
         patterns:
           - "k8s.io/*"
 
+  - package-ecosystem: "gomod" # See documentation for possible values
+    directory: "/internal/tools" # Location of package manifests
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "kind/chore"
+      - "area/ci"
+
 
   - package-ecosystem: "docker" # See documentation for possible values
     directory: "/" # Location of package manifests
@@ -28,6 +38,7 @@ updates:
     labels:
       - "kind/chore"
       - "area/dependency"
+
   - package-ecosystem: "github-actions" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:

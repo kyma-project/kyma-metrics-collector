@@ -15,6 +15,7 @@ on:
       - milestoned
 
   workflow_dispatch:
+  merge_group:
 
 jobs:
   pr-label-check:

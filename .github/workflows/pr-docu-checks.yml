@@ -6,6 +6,7 @@ on:
       - "main"
       - "release-*"
   workflow_dispatch:
+  merge_group:
 
 jobs:
   markdown-link-check:

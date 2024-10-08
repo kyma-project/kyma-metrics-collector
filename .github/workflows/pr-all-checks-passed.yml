@@ -11,6 +11,7 @@ on:
         labeled,
         milestoned,
       ]
+  merge_group:
 jobs:
   all-checks:
     runs-on: ubuntu-latest
