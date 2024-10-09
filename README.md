@@ -7,15 +7,9 @@
 ![GitHub tag checks state](https://img.shields.io/github/checks-status/kyma-project/kyma-metrics-collector/main?label=kyma-metrics-collector&link=https%3A%2F%2Fgithub.com%2Fkyma-project%2Fkyma-metrics-collector%2Fcommits%2Fmain)
 
 ## Overview
-Kyma Metrics Collector (KMC) is a component that scrapes all Kyma clusters to generate metrics. These metrics are sent to an SAP internal tool called Event Data Platform (EDP) as an event stream and used for billing information.
+Kyma Metrics Collector (KMC) is a component that scrapes all Kyma clusters to generate metrics. These metrics are sent to an SAP-internal tool called Event Data Platform (EDP) as an event stream and used for billing information.
 
-## Functionality
-The basic flow for KMC is as follows:
-* KMC workers get a list of runtimes from [Kyma Environment Broker (KEB)](https://github.com/kyma-project/kyma-environment-broker/tree/main).
- * KMC adds the runtimes to a queue to work through them. If an error occurs, KMC re-queues the affected runtime.
- * Information on PVCs, SVCs and Nodes is retrieved from SAP BTP, Kyma runtime (SKR).
- * This information is sent to EDP as an event stream.
- * For every process step, internal metrics are exposed with the [Prometheus client library](https://github.com/prometheus/client_golang). See the [metrics.md](metrics.md) file for exposed metrics.
+Learn more about functionality and architecture in the [Contributor README](./docs/contributor/README.md).
 
 ## Usage
 
@@ -53,255 +47,21 @@ Kyma Metrics Collector comes with the following environment variables:
 
 ## Development
 - Run a deployment in a currently configured k8s cluster:
->**NOTE:** In order to do this, you need a token from a secret `kcp-kyma-metrics-collector`.
-```
-ko apply -f dev/
-```
+  >**NOTE:** In order to do this, you need a token from a secret `kcp-kyma-metrics-collector`.
+  ```
+  ko apply -f dev/
+  ```
 
 - Run tests:
-```
-make test
-```
+  ```
+  make test
+  ```
 
 ### Troubleshooting
 - Check logs:
-```
-kubectl logs -f -n kcp-system $(kubectl get po -n kcp-system -l 'app=kmc-dev' -oname) kmc-dev
-```
-
-### Data collection
-
-Kyma Metrics Collector collects information about billable hyperscaler usage and sends it to EDP. This data has to adhere to the following schema:
-
-```json
-{
-  "name": "kmc-consumption-metrics",
-  "jsonSchema": {
-    "type": "object",
-    "title": "SKR Metering Schema",
-    "description": "SKR Metering Schema.",
-    "required": [
-      "timestamp",
-      "compute",
-      "networking"
-    ],
-    "properties": {
-      "timestamp": {
-        "$id": "#/properties/timestamp",
-        "type": "string",
-        "format": "date-time",
-        "title": "The Timestamp Schema",
-        "description": "Event Creation Timestamp",
-        "default": "",
-        "examples": ["2020-03-25T09:16:41+00:00"]
-      },
-      "compute": {
-        "$id": "#/properties/compute",
-        "type": "object",
-        "title": "The Compute Schema",
-        "description": "Contains Azure Compute metrics",
-        "default": {},
-        "examples": [
-          {
-            "provisioned_cpus": 24.0,
-            "provisioned_volumes": {
-              "size_gb_rounded": 192.0,
-              "count": 3.0,
-              "size_gb_total": 150.0
-            },
-            "vm_types": [
-              {
-                "name": "Standard_D8_v3",
-                "count": 3.0
-              },
-              {
-                "name": "Standard_D6_v3",
-                "count": 2.0
-              }
-            ],
-            "provisioned_ram_gb": 96.0
-          }
-        ],
-        "required": [
-          "vm_types",
-          "provisioned_cpus",
-          "provisioned_ram_gb",
-          "provisioned_volumes"
-        ],
-        "properties": {
-          "vm_types": {
-            "$id": "#/properties/compute/properties/vm_types",
-            "type": "array",
-            "title": "The Vm_types Schema",
-            "description": "A list of VM types that have been used for this SKR instance.",
-            "default": [],
-            "items": {
-              "$id": "#/properties/compute/properties/vm_types/items",
-              "type": "object",
-              "title": "The Items Schema",
-              "description": "The Azure instance type name and the provisioned quantity at the time of the event.",
-              "default": {},
-              "examples": [
-                {
-                  "name": "Standard_D8_v3",
-                  "count": 3.0
-                },
-                {
-                  "name": "Standard_D6_v3",
-                  "count": 2.0
-                }
-              ],
-              "required": ["name", "count"],
-              "properties": {
-                "name": {
-                  "$id": "#/properties/compute/properties/vm_types/items/properties/name",
-                  "type": "string",
-                  "title": "The Name Schema",
-                  "description": "Name of the instance type",
-                  "default": "",
-                  "examples": ["Standard_D8_v3"]
-                },
-                "count": {
-                  "$id": "#/properties/compute/properties/vm_types/items/properties/count",
-                  "type": "integer",
-                  "title": "The Count Schema",
-                  "description": "Quantity of the instances",
-                  "default": 0,
-                  "examples": [3]
-                }
-              }
-            }
-          },
-          "provisioned_cpus": {
-            "$id": "#/properties/compute/properties/provisioned_cpus",
-            "type": "integer",
-            "title": "The Provisioned_cpus Schema",
-            "description": "The total sum of all CPUs provisioned from all instances (number of instances *  number of CPUs per instance)",
-            "default": 0,
-            "examples": [24]
-          },
-          "provisioned_ram_gb": {
-            "$id": "#/properties/compute/properties/provisioned_ram_gb",
-            "type": "integer",
-            "title": "The Provisioned_ram_gb Schema",
-            "description": "The total sum of Memory (RAM) of all provisioned instances (number of instances * number of GB RAM per instance).",
-            "default": 0,
-            "examples": [96]
-          },
-          "provisioned_volumes": {
-            "$id": "#/properties/compute/properties/provisioned_volumes",
-            "type": "object",
-            "title": "The Provisioned_volumes Schema",
-            "description": "Volumes (Disk) provisioned(excluding the Node volumes).",
-            "default": {},
-            "examples": [
-              {
-                "size_gb_rounded": 192.0,
-                "count": 3.0,
-                "size_gb_total": 150.0
-              }
-            ],
-            "required": ["size_gb_total", "count", "size_gb_rounded"],
-            "properties": {
-              "size_gb_total": {
-                "$id": "#/properties/compute/properties/provisioned_volumes/properties/size_gb_total",
-                "type": "integer",
-                "title": "The Size_gb_total Schema",
-                "description": "The total GB disk space requested by a kyma instance",
-                "default": 0,
-                "examples": [150]
-              },
-              "count": {
-                "$id": "#/properties/compute/properties/provisioned_volumes/properties/count",
-                "type": "integer",
-                "title": "The Count Schema",
-                "description": "The number of disks provisioned.",
-                "default": 0,
-                "examples": [3]
-              },
-              "size_gb_rounded": {
-                "$id": "#/properties/compute/properties/provisioned_volumes/properties/size_gb_rounded",
-                "type": "integer",
-                "title": "The Size_gb_rounded Schema",
-                "description": "Azure charges disk in 32GB blocks. If one provisions e.g. 16GB, he still pays 32 GB. This value here is rounding up each volume to the next y 32 dividable number and sums these values up.",
-                "default": 0,
-                "examples": [192]
-              }
-            }
-          }
-        }
-      },
-      "networking": {
-        "$id": "#/properties/networking",
-        "type": "object",
-        "title": "The Networking Schema",
-        "description": "Some networking controlling data.",
-        "default": {},
-        "examples": [
-          {
-            "provisioned_vnets": 2.0,
-            "provisioned_ips": 3.0
-          }
-        ],
-        "required": [
-          "provisioned_vnets",
-          "provisioned_ips"
-        ],
-        "properties": {
-          "provisioned_vnets": {
-            "$id": "#/properties/networking/properties/provisioned_vnets",
-            "type": "integer",
-            "title": "The Provisioned_vnets Schema",
-            "description": "Number of virtual networks",
-            "default": 0,
-            "examples": [2]
-          },
-          "provisioned_ips": {
-            "$id": "#/properties/networking/properties/provisioned_ips",
-            "type": "integer",
-            "title": "The Provisioned_ips Schema",
-            "description": "Number of IPs",
-            "default": 0,
-            "examples": [3]
-          }
-        }
-      }
-    }
-  },
-  "version": "1",
-  "eventTimeField": "event.timestamp"
-}
-```
-
-See the example of data sent to EDP:
-
-```json
-{
-  "compute": {
-    "vm_types": [
-      {
-        "name": "Standard_D8_v3",
-        "count": 3
-      },
-      {
-        "name": "Standard_D6_v3",
-        "count": 2
-      }
-    ],
-    "provisioned_cpus": 24,
-    "provisioned_ram_gb": 96,
-    "provisioned_volumes": {
-      "size_gb_total": 150,
-      "count": 3,
-      "size_gb_rounded": 192
-    }
-  },
-  "networking": {
-    "provisioned_vnets": 2,
-    "provisioned_ips": 3
-  }
-}
-```
+  ```
+  kubectl logs -f -n kcp-system $(kubectl get po -n kcp-system -l 'app=kmc-dev' -oname) kmc-dev
+  ```
 
 ## Contributing
 
