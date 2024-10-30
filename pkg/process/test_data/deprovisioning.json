@@ -1,0 +1,56 @@
+{
+  "instanceID": "E700D3E0-0274-405C-86CA-B56FB3E25149",
+  "runtimeID": "064894bb-8443-4728-ba66-b11cb1da2400",
+  "globalAccountID": "dacce822-b68b-4cb8-9600-2ad630a10a17",
+  "subscriptionGlobalAccountID": "",
+  "subAccountID": "a434d733-5dec-45ad-94b0-baae3533ce5f",
+  "region": "europe-west3",
+  "subAccountRegion": "cf-eu12",
+  "shootName": "c-354a9c2",
+  "serviceClassID": "47c9dcbf-ff30-448e-ab36-d3bad66ba281",
+  "serviceClassName": "kymaruntime",
+  "servicePlanID": "ca6e5357-707f-4565-bbbd-b3ab732597c6",
+  "servicePlanName": "gcp",
+  "provider": "GCP",
+  "status": {
+    "createdAt": "2024-10-30T13:07:16.309896Z",
+    "modifiedAt": "2024-10-30T13:57:57.551859Z",
+    "state": "deprovisioning",
+    "provisioning": {
+      "state": "succeeded",
+      "description": "Processing finished",
+      "createdAt": "2024-10-30T13:07:16.305028Z",
+      "updatedAt": "2024-10-30T13:21:05.784989Z",
+      "operationID": "6b2ff704-60ab-4c70-8b13-c88e224cf2d1",
+      "finishedStages": [
+        "start",
+        "create_runtime",
+        "check_kyma",
+        "create_kyma_resource"
+      ],
+      "runtimeVersion": ""
+    },
+    "deprovisioning": {
+      "state": "in progress",
+      "description": "Operation created",
+      "createdAt": "2024-10-30T13:57:36.957203Z",
+      "updatedAt": "2024-10-30T13:57:57.551859Z",
+      "operationID": "6a4e3458-98a2-445a-b91e-84d2355a907b",
+      "finishedStages": [
+        "Initialisation",
+        "BTPOperator_Cleanup",
+        "EDP_Deregistration",
+        "Delete_Kyma_Resource",
+        "Check_Kyma_Resource_Deleted",
+        "Delete_Runtime_Resource",
+        "Check_RuntimeResource_Deletion",
+        "Delete_GardenerCluster",
+        "Check_GardenerCluster_Deleted",
+        "Remove_Runtime"
+      ],
+      "runtimeVersion": ""
+    }
+  },
+  "userID": "i.was@anonymous.once",
+  "avsInternalEvaluationID": 0
+}
