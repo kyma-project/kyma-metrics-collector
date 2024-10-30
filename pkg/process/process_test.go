@@ -1146,29 +1146,10 @@ func NewMetric() *edp.ConsumptionMetrics {
 	}
 }
 
-// Helper function to check if a cluster is trackable.
-func isClusterTrackable(runtime *kebruntime.RuntimeDTO) bool {
-	// Check if the cluster is in a trackable state
-	trackableStates := map[kebruntime.State]bool{
-		"succeeded": true,
-		"error":     true,
-		"upgrading": true,
-		"updating":  true,
-	}
-
-	if trackableStates[runtime.Status.State] ||
-		(runtime.Status.Provisioning != nil &&
-			runtime.Status.Provisioning.State == "succeeded" &&
-			runtime.Status.Deprovisioning == nil) {
-		return true
-	}
-	return false
-}
-
 // Helper function to check the value of the `kmc_process_fetched_clusters` metric using `ToFloat64`.
 func verifyKEBAllClustersCountMetricValue(expectedValue int, g *gomega.WithT, runtimeData kebruntime.RuntimeDTO) bool {
 	return g.Eventually(func() int {
-		trackable := isClusterTrackable(&runtimeData)
+		trackable := isRuntimeTrackable(runtimeData)
 
 		counter, err := kebFetchedClusters.GetMetricWithLabelValues(
 			strconv.FormatBool(trackable),
@@ -1182,4 +1163,50 @@ func verifyKEBAllClustersCountMetricValue(expectedValue int, g *gomega.WithT, ru
 		// check the value of the metric
 		return int(testutil.ToFloat64(counter))
 	}).Should(gomega.Equal(expectedValue))
+}
+
+func loadRuntimeDTOFromFile(t *testing.T, path string) kebruntime.RuntimeDTO {
+	t.Helper()
+
+	data, err := kmctesting.LoadFixtureFromFile(path)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var runtimeDTO kebruntime.RuntimeDTO
+
+	err = json.Unmarshal(data, &runtimeDTO)
+	if err != nil {
+		t.Error(err)
+	}
+
+	return runtimeDTO
+}
+
+func Test_isRuntimeTrackable(t *testing.T) {
+	type args struct {
+		runtime kebruntime.RuntimeDTO
+	}
+
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "deprovisioning runtime is not trackable",
+			args: args{
+				runtime: loadRuntimeDTOFromFile(t, "test_data/deprovisioning.json"),
+			},
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isRuntimeTrackable(tt.args.runtime); got != tt.want {
+				t.Errorf("isRuntimeTrackable() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

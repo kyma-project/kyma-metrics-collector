@@ -29,7 +29,7 @@ var (
 			Namespace: namespace,
 			Subsystem: subsystem,
 			Name:      "sub_account_total",
-			Help:      "Number of subaccounts processed, including successful and failed.",
+			Help:      "Number of processings per subaccount, including successful and failed.",
 		},
 		[]string{successLabel, shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
 	)
