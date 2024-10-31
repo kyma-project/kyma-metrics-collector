@@ -44,5 +44,6 @@ pr_link=$(gh pr create -B main --title "chore: bump sec-scanners-config.yaml to 
 echo "Link for created PR: ${pr_link}"
 
 pr_number=$(echo "$pr_link" | awk -F'/' '{print $NF}')
-gh pr edit $pr_number --add-label kind/enhancement
+gh pr edit $pr_number --add-label kind/chore
+gh pr edit $pr_number --add-label area/release
 echo "$pr_number"
