@@ -323,13 +323,18 @@ func TestIsRuntimeTrackable(t *testing.T) {
 			expectedBool: true,
 		},
 		{
-			name:         "should return true when runtime is in non-trackable state and provisioned status",
+			name:         "should return false when runtime is in non-trackable state and provisioned status",
 			givenRuntime: kmctesting.NewRuntimesDTO(subAccountID, shootName, kmctesting.WithProvisioningSucceededStatus(kebruntime.StateDeprovisioning)),
-			expectedBool: true,
+			expectedBool: false,
 		},
 		{
 			name:         "should return false when runtime is in non-trackable state and deprovisioned status",
 			givenRuntime: kmctesting.NewRuntimesDTO(subAccountID, shootName, kmctesting.WithProvisionedAndDeprovisionedStatus(kebruntime.StateDeprovisioning)),
+			expectedBool: false,
+		},
+		{
+			name:         "should return false when runtime state has status deprovisioning",
+			givenRuntime: kmctesting.NewRuntimesDTO(subAccountID, shootName, kmctesting.WithState(kebruntime.StateDeprovisioning)),
 			expectedBool: false,
 		},
 	}
@@ -1146,29 +1151,10 @@ func NewMetric() *edp.ConsumptionMetrics {
 	}
 }
 
-// Helper function to check if a cluster is trackable.
-func isClusterTrackable(runtime *kebruntime.RuntimeDTO) bool {
-	// Check if the cluster is in a trackable state
-	trackableStates := map[kebruntime.State]bool{
-		"succeeded": true,
-		"error":     true,
-		"upgrading": true,
-		"updating":  true,
-	}
-
-	if trackableStates[runtime.Status.State] ||
-		(runtime.Status.Provisioning != nil &&
-			runtime.Status.Provisioning.State == "succeeded" &&
-			runtime.Status.Deprovisioning == nil) {
-		return true
-	}
-	return false
-}
-
 // Helper function to check the value of the `kmc_process_fetched_clusters` metric using `ToFloat64`.
 func verifyKEBAllClustersCountMetricValue(expectedValue int, g *gomega.WithT, runtimeData kebruntime.RuntimeDTO) bool {
 	return g.Eventually(func() int {
-		trackable := isClusterTrackable(&runtimeData)
+		trackable := isRuntimeTrackable(runtimeData)
 
 		counter, err := kebFetchedClusters.GetMetricWithLabelValues(
 			strconv.FormatBool(trackable),

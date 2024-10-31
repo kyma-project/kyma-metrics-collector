@@ -231,9 +231,11 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 		// SubAccountID is not trackable anymore as there is no runtime
 		if errors.Is(err, errSubAccountIDNotTrackable) {
 			p.namedLoggerWithRuntime(record).With(log.KeyRequeue, log.ValueFalse).With(log.KeySubAccountID, subAccountID).
-				With(log.KeyWorkerID, identifier).Info("subAccountID requeued")
+				With(log.KeyWorkerID, identifier).Info("subAccountID NOT requeued")
+
 			return
 		}
+
 		p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
 		p.namedLoggerWithRuntime(record).With(log.KeyRequeue, log.ValueTrue).With(log.KeySubAccountID, subAccountID).
 			With(log.KeyWorkerID, identifier).Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
@@ -376,10 +378,15 @@ func isProvisionedStatus(runtime kebruntime.RuntimeDTO) bool {
 		runtime.Status.Deprovisioning == nil {
 		return true
 	}
+
 	return false
 }
 
 func isRuntimeTrackable(runtime kebruntime.RuntimeDTO) bool {
+	if runtime.Status.State == kebruntime.StateDeprovisioning {
+		return false
+	}
+
 	return isTrackableState(runtime.Status.State) || isProvisionedStatus(runtime)
 }
 
@@ -507,7 +514,7 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 					Error("bad item from cache, could not cast to a record obj")
 			} else {
 				p.namedLogger().With(log.KeySubAccountID, sAccID).With(log.KeyRuntimeID, record.RuntimeID).
-					Debug("SubAccount is not trackable anymore hence deleting it from cache")
+					Info("SubAccount is not trackable anymore, deleting it from cache")
 			}
 			// delete metrics for old shoot name.
 			if success := deleteMetrics(record); !success {
