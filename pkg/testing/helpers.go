@@ -53,6 +53,12 @@ func WithProvisioningSucceededStatus(statusState kebruntime.State) func(*kebrunt
 	}
 }
 
+func WithState(state kebruntime.State) func(runtime *kebruntime.RuntimeDTO) {
+	return func(runtime *kebruntime.RuntimeDTO) {
+		runtime.Status.State = state
+	}
+}
+
 func WithProvisioningFailedState(runtime *kebruntime.RuntimeDTO) {
 	runtime.Status.Provisioning = &kebruntime.Operation{
 		State: string(kebruntime.StateFailed),

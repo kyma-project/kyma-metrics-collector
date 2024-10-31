@@ -332,6 +332,11 @@ func TestIsRuntimeTrackable(t *testing.T) {
 			givenRuntime: kmctesting.NewRuntimesDTO(subAccountID, shootName, kmctesting.WithProvisionedAndDeprovisionedStatus(kebruntime.StateDeprovisioning)),
 			expectedBool: false,
 		},
+		{
+			name:         "should return false when runtime state has status deprovisioning",
+			givenRuntime: kmctesting.NewRuntimesDTO(subAccountID, shootName, kmctesting.WithState(kebruntime.StateDeprovisioning)),
+			expectedBool: false,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1181,32 +1186,4 @@ func loadRuntimeDTOFromFile(t *testing.T, path string) kebruntime.RuntimeDTO {
 	}
 
 	return runtimeDTO
-}
-
-func Test_isRuntimeTrackable(t *testing.T) {
-	type args struct {
-		runtime kebruntime.RuntimeDTO
-	}
-
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "deprovisioning runtime is not trackable",
-			args: args{
-				runtime: loadRuntimeDTOFromFile(t, "test_data/deprovisioning.json"),
-			},
-			want: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := isRuntimeTrackable(tt.args.runtime); got != tt.want {
-				t.Errorf("isRuntimeTrackable() = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }
