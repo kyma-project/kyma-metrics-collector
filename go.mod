@@ -15,8 +15,8 @@ require (
 	github.com/prometheus/client_golang v1.20.4
 	github.com/prometheus/client_model v0.6.1
 	go.uber.org/zap v1.27.0
-	k8s.io/api v0.31.1
-	k8s.io/apimachinery v0.31.1
+	k8s.io/api v0.31.2
+	k8s.io/apimachinery v0.31.2
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 )
 
