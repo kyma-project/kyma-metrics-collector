@@ -323,9 +323,9 @@ func TestIsRuntimeTrackable(t *testing.T) {
 			expectedBool: true,
 		},
 		{
-			name:         "should return true when runtime is in non-trackable state and provisioned status",
+			name:         "should return false when runtime is in non-trackable state and provisioned status",
 			givenRuntime: kmctesting.NewRuntimesDTO(subAccountID, shootName, kmctesting.WithProvisioningSucceededStatus(kebruntime.StateDeprovisioning)),
-			expectedBool: true,
+			expectedBool: false,
 		},
 		{
 			name:         "should return false when runtime is in non-trackable state and deprovisioned status",
