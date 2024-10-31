@@ -1169,21 +1169,3 @@ func verifyKEBAllClustersCountMetricValue(expectedValue int, g *gomega.WithT, ru
 		return int(testutil.ToFloat64(counter))
 	}).Should(gomega.Equal(expectedValue))
 }
-
-func loadRuntimeDTOFromFile(t *testing.T, path string) kebruntime.RuntimeDTO {
-	t.Helper()
-
-	data, err := kmctesting.LoadFixtureFromFile(path)
-	if err != nil {
-		t.Error(err)
-	}
-
-	var runtimeDTO kebruntime.RuntimeDTO
-
-	err = json.Unmarshal(data, &runtimeDTO)
-	if err != nil {
-		t.Error(err)
-	}
-
-	return runtimeDTO
-}
