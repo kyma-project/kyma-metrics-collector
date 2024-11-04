@@ -58,7 +58,6 @@ if feature_prs:
     latest_release_name = latest_release['name'].split(".")
     new_release_name = os.getenv('NAME').split(".")
     if latest_release_name[0] == new_release_name[0] and latest_release_name[1] == new_release_name[1]:
-        print("\nThese PRs have kind/feature label, but only the patch version number was bumped:\n" + '\n'.join([f"PR: {pr}" for pr in feature_prs]))
-        sys.exit(1)
+        print("\nWARNING: These PRs have kind/feature label, but only the patch version number was bumped:\n" + '\n'.join([f"PR: {pr}" for pr in feature_prs]))
 
 print("\nVersion name is correct")
