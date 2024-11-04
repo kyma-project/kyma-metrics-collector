@@ -160,15 +160,15 @@ jobs:
     outputs:
       release_id: ${{ steps.create-draft.outputs.release_id }}
 
-  wait-for-prow-jobs:
-    name: Wait for prow jobs
+  wait-for-build-jobs:
+    name: Wait for build jobs
     needs: [ create-draft, bump-sec-scanners-config ]
     runs-on: ubuntu-latest
 
     steps:
       # wait for the build to succeed so that the manager image is available
       - name: Wait for the image to be available in the registry
-        run: "./hack/await_image.sh"
+        run: "./hack/scripts/await_image.sh"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           IMAGE_REPO: "europe-docker.pkg.dev/kyma-project/prod/kyma-metrics-collector"
@@ -177,7 +177,7 @@ jobs:
 
   check-prerequisites:
     name: Check release pre-requisites
-    needs: [ create-draft, run-unit-tests, wait-for-prow-jobs]
+    needs: [ create-draft, run-unit-tests, wait-for-build-jobs]
     runs-on: ubuntu-latest
 
     steps:
