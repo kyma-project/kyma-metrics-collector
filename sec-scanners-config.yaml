@@ -1,7 +1,7 @@
 module-name: kyma-metrics-collector
-rc-tag: 1.2.0
+rc-tag: 1.2.1
 protecode:
-  - europe-docker.pkg.dev/kyma-project/prod/kyma-metrics-collector:1.2.0
+  - europe-docker.pkg.dev/kyma-project/prod/kyma-metrics-collector:1.2.1
 whitesource:
   language: golang-mod
   subprojects: false
