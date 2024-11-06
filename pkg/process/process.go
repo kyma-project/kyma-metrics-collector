@@ -226,19 +226,29 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 
 	record, isOldMetricValid, err := p.getRecordWithOldOrNewMetric(identifier, subAccountID)
 	if err != nil {
-		p.namedLoggerWithRuntime(record).With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).With(log.KeyWorkerID, identifier).
-			With(log.KeySubAccountID, subAccountID).Error("no metric found/generated for subaccount")
+		p.namedLoggerWithRecord(record).
+			With(log.KeyResult, log.ValueFail).
+			With(log.KeyError, err.Error()).
+			With(log.KeyWorkerID, identifier).
+			With(log.KeySubAccountID, subAccountID).
+			Error("no metric found/generated for subaccount")
 		// SubAccountID is not trackable anymore as there is no runtime
 		if errors.Is(err, errSubAccountIDNotTrackable) {
-			p.namedLoggerWithRuntime(record).With(log.KeyRequeue, log.ValueFalse).With(log.KeySubAccountID, subAccountID).
-				With(log.KeyWorkerID, identifier).Info("subAccountID NOT requeued")
+			p.namedLoggerWithRecord(record).
+				With(log.KeyRequeue, log.ValueFalse).
+				With(log.KeyWorkerID, identifier).
+				With(log.KeySubAccountID, subAccountID).
+				Info("subAccountID NOT requeued")
 
 			return
 		}
 
 		p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
-		p.namedLoggerWithRuntime(record).With(log.KeyRequeue, log.ValueTrue).With(log.KeySubAccountID, subAccountID).
-			With(log.KeyWorkerID, identifier).Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
+		p.namedLoggerWithRecord(record).
+			With(log.KeyRequeue, log.ValueTrue).
+			With(log.KeySubAccountID, subAccountID).
+			With(log.KeyWorkerID, identifier).
+			Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
 
 		// record metric.
 		if oldRecord := p.getSubAccountFromCache(subAccountID); oldRecord != nil {
@@ -252,13 +262,19 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	// Convert metric to JSON
 	payload, err = json.Marshal(*record.Metric)
 	if err != nil {
-		p.namedLoggerWithRuntime(record).With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).
-			With(log.KeySubAccountID, subAccountID).With(log.KeyWorkerID, identifier).
+		p.namedLoggerWithRecord(record).
+			With(log.KeyResult, log.ValueFail).
+			With(log.KeyError, err.Error()).
+			With(log.KeyWorkerID, identifier).
+			With(log.KeySubAccountID, subAccountID).
 			Error("json.Marshal metric for subAccountID")
 
 		p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
-		p.namedLoggerWithRuntime(record).With(log.KeyResult, log.ValueSuccess).With(log.KeyRequeue, log.ValueTrue).
-			With(log.KeySubAccountID, subAccountID).With(log.KeyWorkerID, identifier).
+		p.namedLoggerWithRecord(record).
+			With(log.KeyResult, log.ValueSuccess).
+			With(log.KeyRequeue, log.ValueTrue).
+			With(log.KeyWorkerID, identifier).
+			With(log.KeySubAccountID, subAccountID).
 			Debugf("requeued subAccountID after %v", p.ScrapeInterval)
 
 		// record metric.
@@ -270,17 +286,22 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 
 	// Send metrics to EDP
 	// Note: EDP refers SubAccountID as tenant
-	p.namedLoggerWithRuntime(record).With(log.KeySubAccountID, subAccountID).
-		With(log.KeyWorkerID, identifier).Debugf("sending EventStreamToEDP: payload: %s", string(payload))
+	p.namedLoggerWithRecord(record).
+		With(log.KeyWorkerID, identifier).
+		Debugf("sending EventStreamToEDP: payload: %s", string(payload))
 	err = p.sendEventStreamToEDP(subAccountID, payload)
 	if err != nil {
-		p.namedLoggerWithRuntime(record).With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).
-			With(log.KeySubAccountID, subAccountID).With(log.KeyWorkerID, identifier).
+		p.namedLoggerWithRecord(record).
+			With(log.KeyResult, log.ValueFail).
+			With(log.KeyError, err.Error()).
+			With(log.KeyWorkerID, identifier).
 			Errorf("send metric to EDP for event-stream: %s", string(payload))
 
 		p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
-		p.namedLoggerWithRuntime(record).With(log.KeyResult, log.ValueSuccess).With(log.KeyRequeue, log.ValueTrue).
-			With(log.KeySubAccountID, subAccountID).With(log.KeyWorkerID, identifier).
+		p.namedLoggerWithRecord(record).
+			With(log.KeyResult, log.ValueSuccess).
+			With(log.KeyRequeue, log.ValueTrue).
+			With(log.KeyWorkerID, identifier).
 			Debugf("requeued subAccountID after %v", p.ScrapeInterval)
 
 		// record metric.
@@ -289,8 +310,10 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 		// Nothing to do further hence continue
 		return
 	}
-	p.namedLoggerWithRuntime(record).With(log.KeyResult, log.ValueSuccess).With(log.KeySubAccountID, subAccountID).
-		With(log.KeyWorkerID, identifier).Infof("sent event stream, shoot: %s", record.ShootName)
+	p.namedLoggerWithRecord(record).
+		With(log.KeyResult, log.ValueSuccess).
+		With(log.KeyWorkerID, identifier).
+		Infof("sent event stream, shoot: %s", record.ShootName)
 
 	// record metrics.
 	recordSubAccountProcessed(true, *record)
@@ -299,8 +322,10 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	// update cache.
 	if !isOldMetricValid {
 		p.Cache.Set(record.SubAccountID, *record, cache.NoExpiration)
-		p.namedLoggerWithRuntime(record).With(log.KeyResult, log.ValueSuccess).With(log.KeySubAccountID, record.SubAccountID).
-			With(log.KeyWorkerID, identifier).Debug("saved metric")
+		p.namedLoggerWithRecord(record).
+			With(log.KeyResult, log.ValueSuccess).
+			With(log.KeyWorkerID, identifier).
+			Debug("saved metric")
 		resetOldMetricsPublishedGauge(*record)
 	} else {
 		// record metric.
@@ -308,8 +333,10 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	}
 
 	// Requeue the subAccountID anyway
-	p.namedLoggerWithRuntime(record).With(log.KeyResult, log.ValueSuccess).With(log.KeyRequeue, log.ValueTrue).
-		With(log.KeySubAccountID, subAccountID).With(log.KeyWorkerID, identifier).
+	p.namedLoggerWithRecord(record).
+		With(log.KeyResult, log.ValueSuccess).
+		With(log.KeyRequeue, log.ValueTrue).
+		With(log.KeyWorkerID, identifier).
 		Debugf("requeued subAccountID after %v", p.ScrapeInterval)
 	p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
 }
@@ -319,12 +346,13 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 func (p *Process) getRecordWithOldOrNewMetric(identifier int, subAccountID string) (*kmccache.Record, bool, error) {
 	record, err := p.generateRecordWithNewMetrics(identifier, subAccountID)
 	if err != nil {
+
 		if errors.Is(err, errSubAccountIDNotTrackable) {
-			p.namedLoggerWithRuntime(&record).With(log.KeySubAccountID, subAccountID).
+			p.namedLoggerWithRecord(&record).
 				With(log.KeyWorkerID, identifier).Info("subAccountID is not trackable anymore, skipping the fetch of old metric")
 			return nil, false, err
 		}
-		p.namedLoggerWithRuntime(&record).With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).With(log.KeySubAccountID, subAccountID).
+		p.namedLoggerWithRecord(&record).With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).
 			Error("generate new metric for subAccount")
 		// Get old data
 		oldRecord, err := p.getOldRecordIfMetricExists(subAccountID)
@@ -414,13 +442,11 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 		// Get provisioning and deprovisioning states if available otherwise return empty string for logging.
 		provisioning := getOrDefault(runtime.Status.Provisioning, "")
 		deprovisioning := getOrDefault(runtime.Status.Deprovisioning, "")
-		p.namedLogger().
-			With(log.KeySubAccountID, runtime.SubAccountID).
-			With(log.KeyRuntimeID, runtime.RuntimeID).
+		p.namedLoggerWithRuntime(runtime).
 			With(log.KeyRuntimeState, runtime.Status.State).
 			With(log.KeyProvisioningStatus, provisioning).
 			With(log.KeyDeprovisioningStatus, deprovisioning).
-			Info("Runtime state")
+			Debug("Runtime state")
 
 		if isRuntimeTrackable(runtime) {
 			newRecord := kmccache.Record{
@@ -447,14 +473,11 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 			if !isFoundInCache {
 				err := p.Cache.Add(runtime.SubAccountID, newRecord, cache.NoExpiration)
 				if err != nil {
-					p.namedLogger().With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).
-						With(log.KeySubAccountID, runtime.SubAccountID).With(log.KeyRuntimeID, runtime.RuntimeID).
-						Error("Failed to add subAccountID to cache hence skipping queueing it")
+					p.namedLoggerWithRecord(&newRecord).With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Error("Failed to add subAccountID to cache. Skipping queueing it")
 					continue
 				}
 				p.Queue.Add(runtime.SubAccountID)
-				p.namedLogger().With(log.KeyResult, log.ValueSuccess).With(log.KeySubAccountID, runtime.SubAccountID).
-					With(log.KeyRuntimeID, runtime.RuntimeID).Debug("Queued and added to cache")
+				p.namedLoggerWithRecord(&newRecord).With(log.KeyResult, log.ValueSuccess).Debug("Queued and added to cache")
 				continue
 			}
 
@@ -464,13 +487,11 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 					// The shootname has changed hence the record in the cache is not valid anymore
 					// No need to queue as the subAccountID already exists in queue
 					p.Cache.Set(runtime.SubAccountID, newRecord, cache.NoExpiration)
-					p.namedLogger().With(log.KeySubAccountID, runtime.SubAccountID).With(log.KeyRuntimeID, runtime.RuntimeID).
-						Debug("Resetted the values in cache for subAccount")
+					p.namedLoggerWithRecord(&record).Debug("Resetted the values in cache for subAccount")
 
 					// delete metrics for old shoot name.
 					if success := deleteMetrics(record); !success {
-						p.namedLogger().With(log.KeySubAccountID, runtime.SubAccountID).With(log.KeyRuntimeID, runtime.RuntimeID).
-							Info("prometheus metrics were not successfully removed for subAccount")
+						p.namedLoggerWithRecord(&record).Info("prometheus metrics were not successfully removed for subAccount")
 					}
 				}
 			}
@@ -494,8 +515,7 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 			// delete metrics for old shoot name.
 			if record, ok := recordObj.(kmccache.Record); ok {
 				if success := deleteMetrics(record); !success {
-					p.namedLogger().With(log.KeySubAccountID, runtime.SubAccountID).With(log.KeyRuntimeID, runtime.RuntimeID).
-						Info("prometheus metrics were not successfully removed for subAccount")
+					p.namedLoggerWithRecord(&record).Info("prometheus metrics were not successfully removed for subAccount")
 				}
 			}
 			continue
@@ -510,15 +530,15 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 			record, ok := recordObj.Object.(kmccache.Record)
 			p.Cache.Delete(sAccID)
 			if !ok {
-				p.namedLogger().With(log.KeySubAccountID, sAccID).
+				p.namedLoggerWithRecord(&record).
 					Error("bad item from cache, could not cast to a record obj")
 			} else {
-				p.namedLogger().With(log.KeySubAccountID, sAccID).With(log.KeyRuntimeID, record.RuntimeID).
+				p.namedLoggerWithRecord(&record).
 					Info("SubAccount is not trackable anymore, deleting it from cache")
 			}
 			// delete metrics for old shoot name.
 			if success := deleteMetrics(record); !success {
-				p.namedLogger().With(log.KeySubAccountID, record.SubAccountID).With(log.KeyRuntimeID, record.RuntimeID).
+				p.namedLoggerWithRecord(&record).
 					Info("prometheus metrics were not successfully removed for subAccount")
 			}
 		}
@@ -539,9 +559,13 @@ func (p *Process) namedLogger() *zap.SugaredLogger {
 	return p.Logger.With("component", "kmc")
 }
 
-func (p *Process) namedLoggerWithRuntime(record *kmccache.Record) *zap.SugaredLogger {
+func (p *Process) namedLoggerWithRecord(record *kmccache.Record) *zap.SugaredLogger {
 	if record == nil {
 		return p.Logger.With("component", "kmc").With(log.KeyRuntimeID, "")
 	}
-	return p.Logger.With("component", "kmc").With(log.KeyRuntimeID, record.RuntimeID)
+	return p.Logger.With("component", "kmc").With(log.KeyRuntimeID, record.RuntimeID).With(log.KeyShoot, record.ShootName).With(log.KeySubAccountID, record.SubAccountID).With(log.KeyGlobalAccountID, record.GlobalAccountID)
+}
+
+func (p *Process) namedLoggerWithRuntime(runtime kebruntime.RuntimeDTO) *zap.SugaredLogger {
+	return p.Logger.With("component", "kmc").With(log.KeyRuntimeID, runtime.RuntimeID).With(log.KeyShoot, runtime.ShootName).With(log.KeySubAccountID, runtime.SubAccountID).With(log.KeyGlobalAccountID, runtime.GlobalAccountID)
 }

@@ -86,7 +86,10 @@ func main() {
 
 	edpClient := edp.NewClient(edpConfig, logger)
 
-	queue := workqueue.TypedNewDelayingQueue[string]()
+	queue := workqueue.NewTypedDelayingQueueWithConfig[string](
+		workqueue.TypedDelayingQueueConfig[string]{
+			Name: "kyma-metrics-collector-tracking-queue",
+		})
 
 	kmcProcess := kmcprocess.Process{
 		KEBClient:         kebClient,
