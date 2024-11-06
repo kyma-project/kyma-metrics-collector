@@ -56,6 +56,7 @@ $(TOOLS_BIN_NAMES): $(TOOLS_BIN_DIR) $(TOOLS_MOD_DIR)/go.mod
 
 ## Tools
 GOLANGCI_LINT    := $(TOOLS_BIN_DIR)/golangci-lint
+GOLANGCI_LINT    := $(TOOLS_BIN_DIR)/wsl
 
 ##@ General
 
@@ -86,6 +87,7 @@ lint-compact: $(GOLANGCI_LINT) ## Check lint issues using `golangci-lint` in com
 
 .PHONY: lint-fix
 lint-fix: $(GOLANGCI_LINT) ## Check and fix lint issues using `golangci-lint`
+	$(TOOLS_BIN_DIR)/wsl -fix ./...
 	$(TOOLS_BIN_DIR)/golangci-lint run --fix
 
 .PHONY: lint-report
