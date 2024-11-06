@@ -102,7 +102,9 @@ func TestClientRetry(t *testing.T) {
 	edpTestHandler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		g.Expect(req.URL.Path).To(gomega.Equal(expectedPath))
 		g.Expect(req.Method).To(gomega.Equal(http.MethodPost))
+
 		counter += 1
+
 		rw.WriteHeader(http.StatusInternalServerError)
 	})
 	srv := kmctesting.StartTestServer(expectedPath, edpTestHandler, g)
@@ -130,6 +132,7 @@ func TestClientRetry(t *testing.T) {
 	// ensure metric exists.
 	expectedNumberOfMetrics := 1 // because single request is send.
 	expectedNumberOfLabels := 2  // because 2 labels are set in the definition of latencyMetric metric.
+
 	g.Expect(testutil.CollectAndCount(latencyMetric, histogramName)).Should(gomega.Equal(1))
 
 	// ensure metric has expected label value.

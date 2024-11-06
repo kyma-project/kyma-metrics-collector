@@ -81,6 +81,7 @@ func newLogger(logLevel zapcore.Level) *zap.Logger {
 	encoderConfig.CallerKey = "caller"
 
 	var encoder zapcore.Encoder
+
 	switch outputFormat {
 	case OutputFormatPlain:
 		encoder = zapcore.NewConsoleEncoder(encoderConfig)

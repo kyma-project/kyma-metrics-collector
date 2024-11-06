@@ -38,6 +38,7 @@ func NewClient(config *Config, logger *zap.SugaredLogger) *Client {
 		Transport: http.DefaultTransport,
 		Timeout:   config.Timeout,
 	}
+
 	return &Client{
 		HttpClient: httpClient,
 		Logger:     logger,
@@ -89,6 +90,7 @@ func (eClient Client) Send(req *http.Request, payload []byte) (*http.Response, e
 			if err != nil {
 				urlErr := err.(*url.Error)
 				responseCode := http.StatusBadRequest
+
 				if urlErr.Timeout() {
 					responseCode = http.StatusRequestTimeout
 				}
@@ -98,6 +100,7 @@ func (eClient Client) Send(req *http.Request, payload []byte) (*http.Response, e
 				eClient.namedLogger().Debugf("req: %v", req)
 				eClient.namedLogger().With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).
 					With(log.KeyRetry, log.ValueTrue).Warn("send event stream to EDP")
+
 				return resp, err
 			}
 
@@ -118,6 +121,7 @@ func (eClient Client) Send(req *http.Request, payload []byte) (*http.Response, e
 			// record metric.
 			// the request URL is recorded without the actual tenant id to avoid having multiple histograms.
 			recordEDPLatency(duration, resp.StatusCode, eClient.getEDPURL(tenantIdPlaceholder))
+
 			return resp, err
 		},
 		retryOptions...,
@@ -127,6 +131,7 @@ func (eClient Client) Send(req *http.Request, payload []byte) (*http.Response, e
 	}
 
 	eClient.namedLogger().Debugf("sent an event to '%s' with eventstream: '%s'", req.URL.String(), string(payload))
+
 	return resp, nil
 }
 

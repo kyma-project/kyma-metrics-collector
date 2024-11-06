@@ -25,11 +25,14 @@ func (c Config) NewClient(shootInfo kmccache.Record) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	dynamicClient, err := dynamic.NewForConfig(restClientConfig)
 	if err != nil {
 		return nil, err
 	}
+
 	nsResourceClient := dynamicClient.Resource(GroupVersionResource())
+
 	return &Client{Resource: nsResourceClient, ShootInfo: shootInfo}, nil
 }
 
@@ -39,20 +42,25 @@ func (c Client) List(ctx context.Context) (*corev1.NodeList, error) {
 		skrcommons.RecordSKRQuery(false, skrcommons.ListingNodesAction, c.ShootInfo)
 		return nil, err
 	}
+
 	skrcommons.RecordSKRQuery(true, skrcommons.ListingNodesAction, c.ShootInfo)
+
 	return convertRuntimeListToNodeList(nodesUnstructured)
 }
 
 func convertRuntimeListToNodeList(unstructuredNodesList *unstructured.UnstructuredList) (*corev1.NodeList, error) {
 	nodeList := new(corev1.NodeList)
+
 	nodeListBytes, err := unstructuredNodesList.MarshalJSON()
 	if err != nil {
 		return nil, err
 	}
+
 	err = json.Unmarshal(nodeListBytes, nodeList)
 	if err != nil {
 		return nil, err
 	}
+
 	return nodeList, nil
 }
 

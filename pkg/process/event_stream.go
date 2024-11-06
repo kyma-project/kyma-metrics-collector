@@ -72,6 +72,7 @@ func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
 		if vmFeature == nil {
 			return nil, fmt.Errorf("providerType: %s and nodeType: %s does not exist in the map", providerType, nodeType)
 		}
+
 		provisionedCPUs += vmFeature.CpuCores
 		provisionedMemory += vmFeature.Memory
 		vmTypes[nodeType] += 1
@@ -90,8 +91,10 @@ func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
 					pvcStorageRounded += getVolumeRoundedToFactor(nfsPVCStorage)
 					volumeCount += 1
 				}
+
 				continue
 			}
+
 			if pvc.Status.Phase == corev1.ClaimBound {
 				currPVC := getSizeInGB(pvc.Status.Capacity.Storage())
 				pvcStorage += currPVC
@@ -127,6 +130,7 @@ func hasAllLabels(has, want map[string]string) bool {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -147,5 +151,6 @@ func getSizeInGB(value *resource.Quantity) int64 {
 
 	// Converting back from milli to original
 	gVal := int64((float64(milliVal) / GiB) / 1000) //nolint:mnd // 1000 is the factor to convert from milli to original
+
 	return gVal
 }

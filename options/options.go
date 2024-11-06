@@ -31,6 +31,7 @@ type Options struct {
 
 func ParseArgs() *Options {
 	var logLevel zapcore.Level
+
 	scrapeInterval := flag.Duration("scrape-interval", DefaultScrapeInterval, "The wait duration of the interval between 2 executions of metrics generation")
 	workerPoolSize := flag.Int("worker-pool-size", DefaultWorkerPoolSize, "The number of workers in the pool")
 	logLevelStr := flag.String("log-level", DefaultLogLevel.String(), "The log-level of the application. E.g. fatal, error, info, debug etc")

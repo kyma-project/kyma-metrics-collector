@@ -21,6 +21,7 @@ func (fakePVCClient FakePVCClient) NewClient(record kmccache.Record) (*Client, e
 
 	// setup fake client with PVCs.
 	pvcList := kmctesting.GetPVCs()
+
 	scheme, err := skrcommons.SetupScheme()
 	if err != nil {
 		return nil, err
@@ -32,5 +33,6 @@ func (fakePVCClient FakePVCClient) NewClient(record kmccache.Record) (*Client, e
 		}, pvcList)
 
 	nsResourceClient := dynamicClient.Resource(GroupVersionResource())
+
 	return &Client{Resource: nsResourceClient}, nil
 }

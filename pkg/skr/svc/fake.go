@@ -13,6 +13,7 @@ type FakeSvcClient struct{}
 
 func (fakeSvcClient FakeSvcClient) NewClient(kmccache.Record) (*Client, error) {
 	nodeList := kmctesting.GetSvcsWithLoadBalancers()
+
 	scheme, err := skrcommons.SetupScheme()
 	if err != nil {
 		return nil, err
@@ -24,5 +25,6 @@ func (fakeSvcClient FakeSvcClient) NewClient(kmccache.Record) (*Client, error) {
 		}, nodeList)
 
 	nsResourceClient := dynamicClient.Resource(GroupVersionResource())
+
 	return &Client{Resource: nsResourceClient}, nil
 }

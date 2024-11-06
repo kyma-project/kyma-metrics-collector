@@ -10,5 +10,6 @@ func SetupScheme() (*runtime.Scheme, error) {
 	if err := corev1.AddToScheme(scheme); err != nil {
 		return nil, err
 	}
+
 	return scheme, nil
 }
