@@ -56,7 +56,7 @@ $(TOOLS_BIN_NAMES): $(TOOLS_BIN_DIR) $(TOOLS_MOD_DIR)/go.mod
 
 ## Tools
 GOLANGCI_LINT    := $(TOOLS_BIN_DIR)/golangci-lint
-GOLANGCI_LINT    := $(TOOLS_BIN_DIR)/wsl
+WSL              := $(TOOLS_BIN_DIR)/wsl
 
 ##@ General
 
@@ -79,20 +79,20 @@ help: ## Display this help.
 
 .PHONY: lint
 lint: $(GOLANGCI_LINT) ## Check lint issues using `golangci-lint`
-	$(TOOLS_BIN_DIR)/golangci-lint run
+	$(GOLANGCI_LINT) run
 
 .PHONY: lint-compact
 lint-compact: $(GOLANGCI_LINT) ## Check lint issues using `golangci-lint` in compact result format
-	$(TOOLS_BIN_DIR)/golangci-lint run --print-issued-lines=false
+	$(GOLANGCI_LINT) run --print-issued-lines=false
 
 .PHONY: lint-fix
-lint-fix: $(GOLANGCI_LINT) ## Check and fix lint issues using `golangci-lint`
-	$(TOOLS_BIN_DIR)/wsl -fix ./...
-	$(TOOLS_BIN_DIR)/golangci-lint run --fix
+lint-fix: $(GOLANGCI_LINT) $(WSL) ## Check and fix lint issues using `golangci-lint`
+	$(WSL) -fix ./...
+	$(GOLANGCI_LINT) run --fix
 
 .PHONY: lint-report
 lint-report: $(GOLANGCI_LINT)golangci-lint ## Check lint issues using `golangci-lint` then export them to a file, then print the list of linters used
-	$(TOOLS_BIN_DIR)/golangci-lint run --issues-exit-code 0 --out-format json > ./lint-report.json
+	$(GOLANGCI_LINT) run --issues-exit-code 0 --out-format json > ./lint-report.json
 
 .PHONY: lint-report-issue-category
 lint-report-issue-category: ## Get lint issues categories

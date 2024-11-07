@@ -14,7 +14,6 @@ import (
 	"go.uber.org/zap"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/util/workqueue"
 
 	"github.com/kyma-project/kyma-metrics-collector/env"
 	"github.com/kyma-project/kyma-metrics-collector/options"
@@ -22,6 +21,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	kmcprocess "github.com/kyma-project/kyma-metrics-collector/pkg/process"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/queue"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/service"
 	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
 	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
@@ -90,11 +90,6 @@ func main() {
 
 	edpClient := edp.NewClient(edpConfig, logger)
 
-	queue := workqueue.NewTypedDelayingQueueWithConfig[string](
-		workqueue.TypedDelayingQueueConfig[string]{
-			Name: "kyma-metrics-collector-tracking-queue",
-		})
-
 	kmcProcess := kmcprocess.Process{
 		KEBClient:         kebClient,
 		SecretCacheClient: secretCacheClient.CoreV1(),
@@ -103,7 +98,7 @@ func main() {
 		Providers:         publicCloudSpecs,
 		Cache:             cache,
 		ScrapeInterval:    opts.ScrapeInterval,
-		Queue:             queue,
+		Queue:             queue.NewQueue("trackable-skrs"),
 		WorkersPoolSize:   opts.WorkerPoolSize,
 		NodeConfig:        skrnode.Config{},
 		PVCConfig:         skrpvc.Config{},
