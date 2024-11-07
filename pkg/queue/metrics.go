@@ -36,12 +36,14 @@ var (
 	}, []string{"name"})
 
 	adds = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      addsKey,
 		Help:      "Total number of adds handled by workqueue",
 	}, []string{"name"})
 
 	latency = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      queueLatencyKey,
 		Help:      "How long in seconds an item stays in workqueue before being requested.",
@@ -49,6 +51,7 @@ var (
 	}, []string{"name"})
 
 	workDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      workDurationKey,
 		Help:      "How long in seconds processing an item from workqueue takes.",
@@ -56,6 +59,7 @@ var (
 	}, []string{"name"})
 
 	unfinished = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      unfinishedWorkKey,
 		Help: "How many seconds of work has done that " +
@@ -65,6 +69,7 @@ var (
 	}, []string{"name"})
 
 	longestRunningProcessor = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      longestRunningProcessorKey,
 		Help: "How many seconds has the longest running " +
@@ -72,6 +77,7 @@ var (
 	}, []string{"name"})
 
 	retries = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      retriesKey,
 		Help:      "Total number of retries handled by workqueue",
