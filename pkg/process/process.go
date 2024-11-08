@@ -58,13 +58,15 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 	obj, isFound := p.Cache.Get(subAccountID)
 	if !isFound {
 		err := errSubAccountIDNotTrackable
-		return kmccache.Record{}, err
+		return kmccache.Record{
+			SubAccountID: subAccountID,
+		}, err
 	}
 
 	var record kmccache.Record
 	if record, ok = obj.(kmccache.Record); !ok {
 		err := fmt.Errorf("bad item from cache, could not cast to a record obj")
-		return kmccache.Record{}, err
+		return kmccache.Record{SubAccountID: subAccountID}, err
 	}
 	p.namedLogger().With(log.KeyWorkerID, identifier).Debugf("record found from cache: %+v", record)
 
@@ -241,6 +243,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 				With(log.KeySubAccountID, subAccountID).
 				Info("subAccountID NOT requeued")
 
+			recordSubAccountProcessed(false, *record)
 			return
 		}
 
@@ -252,9 +255,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 			Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
 
 		// record metric.
-		if oldRecord := p.getSubAccountFromCache(subAccountID); oldRecord != nil {
-			recordSubAccountProcessed(false, *oldRecord)
-		}
+		recordSubAccountProcessed(false, *record)
 
 		// Nothing to do further
 		return
@@ -344,21 +345,22 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 
 // getRecordWithOldOrNewMetric generates new metric or fetches the old metric along with a bool flag which
 // indicates whether it is an old metric or not(true, when it is old and false when it is new).
+// it always returns a record for metadata.
 func (p *Process) getRecordWithOldOrNewMetric(identifier int, subAccountID string) (*kmccache.Record, bool, error) {
 	record, err := p.generateRecordWithNewMetrics(identifier, subAccountID)
 	if err != nil {
 		if errors.Is(err, errSubAccountIDNotTrackable) {
 			p.namedLoggerWithRecord(&record).
 				With(log.KeyWorkerID, identifier).Info("subAccountID is not trackable anymore, skipping the fetch of old metric")
-			return nil, false, err
+			return &record, false, err // SubAccountID is not trackable anymore, record returned for metadata
 		}
 		p.namedLoggerWithRecord(&record).With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).
 			Error("generate new metric for subAccount")
 		// Get old data
 		oldRecord, err := p.getOldRecordIfMetricExists(subAccountID)
 		if err != nil {
-			// Nothing to do
-			return nil, false, errors.Wrapf(err, "failed to get getOldMetric for subaccountID: %s", subAccountID)
+			// Nothing to do, return the new record for metadata
+			return &record, false, errors.Wrapf(err, "failed to get getOldMetric for subaccountID: %s", subAccountID)
 		}
 		return oldRecord, true, nil
 	}
