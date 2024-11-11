@@ -23,6 +23,7 @@ import (
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
 	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
+	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
 	skrsvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/svc"
 )
 
@@ -38,6 +39,7 @@ type Process struct {
 	NodeConfig        skrnode.ConfigInf
 	PVCConfig         skrpvc.ConfigInf
 	SvcConfig         skrsvc.ConfigInf
+	RedisConfig       skrredis.ConfigInf
 	Logger            *zap.SugaredLogger
 }
 
@@ -115,6 +117,8 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 	if err != nil {
 		return record, err
 	}
+
+	// Get Redis resources
 
 	// Create input
 	input := Input{
