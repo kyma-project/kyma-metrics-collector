@@ -18,12 +18,14 @@ func (p *Process) pollKEBForRuntimes() {
 		p.namedLogger().With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).
 			Fatal("create a new request for KEB")
 	}
+
 	for {
 		runtimesPage, err := p.KEBClient.GetAllRuntimes(kebReq)
 		if err != nil {
 			p.namedLogger().With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).
 				Error("get runtimes from KEB")
 			time.Sleep(p.KEBClient.Config.PollWaitDuration)
+
 			continue
 		}
 
@@ -42,10 +44,12 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 	kebFetchedClusters.Reset()
 
 	validSubAccounts := make(map[string]bool)
+
 	for _, runtime := range runtimes.Data {
 		if runtime.SubAccountID == "" {
 			continue
 		}
+
 		validSubAccounts[runtime.SubAccountID] = true
 		recordObj, isFoundInCache := p.Cache.Get(runtime.SubAccountID)
 
@@ -86,8 +90,10 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 					p.namedLoggerWithRecord(&newRecord).With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Error("Failed to add subAccountID to cache. Skipping queueing it")
 					continue
 				}
+
 				p.Queue.Add(runtime.SubAccountID)
 				p.namedLoggerWithRecord(&newRecord).With(log.KeyResult, log.ValueSuccess).Debug("Queued and added to cache")
+
 				continue
 			}
 
@@ -105,6 +111,7 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 					}
 				}
 			}
+
 			continue
 		}
 
@@ -129,8 +136,10 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 					p.namedLoggerWithRecord(&record).Info("prometheus metrics were not successfully removed for subAccount")
 				}
 			}
+
 			continue
 		}
+
 		p.namedLogger().With(log.KeySubAccountID, runtime.SubAccountID).
 			With(log.KeyRuntimeID, runtime.RuntimeID).Debug("Ignoring SubAccount as it is not trackable")
 	}
@@ -139,7 +148,9 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 	for sAccID, recordObj := range p.Cache.Items() {
 		if _, ok := validSubAccounts[sAccID]; !ok {
 			record, ok := recordObj.Object.(kmccache.Record)
+
 			p.Cache.Delete(sAccID)
+
 			if !ok {
 				p.namedLoggerWithRecord(&record).
 					Error("bad item from cache, could not cast to a record obj")
@@ -161,6 +172,7 @@ func getOrDefault(runtimeStatus *kebruntime.Operation, defaultValue string) stri
 	if runtimeStatus != nil {
 		return runtimeStatus.State
 	}
+
 	return defaultValue
 }
 
@@ -190,5 +202,6 @@ func isTrackableState(state kebruntime.State) bool {
 	case kebruntime.StateSucceeded, kebruntime.StateError, kebruntime.StateUpgrading, kebruntime.StateUpdating:
 		return true
 	}
+
 	return false
 }

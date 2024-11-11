@@ -47,6 +47,7 @@ const (
 // Start runs the complete process of collection and sending metrics.
 func (p *Process) Start() {
 	var wg sync.WaitGroup
+
 	go func() {
 		p.pollKEBForRuntimes()
 	}()
@@ -59,6 +60,7 @@ func (p *Process) Start() {
 			p.namedLogger().Debugf("########  Worker exits ########")
 		}()
 	}
+
 	wg.Wait()
 }
 
