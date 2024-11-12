@@ -2,10 +2,13 @@ package redis
 
 import (
 	"context"
+	"strconv"
 	"testing"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/onsi/gomega"
+	"github.com/prometheus/client_golang/prometheus/testutil"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
 
@@ -26,17 +29,15 @@ func TestList(t *testing.T) {
 		ShootName:       "c-987654",
 	}
 
-	awsRedises := cloudresourcesv1beta1.AwsRedisInstanceList{
-		Items: []cloudresourcesv1beta1.AwsRedisInstance{
-			*kmctesting.AWSRedis("aws-redis-1", "aws-redis-1-namespace"),
-		},
-	}
+	awsRedises := kmctesting.AWSRedisList()
+	azureRedises := kmctesting.AzureRedisList()
+	gcpRedises := kmctesting.GCPRedisList()
 
-	client := newFakeClient(
+	client := newClientWithFakes(
 		t,
-		&awsRedises,
-		&cloudresourcesv1beta1.AzureRedisInstanceList{},
-		&cloudresourcesv1beta1.GcpRedisInstanceList{},
+		awsRedises,
+		azureRedises,
+		gcpRedises,
 		givenShootInfo,
 	)
 
@@ -46,48 +47,85 @@ func TestList(t *testing.T) {
 	// then
 	g.Expect(err).Should(gomega.BeNil())
 	g.Expect(gotRedisList.AWS.Items).To(gomega.Equal(awsRedises.Items))
-	// g.Expect(*gotSvcList).To(gomega.Equal(*svcList))
-	// // ensure metrics.
-	// gotMetrics, err := skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
-	// 	skrcommons.ListingSVCsAction,
-	// 	strconv.FormatBool(true),
-	// 	givenShootInfo.ShootName,
-	// 	givenShootInfo.InstanceID,
-	// 	givenShootInfo.RuntimeID,
-	// 	givenShootInfo.SubAccountID,
-	// 	givenShootInfo.GlobalAccountID,
-	// )
-	// g.Expect(err).Should(gomega.BeNil())
-	// g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(1)))
-	//
-	// // given - another case.
-	// // Delete all the svcs
-	// for _, svc := range svcList.Items {
-	// 	err := client.Resource.Namespace(svc.Namespace).Delete(ctx, svc.Name, metaV1.DeleteOptions{})
-	// 	g.Expect(err).Should(gomega.BeNil())
-	// }
-	//
-	// // when
-	// gotSvcList, err = client.List(ctx)
-	//
-	// // then
-	// g.Expect(err).Should(gomega.BeNil())
-	// g.Expect(len(gotSvcList.Items)).To(gomega.Equal(0))
-	// // ensure metrics.
-	// gotMetrics, err = skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
-	// 	skrcommons.ListingSVCsAction,
-	// 	strconv.FormatBool(true),
-	// 	givenShootInfo.ShootName,
-	// 	givenShootInfo.InstanceID,
-	// 	givenShootInfo.RuntimeID,
-	// 	givenShootInfo.SubAccountID,
-	// 	givenShootInfo.GlobalAccountID,
-	// )
-	// g.Expect(err).Should(gomega.BeNil())
-	// g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(2)))
+	g.Expect(gotRedisList.Azure.Items).To(gomega.Equal(azureRedises.Items))
+	g.Expect(gotRedisList.GCP.Items).To(gomega.Equal(gcpRedises.Items))
+
+	// ensure metrics.
+	gotMetrics, err := skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
+		skrcommons.ListingRedisesAWSAction,
+		strconv.FormatBool(true),
+		givenShootInfo.ShootName,
+		givenShootInfo.InstanceID,
+		givenShootInfo.RuntimeID,
+		givenShootInfo.SubAccountID,
+		givenShootInfo.GlobalAccountID,
+	)
+	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(1)))
+
+	gotMetrics, err = skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
+		skrcommons.ListingRedisesAzureAction,
+		strconv.FormatBool(true),
+		givenShootInfo.ShootName,
+		givenShootInfo.InstanceID,
+		givenShootInfo.RuntimeID,
+		givenShootInfo.SubAccountID,
+		givenShootInfo.GlobalAccountID,
+	)
+	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(1)))
+
+	actionLabels := []string{skrcommons.ListingRedisesAWSAction, skrcommons.ListingRedisesAzureAction, skrcommons.ListingRedisesGCPAction}
+	for _, actionLabel := range actionLabels {
+		gotMetrics, err = skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
+			actionLabel,
+			strconv.FormatBool(true),
+			givenShootInfo.ShootName,
+			givenShootInfo.InstanceID,
+			givenShootInfo.RuntimeID,
+			givenShootInfo.SubAccountID,
+			givenShootInfo.GlobalAccountID,
+		)
+
+		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(1)))
+	}
+
+	// given - another case.
+	// Delete all the AWS redises
+	for _, svc := range awsRedises.Items {
+		err := client.AWSRedisClient.Namespace(svc.Namespace).Delete(ctx, svc.Name, metav1.DeleteOptions{})
+		g.Expect(err).Should(gomega.BeNil())
+	}
+
+	// when
+	gotRedisList, err = client.List(ctx)
+
+	// then
+	g.Expect(err).Should(gomega.BeNil())
+	g.Expect(len(gotRedisList.AWS.Items)).To(gomega.Equal(0))
+	// Azure and GCP redises should be the same.
+	g.Expect(gotRedisList.Azure.Items).To(gomega.Equal(azureRedises.Items))
+	g.Expect(gotRedisList.GCP.Items).To(gomega.Equal(gcpRedises.Items))
+
+	// ensure metrics.
+	for _, actionLabel := range actionLabels {
+		gotMetrics, err = skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
+			actionLabel,
+			strconv.FormatBool(true),
+			givenShootInfo.ShootName,
+			givenShootInfo.InstanceID,
+			givenShootInfo.RuntimeID,
+			givenShootInfo.SubAccountID,
+			givenShootInfo.GlobalAccountID,
+		)
+
+		g.Expect(err).Should(gomega.BeNil())
+		g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(2)))
+	}
 }
 
-func newFakeClient(
+func newClientWithFakes(
 	t *testing.T,
 	awsRedises *cloudresourcesv1beta1.AwsRedisInstanceList,
 	azureRedises *cloudresourcesv1beta1.AzureRedisInstanceList,

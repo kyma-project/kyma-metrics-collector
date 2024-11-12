@@ -417,6 +417,15 @@ func AWSRedis(name, namespace string) *cloudresourcesv1beta1.AwsRedisInstance {
 	}
 }
 
+func AWSRedisList() *cloudresourcesv1beta1.AwsRedisInstanceList {
+	return &cloudresourcesv1beta1.AwsRedisInstanceList{
+		Items: []cloudresourcesv1beta1.AwsRedisInstance{
+			*AWSRedis("aws-redis-1", "aws-redis-1-namespace"),
+			*AWSRedis("aws-redis-2", "aws-redis-2-namespace"),
+		},
+	}
+}
+
 func AzureRedis(name, namespace string) *cloudresourcesv1beta1.AzureRedisInstance {
 	return &cloudresourcesv1beta1.AzureRedisInstance{
 		ObjectMeta: metaV1.ObjectMeta{
@@ -427,6 +436,15 @@ func AzureRedis(name, namespace string) *cloudresourcesv1beta1.AzureRedisInstanc
 	}
 }
 
+func AzureRedisList() *cloudresourcesv1beta1.AzureRedisInstanceList {
+	return &cloudresourcesv1beta1.AzureRedisInstanceList{
+		Items: []cloudresourcesv1beta1.AzureRedisInstance{
+			*AzureRedis("azure-redis-1", "azure-redis-1-namespace"),
+			*AzureRedis("azure-redis-2", "azure-redis-2-namespace"),
+		},
+	}
+}
+
 func GCPRedis(name, namespace string) *cloudresourcesv1beta1.GcpRedisInstance {
 	return &cloudresourcesv1beta1.GcpRedisInstance{
 		ObjectMeta: metaV1.ObjectMeta{
@@ -434,5 +452,14 @@ func GCPRedis(name, namespace string) *cloudresourcesv1beta1.GcpRedisInstance {
 			Namespace: namespace,
 		},
 		Spec: cloudresourcesv1beta1.GcpRedisInstanceSpec{},
+	}
+}
+
+func GCPRedisList() *cloudresourcesv1beta1.GcpRedisInstanceList {
+	return &cloudresourcesv1beta1.GcpRedisInstanceList{
+		Items: []cloudresourcesv1beta1.GcpRedisInstance{
+			*GCPRedis("gcp-redis-1", "gcp-redis-1-namespace"),
+			*GCPRedis("gcp-redis-2", "gcp-redis-2-namespace"),
+		},
 	}
 }
