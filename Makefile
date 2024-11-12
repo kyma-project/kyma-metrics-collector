@@ -148,7 +148,7 @@ test: ## Run tests
 	@go tool cover -func=/tmp/artifacts/cover.out | grep total | awk '{print $$3}'
 
 update-metrics-docs: ## Updates the metrics document (i.e. metrics.md).
-	@metrics=$$(mktemp).json; echo $${metrics}; promlinter list -ojson . > $${metrics}; gomplate -d kmc=$${metrics} -f hack/metrics.md.tpl  | prettier --parser markdown > metrics.md
+	@metrics=$$(mktemp).json; echo $${metrics}; promlinter list -ojson . > $${metrics}; gomplate -d kmc=$${metrics} -f hack/metrics.md.tpl  | prettier --parser markdown > docs/contributor/metrics.md 
 
 
 ##@ Build
