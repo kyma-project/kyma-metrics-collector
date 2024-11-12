@@ -48,7 +48,7 @@ const (
 	testEnv               = "env"
 	retryCount            = 1
 
-	fecthedClustersMetricName = "kmc_process_fetched_clusters"
+	fecthedClustersMetricName = "kmc_process_fetched_clusters_total"
 )
 
 func TestGetOldRecordIfMetricExists(t *testing.T) {

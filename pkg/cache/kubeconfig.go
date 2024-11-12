@@ -74,7 +74,6 @@ func GetKubeConfigFromCache(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interface
 
 func recordMetrics() {
 	cacheSizeMetric.With(prometheus.Labels{}).Set(float64(kubeConfigCache.Len()))
-	kubeConfigCache.DeleteExpired()
 }
 
 // getkubeConfigFromSecret gets the kubeconfig from the secret.
