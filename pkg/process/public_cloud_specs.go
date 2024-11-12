@@ -10,8 +10,8 @@ import (
 )
 
 type PublicCloudSpecs struct {
-	Providers  Providers
-	RedisTiers map[string]RedisInfo
+	Providers Providers
+	Redis     map[string]RedisInfo
 }
 
 type Providers struct {
