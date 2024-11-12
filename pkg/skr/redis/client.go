@@ -7,6 +7,7 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -63,17 +64,17 @@ func (c Config) NewClient(shootInfo kmccache.Record) (*Client, error) {
 func (c Client) List(ctx context.Context) (*RedisList, error) {
 	var awsRedises cloudresourcesv1beta1.AwsRedisInstanceList
 	if err := c.listRedisInstances(ctx, c.AWSRedisClient, skrcommons.ListingRedisesAWSAction, &awsRedises); err != nil {
-		return nil, fmt.Errorf("failed to list AWS Redis instances: %w", err)
+		return nil, fmt.Errorf("failed to list aws redis instances: %w", err)
 	}
 
 	var azureRedises cloudresourcesv1beta1.AzureRedisInstanceList
 	if err := c.listRedisInstances(ctx, c.AzureRedisClient, skrcommons.ListingRedisesAzureAction, &azureRedises); err != nil {
-		return nil, fmt.Errorf("failed to list Azure Redis instances: %w", err)
+		return nil, fmt.Errorf("failed to list azure redis instances: %w", err)
 	}
 
 	var gcpRedises cloudresourcesv1beta1.GcpRedisInstanceList
 	if err := c.listRedisInstances(ctx, c.GCPRedisClient, skrcommons.ListingRedisesGCPAction, &gcpRedises); err != nil {
-		return nil, fmt.Errorf("failed to list GCP Redis instances: %w", err)
+		return nil, fmt.Errorf("failed to list gcp redis instances: %w", err)
 	}
 
 	return &RedisList{
@@ -91,8 +92,12 @@ func (c Client) listRedisInstances(
 ) error {
 	unstructuredList, err := client.Namespace(corev1.NamespaceAll).List(ctx, metaV1.ListOptions{})
 	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
+
 		skrcommons.RecordSKRQuery(false, actionPromLabel, c.ShootInfo)
-		return fmt.Errorf("failed to list redis instances: %w", err)
+		return err
 	}
 
 	skrcommons.RecordSKRQuery(true, actionPromLabel, c.ShootInfo)
