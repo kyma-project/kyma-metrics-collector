@@ -28,7 +28,7 @@ var (
 		prometheus.GaugeOpts{
 			Namespace: namespace,
 			Subsystem: subsystem,
-			Name:      "items_in_cache_total",
+			Name:      "items_in_cache",
 			Help:      "Number of items in the cache.",
 		}, nil)
 
@@ -54,7 +54,7 @@ var (
 		prometheus.GaugeOpts{
 			Namespace: namespace,
 			Subsystem: subsystem,
-			Name:      "old_metric_published_gauge",
+			Name:      "old_metric_published",
 			Help:      "Number of consecutive re-sends of old metrics to EDP per cluster. It will reset to 0 when new metric data is published.",
 		},
 		[]string{shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
@@ -63,16 +63,12 @@ var (
 		prometheus.CounterOpts{
 			Namespace: namespace,
 			Subsystem: subsystem,
-			Name:      "fetched_clusters",
+			Name:      "fetched_clusters_total",
 			Help:      "All clusters fetched from KEB, including trackable and not trackable.",
 		},
 		[]string{trackableLabel, shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
 	)
 )
-
-func recordItemsInCache(count float64) {
-	itemsInCache.WithLabelValues().Set(count)
-}
 
 func recordKEBFetchedClusters(trackable bool, shootName, instanceID, runtimeID, subAccountID, globalAccountID string) {
 	// the order if the values should be same as defined in the metric declaration.

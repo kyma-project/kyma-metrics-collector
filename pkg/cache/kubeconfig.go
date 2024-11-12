@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/jellydator/ttlcache/v3"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -25,6 +27,14 @@ var (
 		ttlcache.WithTTL[string, string](ttl),
 		ttlcache.WithDisableTouchOnHit[string, string](),
 	)
+
+	cacheSizeMetric = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "kmc",
+			Subsystem: "kubeconfig_cache",
+			Name:      "size",
+			Help:      "Number of items in the kubeconfig cache.",
+		}, nil)
 )
 
 // GetKubeConfigFromCache returns the kubeconfig from the cache if it is not expired.
@@ -33,6 +43,7 @@ func GetKubeConfigFromCache(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interface
 	error,
 ) {
 	kubeConfigCache.DeleteExpired()
+	recordMetrics()
 
 	if kubeConfigCache.Has(runtimeID) {
 		logger.Debugf("Kubeconfig cache found kubeconfig for cluster (runtimeID: %s) in cache", runtimeID)
@@ -59,6 +70,11 @@ func GetKubeConfigFromCache(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interface
 	}
 
 	return kubeConfig, err
+}
+
+func recordMetrics() {
+	cacheSizeMetric.With(prometheus.Labels{}).Set(float64(kubeConfigCache.Len()))
+	kubeConfigCache.DeleteExpired()
 }
 
 // getkubeConfigFromSecret gets the kubeconfig from the secret.
