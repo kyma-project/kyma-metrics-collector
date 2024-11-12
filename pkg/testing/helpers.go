@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	kebruntime "github.com/kyma-project/kyma-environment-broker/common/runtime"
 	"github.com/onsi/gomega"
 	"github.com/prometheus/client_golang/prometheus"
@@ -404,4 +405,34 @@ func PrometheusFilterLabelPair(pairs []*dto.LabelPair, name string) *dto.LabelPa
 		}
 	}
 	return nil
+}
+
+func AWSRedis(name, namespace string) *cloudresourcesv1beta1.AwsRedisInstance {
+	return &cloudresourcesv1beta1.AwsRedisInstance{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: cloudresourcesv1beta1.AwsRedisInstanceSpec{},
+	}
+}
+
+func AzureRedis(name, namespace string) *cloudresourcesv1beta1.AzureRedisInstance {
+	return &cloudresourcesv1beta1.AzureRedisInstance{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: cloudresourcesv1beta1.AzureRedisInstanceSpec{},
+	}
+}
+
+func GCPRedis(name, namespace string) *cloudresourcesv1beta1.GcpRedisInstance {
+	return &cloudresourcesv1beta1.GcpRedisInstance{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: cloudresourcesv1beta1.GcpRedisInstanceSpec{},
+	}
 }

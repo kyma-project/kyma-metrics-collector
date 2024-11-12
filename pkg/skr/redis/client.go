@@ -1,4 +1,4 @@
-package svc
+package redis
 
 import (
 	"context"
@@ -17,10 +17,15 @@ import (
 	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
 )
 
+const (
+	cloudResourcesGroup   = "cloud-resources.kyma-project.io"
+	cloudResourcesVersion = "v1beta1"
+)
+
 var (
-	AWSRedisGVR   = schema.GroupVersionResource{Group: "cloud.kyma-project.io", Version: "v1beta1", Resource: "awsredisinstances"}
-	AzureRedisGVR = schema.GroupVersionResource{Group: "cloud.kyma-project.io", Version: "v1beta1", Resource: "azureredisinstances"}
-	GCPRedisGVR   = schema.GroupVersionResource{Group: "cloud.kyma-project.io", Version: "v1beta1", Resource: "gcpredisinstances"}
+	AWSRedisGVR   = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "awsredisinstances"}
+	AzureRedisGVR = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "azureredisinstances"}
+	GCPRedisGVR   = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "gcpredisinstances"}
 )
 
 type Client struct {
@@ -87,7 +92,7 @@ func (c Client) listRedisInstances(
 	unstructuredList, err := client.Namespace(corev1.NamespaceAll).List(ctx, metaV1.ListOptions{})
 	if err != nil {
 		skrcommons.RecordSKRQuery(false, queryAction, c.ShootInfo)
-		return err
+		return fmt.Errorf("failed to list redis instances: %w", err)
 	}
 
 	skrcommons.RecordSKRQuery(true, queryAction, c.ShootInfo)

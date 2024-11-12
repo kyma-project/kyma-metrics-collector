@@ -1,4 +1,4 @@
-package svc
+package redis
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -20,9 +20,14 @@ func (fakeSvcClient FakeSvcClient) NewClient(kmccache.Record) (*Client, error) {
 
 	dynamicClient := dynamicfake.NewSimpleDynamicClientWithCustomListKinds(scheme,
 		map[schema.GroupVersionResource]string{
-			{Group: "core", Version: "v1", Resource: "Node"}: "NodeList",
+			AWSRedisGVR:   "AwsRedisInstanceList",
+			AzureRedisGVR: "AzureRedisInstanceList",
+			GCPRedisGVR:   "GcpRedisInstanceList",
 		}, nodeList)
 
-	nsResourceClient := dynamicClient.Resource(GroupVersionResource())
-	return &Client{Resource: nsResourceClient}, nil
+	return &Client{
+		AWSRedisClient:   dynamicClient.Resource(AWSRedisGVR),
+		AzureRedisClient: dynamicClient.Resource(AzureRedisGVR),
+		GCPRedisClient:   dynamicClient.Resource(GCPRedisGVR),
+	}, nil
 }

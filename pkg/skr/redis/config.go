@@ -1,4 +1,4 @@
-package svc
+package redis
 
 import kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 

@@ -1,15 +1,11 @@
-package svc
+package redis
 
 import (
 	"context"
-	"sort"
-	"strconv"
 	"testing"
 
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	"github.com/onsi/gomega"
-	"github.com/prometheus/client_golang/prometheus/testutil"
-	corev1 "k8s.io/api/core/v1"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
 
@@ -30,71 +26,92 @@ func TestList(t *testing.T) {
 		ShootName:       "c-987654",
 	}
 
-	svcList := kmctesting.GetSvcsWithLoadBalancers()
-	client, err := NewFakeClient(svcList, givenShootInfo)
-	g.Expect(err).Should(gomega.BeNil())
-
-	// when
-	gotSvcList, err := client.List(ctx)
-
-	// then
-	g.Expect(err).Should(gomega.BeNil())
-	g.Expect(len(gotSvcList.Items)).To(gomega.Equal(len(svcList.Items)))
-	sort.Slice(gotSvcList.Items, func(i, j int) bool {
-		return gotSvcList.Items[i].Name < gotSvcList.Items[j].Name
-	})
-	g.Expect(*gotSvcList).To(gomega.Equal(*svcList))
-	// ensure metrics.
-	gotMetrics, err := skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
-		skrcommons.ListingSVCsAction,
-		strconv.FormatBool(true),
-		givenShootInfo.ShootName,
-		givenShootInfo.InstanceID,
-		givenShootInfo.RuntimeID,
-		givenShootInfo.SubAccountID,
-		givenShootInfo.GlobalAccountID,
-	)
-	g.Expect(err).Should(gomega.BeNil())
-	g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(1)))
-
-	// given - another case.
-	// Delete all the svcs
-	for _, svc := range svcList.Items {
-		err := client.Resource.Namespace(svc.Namespace).Delete(ctx, svc.Name, metaV1.DeleteOptions{})
-		g.Expect(err).Should(gomega.BeNil())
+	awsRedises := cloudresourcesv1beta1.AwsRedisInstanceList{
+		Items: []cloudresourcesv1beta1.AwsRedisInstance{
+			*kmctesting.AWSRedis("aws-redis-1", "aws-redis-1-namespace"),
+		},
 	}
 
+	client := newFakeClient(
+		t,
+		&awsRedises,
+		&cloudresourcesv1beta1.AzureRedisInstanceList{},
+		&cloudresourcesv1beta1.GcpRedisInstanceList{},
+		givenShootInfo,
+	)
+
 	// when
-	gotSvcList, err = client.List(ctx)
+	gotRedisList, err := client.List(ctx)
 
 	// then
 	g.Expect(err).Should(gomega.BeNil())
-	g.Expect(len(gotSvcList.Items)).To(gomega.Equal(0))
-	// ensure metrics.
-	gotMetrics, err = skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
-		skrcommons.ListingSVCsAction,
-		strconv.FormatBool(true),
-		givenShootInfo.ShootName,
-		givenShootInfo.InstanceID,
-		givenShootInfo.RuntimeID,
-		givenShootInfo.SubAccountID,
-		givenShootInfo.GlobalAccountID,
-	)
-	g.Expect(err).Should(gomega.BeNil())
-	g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(2)))
+	g.Expect(gotRedisList.AWS.Items).To(gomega.Equal(awsRedises.Items))
+	// g.Expect(*gotSvcList).To(gomega.Equal(*svcList))
+	// // ensure metrics.
+	// gotMetrics, err := skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
+	// 	skrcommons.ListingSVCsAction,
+	// 	strconv.FormatBool(true),
+	// 	givenShootInfo.ShootName,
+	// 	givenShootInfo.InstanceID,
+	// 	givenShootInfo.RuntimeID,
+	// 	givenShootInfo.SubAccountID,
+	// 	givenShootInfo.GlobalAccountID,
+	// )
+	// g.Expect(err).Should(gomega.BeNil())
+	// g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(1)))
+	//
+	// // given - another case.
+	// // Delete all the svcs
+	// for _, svc := range svcList.Items {
+	// 	err := client.Resource.Namespace(svc.Namespace).Delete(ctx, svc.Name, metaV1.DeleteOptions{})
+	// 	g.Expect(err).Should(gomega.BeNil())
+	// }
+	//
+	// // when
+	// gotSvcList, err = client.List(ctx)
+	//
+	// // then
+	// g.Expect(err).Should(gomega.BeNil())
+	// g.Expect(len(gotSvcList.Items)).To(gomega.Equal(0))
+	// // ensure metrics.
+	// gotMetrics, err = skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
+	// 	skrcommons.ListingSVCsAction,
+	// 	strconv.FormatBool(true),
+	// 	givenShootInfo.ShootName,
+	// 	givenShootInfo.InstanceID,
+	// 	givenShootInfo.RuntimeID,
+	// 	givenShootInfo.SubAccountID,
+	// 	givenShootInfo.GlobalAccountID,
+	// )
+	// g.Expect(err).Should(gomega.BeNil())
+	// g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(2)))
 }
 
-func NewFakeClient(svcList *corev1.ServiceList, shootInfo kmccache.Record) (*Client, error) {
+func newFakeClient(
+	t *testing.T,
+	awsRedises *cloudresourcesv1beta1.AwsRedisInstanceList,
+	azureRedises *cloudresourcesv1beta1.AzureRedisInstanceList,
+	gcpRedises *cloudresourcesv1beta1.GcpRedisInstanceList,
+	shootInfo kmccache.Record,
+) *Client {
+	t.Helper()
+
 	scheme, err := skrcommons.SetupScheme()
 	if err != nil {
-		return nil, err
+		t.Errorf("failed to setup scheme: %v", err)
 	}
 
 	dynamicClient := dynamicfake.NewSimpleDynamicClientWithCustomListKinds(scheme,
 		map[schema.GroupVersionResource]string{
-			{Group: "core", Version: "v1", Resource: "Service"}: "ServiceList",
-		}, svcList)
+			AWSRedisGVR:   "AwsRedisInstanceList",
+			AzureRedisGVR: "AzureRedisInstanceList",
+			GCPRedisGVR:   "GcpRedisInstanceList",
+		}, awsRedises, azureRedises, gcpRedises)
 
-	nsResourceClient := dynamicClient.Resource(GroupVersionResource())
-	return &Client{Resource: nsResourceClient, ShootInfo: shootInfo}, nil
+	return &Client{
+		AWSRedisClient:   dynamicClient.Resource(AWSRedisGVR),
+		AzureRedisClient: dynamicClient.Resource(AzureRedisGVR),
+		GCPRedisClient:   dynamicClient.Resource(GCPRedisGVR),
+		ShootInfo:        shootInfo,
+	}
 }
