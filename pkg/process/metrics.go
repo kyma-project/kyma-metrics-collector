@@ -70,6 +70,10 @@ var (
 	)
 )
 
+func recordItemsInCache(count float64) {
+	itemsInCache.WithLabelValues().Set(count)
+}
+
 func recordKEBFetchedClusters(trackable bool, shootName, instanceID, runtimeID, subAccountID, globalAccountID string) {
 	// the order if the values should be same as defined in the metric declaration.
 	kebFetchedClusters.WithLabelValues(
