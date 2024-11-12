@@ -35,7 +35,7 @@ type Client struct {
 	ShootInfo        kmccache.Record
 }
 
-type RedisLists struct {
+type RedisList struct {
 	AWS   cloudresourcesv1beta1.AwsRedisInstanceList
 	Azure cloudresourcesv1beta1.AzureRedisInstanceList
 	GCP   cloudresourcesv1beta1.GcpRedisInstanceList
@@ -60,7 +60,7 @@ func (c Config) NewClient(shootInfo kmccache.Record) (*Client, error) {
 	}, nil
 }
 
-func (c Client) List(ctx context.Context) (*RedisLists, error) {
+func (c Client) List(ctx context.Context) (*RedisList, error) {
 	var awsRedises cloudresourcesv1beta1.AwsRedisInstanceList
 	if err := c.listRedisInstances(ctx, c.AWSRedisClient, skrcommons.ListingRedisesAWSAction, &awsRedises); err != nil {
 		return nil, fmt.Errorf("failed to list AWS Redis instances: %w", err)
@@ -76,7 +76,7 @@ func (c Client) List(ctx context.Context) (*RedisLists, error) {
 		return nil, fmt.Errorf("failed to list GCP Redis instances: %w", err)
 	}
 
-	return &RedisLists{
+	return &RedisList{
 		AWS:   awsRedises,
 		Azure: azureRedises,
 		GCP:   gcpRedises,
@@ -86,16 +86,16 @@ func (c Client) List(ctx context.Context) (*RedisLists, error) {
 func (c Client) listRedisInstances(
 	ctx context.Context,
 	client dynamic.NamespaceableResourceInterface,
-	queryAction string,
+	actionPromLabel string,
 	targetList any,
 ) error {
 	unstructuredList, err := client.Namespace(corev1.NamespaceAll).List(ctx, metaV1.ListOptions{})
 	if err != nil {
-		skrcommons.RecordSKRQuery(false, queryAction, c.ShootInfo)
+		skrcommons.RecordSKRQuery(false, actionPromLabel, c.ShootInfo)
 		return fmt.Errorf("failed to list redis instances: %w", err)
 	}
 
-	skrcommons.RecordSKRQuery(true, queryAction, c.ShootInfo)
+	skrcommons.RecordSKRQuery(true, actionPromLabel, c.ShootInfo)
 
 	if err := convertUnstructuredListToRedisList(unstructuredList, targetList); err != nil {
 		return err

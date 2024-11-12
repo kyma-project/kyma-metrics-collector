@@ -119,13 +119,23 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 	}
 
 	// Get Redis resources
+	var redisList *skrredis.RedisList
+	redisClient, err := p.RedisConfig.NewClient(record)
+	if err != nil {
+		return record, err
+	}
+	redisList, err = redisClient.List(ctx)
+	if err != nil {
+		return record, err
+	}
 
 	// Create input
 	input := Input{
-		provider: record.ProviderType,
-		nodeList: nodes,
-		pvcList:  pvcList,
-		svcList:  svcList,
+		provider:  record.ProviderType,
+		nodeList:  nodes,
+		pvcList:   pvcList,
+		svcList:   svcList,
+		redisList: redisList,
 	}
 	metric, err := input.Parse(p.Providers)
 	if err != nil {

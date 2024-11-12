@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
+	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
 )
 
 const (
@@ -42,10 +43,11 @@ type EventStream struct {
 }
 
 type Input struct {
-	provider string
-	nodeList *corev1.NodeList
-	pvcList  *corev1.PersistentVolumeClaimList
-	svcList  *corev1.ServiceList
+	provider  string
+	nodeList  *corev1.NodeList
+	pvcList   *corev1.PersistentVolumeClaimList
+	svcList   *corev1.ServiceList
+	redisList *skrredis.RedisList
 }
 
 func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {

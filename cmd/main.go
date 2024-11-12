@@ -25,6 +25,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/service"
 	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
 	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
+	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
 	skrsvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/svc"
 )
 
@@ -101,6 +102,7 @@ func main() {
 		NodeConfig:        skrnode.Config{},
 		PVCConfig:         skrpvc.Config{},
 		SvcConfig:         skrsvc.Config{},
+		RedisConfig:       skrredis.Config{},
 	}
 
 	// Start execution
