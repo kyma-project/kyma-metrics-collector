@@ -1,0 +1,58 @@
+{
+      "S1": {
+        "price_storage_gb": 182,
+        "price_cu": 74
+      },
+      "S2": {
+        "price_storage_gb": 364,
+        "price_cu": 148
+      },
+      "S3": {
+        "price_storage_gb": 953,
+        "price_cu": 387
+      },
+      "S4": {
+        "price_storage_gb": 1915,
+        "price_cu": 778
+      },
+      "S5": {
+        "price_storage_gb": 3793,
+        "price_cu": 1541
+      },
+      "S6": {
+        "price_storage_gb": 7591,
+        "price_cu": 3084
+      },
+      "S7": {
+        "price_storage_gb": 15180,
+        "price_cu": 6167
+      },
+      "S8": {
+        "price_storage_gb": 30353,
+        "price_cu": 12331
+      },
+      "P1": {
+        "price_storage_gb": 1903,
+        "price_cu": 773
+      },
+      "P2": {
+        "price_storage_gb": 3828,
+        "price_cu": 1555
+      },
+      "P3": {
+        "price_storage_gb": 7586,
+        "price_cu": 3082
+      },
+      "P4": {
+        "price_storage_gb": 15180,
+        "price_cu": 6167
+      },
+      "P5": {
+        "price_storage_gb": 30363,
+        "price_cu": 12335
+      },
+      "P6": {
+        "price_storage_gb": 60704,
+        "price_cu": 24661
+      }
+}

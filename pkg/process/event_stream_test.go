@@ -16,13 +16,13 @@ func TestParse(t *testing.T) {
 	providersData, err := kmctesting.LoadFixtureFromFile(providersFile)
 	g.Expect(err).Should(gomega.BeNil())
 	config := &env.Config{PublicCloudSpecs: string(providersData)}
-	providers, err := LoadPublicCloudSpecs(config)
+	publicCloudSpecs, err := LoadPublicCloudSpecs(config)
 	g.Expect(err).Should(gomega.BeNil())
 
 	testCases := []struct {
 		name            string
 		input           Input
-		providers       Providers
+		specs           PublicCloudSpecs
 		expectedMetrics edp.ConsumptionMetrics
 		expectedErr     bool
 	}{
@@ -34,7 +34,7 @@ func TestParse(t *testing.T) {
 				pvcList:  kmctesting.Get1NFSPVC(),
 				svcList:  kmctesting.Get2SvcsOfDiffTypes(),
 			},
-			providers: *providers,
+			specs: *publicCloudSpecs,
 			expectedMetrics: edp.ConsumptionMetrics{
 				// ResourceGroups: nil,
 				Compute: edp.Compute{
@@ -60,7 +60,7 @@ func TestParse(t *testing.T) {
 				pvcList:  kmctesting.Get3PVCs(),
 				svcList:  kmctesting.Get2SvcsOfDiffTypes(),
 			},
-			providers: *providers,
+			specs: *publicCloudSpecs,
 			expectedMetrics: edp.ConsumptionMetrics{
 				// ResourceGroups: nil,
 				Compute: edp.Compute{
@@ -84,7 +84,7 @@ func TestParse(t *testing.T) {
 				provider: Azure,
 				nodeList: kmctesting.Get3NodesWithStandardD8v3VMType(),
 			},
-			providers: *providers,
+			specs: *publicCloudSpecs,
 			expectedMetrics: edp.ConsumptionMetrics{
 				// ResourceGroups: nil,
 				Compute: edp.Compute{
@@ -108,7 +108,7 @@ func TestParse(t *testing.T) {
 				provider: Azure,
 				nodeList: kmctesting.Get3NodesWithStandardD8v3VMType(),
 			},
-			providers: *providers,
+			specs: *publicCloudSpecs,
 			expectedMetrics: edp.ConsumptionMetrics{
 				Compute: edp.Compute{
 					VMTypes: []edp.VMType{{
@@ -131,7 +131,7 @@ func TestParse(t *testing.T) {
 				provider: Azure,
 				nodeList: kmctesting.Get3NodesWithFooVMType(),
 			},
-			providers:   *providers,
+			specs:       *publicCloudSpecs,
 			expectedErr: true,
 		},
 		{
@@ -142,7 +142,7 @@ func TestParse(t *testing.T) {
 				pvcList:  kmctesting.Get3PVCs(),
 				svcList:  kmctesting.Get2SvcsOfDiffTypes(),
 			},
-			providers: *providers,
+			specs: *publicCloudSpecs,
 			expectedMetrics: edp.ConsumptionMetrics{
 				Compute: edp.Compute{
 					VMTypes: []edp.VMType{{
@@ -163,7 +163,7 @@ func TestParse(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			gotMetrics, err := tc.input.Parse(&tc.providers)
+			gotMetrics, err := tc.input.Parse(&tc.specs)
 			if !tc.expectedErr {
 				g.Expect(err).Should(gomega.BeNil())
 				g.Expect(gotMetrics.Compute).To(gomega.Equal(tc.expectedMetrics.Compute))

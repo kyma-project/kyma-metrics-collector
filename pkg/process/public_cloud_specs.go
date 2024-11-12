@@ -9,6 +9,11 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/env"
 )
 
+type PublicCloudSpecs struct {
+	Providers  Providers
+	RedisTiers map[string]RedisInfo
+}
+
 type Providers struct {
 	Azure     AzureMachines
 	AWS       AWSMachines
@@ -33,6 +38,11 @@ type Feature struct {
 
 type MachineInfo map[string]json.RawMessage
 
+type RedisInfo struct {
+	PriceStorageGB     int `json:"price_storage_gb"`
+	PriceCapacityUnits int `json:"price_cu"`
+}
+
 func (p Providers) GetFeature(cloudProvider, vmType string) *Feature {
 	switch cloudProvider {
 	case AWS:
@@ -56,7 +66,7 @@ func (p Providers) GetFeature(cloudProvider, vmType string) *Feature {
 }
 
 // LoadPublicCloudSpecs loads string data to Providers object from an env var.
-func LoadPublicCloudSpecs(cfg *env.Config) (*Providers, error) {
+func LoadPublicCloudSpecs(cfg *env.Config) (*PublicCloudSpecs, error) {
 	if cfg.PublicCloudSpecs == "" {
 		return nil, fmt.Errorf("public cloud specification is not configured")
 	}
@@ -108,5 +118,7 @@ func LoadPublicCloudSpecs(cfg *env.Config) (*Providers, error) {
 		OpenStack: *openStackMachines,
 	}
 
-	return &providers, nil
+	return &PublicCloudSpecs{
+		Providers: providers,
+	}, nil
 }

@@ -19,7 +19,7 @@ func TestGetFeature(t *testing.T) {
 	providersData, err := kmctesting.LoadFixtureFromFile(providersFile)
 	g.Expect(err).Should(gomega.BeNil())
 	config := &env.Config{PublicCloudSpecs: string(providersData)}
-	providers, err := LoadPublicCloudSpecs(config)
+	specs, err := LoadPublicCloudSpecs(config)
 	g.Expect(err).Should(gomega.BeNil())
 
 	testCases := []struct {
@@ -202,7 +202,7 @@ func TestGetFeature(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("%s-%s", tc.cloudProvider, tc.vmType), func(t *testing.T) {
-			gotFeature := providers.GetFeature(tc.cloudProvider, tc.vmType)
+			gotFeature := specs.Providers.GetFeature(tc.cloudProvider, tc.vmType)
 			if tc.wantNil {
 				g.Expect(gotFeature).Should(gomega.BeNil())
 				return

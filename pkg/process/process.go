@@ -33,7 +33,7 @@ type Process struct {
 	Queue             workqueue.TypedDelayingInterface[string]
 	SecretCacheClient v1.CoreV1Interface
 	Cache             *cache.Cache
-	Providers         *Providers
+	PublicCloudSpecs  *PublicCloudSpecs
 	ScrapeInterval    time.Duration
 	WorkersPoolSize   int
 	NodeConfig        skrnode.ConfigInf
@@ -137,7 +137,7 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 		svcList:   svcList,
 		redisList: redisList,
 	}
-	metric, err := input.Parse(p.Providers)
+	metric, err := input.Parse(p.PublicCloudSpecs)
 	if err != nil {
 		return record, err
 	}

@@ -50,7 +50,7 @@ type Input struct {
 	redisList *skrredis.RedisList
 }
 
-func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
+func (inp Input) Parse(specs *PublicCloudSpecs) (*edp.ConsumptionMetrics, error) {
 	if inp.nodeList == nil {
 		return nil, fmt.Errorf("no nodes data to compute metrics on")
 	}
@@ -70,7 +70,7 @@ func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
 		nodeType = strings.ToLower(nodeType)
 
 		// Calculate CPU and Memory
-		vmFeature := providers.GetFeature(providerType, nodeType)
+		vmFeature := specs.Providers.GetFeature(providerType, nodeType)
 		if vmFeature == nil {
 			return nil, fmt.Errorf("providerType: %s and nodeType: %s does not exist in the map", providerType, nodeType)
 		}

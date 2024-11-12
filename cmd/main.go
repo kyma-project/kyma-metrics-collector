@@ -94,7 +94,7 @@ func main() {
 		SecretCacheClient: secretCacheClient.CoreV1(),
 		EDPClient:         edpClient,
 		Logger:            logger,
-		Providers:         publicCloudSpecs,
+		PublicCloudSpecs:  publicCloudSpecs,
 		Cache:             cache,
 		ScrapeInterval:    opts.ScrapeInterval,
 		Queue:             queue,
