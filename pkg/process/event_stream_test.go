@@ -13,9 +13,7 @@ import (
 
 func TestParse(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
-	providersData, err := kmctesting.LoadFixtureFromFile(providersFile)
-	g.Expect(err).Should(gomega.BeNil())
-	config := &env.Config{PublicCloudSpecs: string(providersData)}
+	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
 	publicCloudSpecs, err := LoadPublicCloudSpecs(config)
 	g.Expect(err).Should(gomega.BeNil())
 

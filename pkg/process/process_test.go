@@ -737,9 +737,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 	givenKubeConfig := "eyJmb28iOiAiYmFyIn0="
 
 	// cloud providers.
-	providersData, err := kmctesting.LoadFixtureFromFile(providersFile)
-	g.Expect(err).Should(gomega.BeNil())
-	config := &env.Config{PublicCloudSpecs: string(providersData)}
+	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
 	givenProviders, err := LoadPublicCloudSpecs(config)
 	g.Expect(err).Should(gomega.BeNil())
 
@@ -984,9 +982,7 @@ func TestExecute(t *testing.T) {
 	g.Expect(err).Should(gomega.BeNil())
 	secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
 
-	providersData, err := kmctesting.LoadFixtureFromFile(providersFile)
-	g.Expect(err).Should(gomega.BeNil())
-	config := &env.Config{PublicCloudSpecs: string(providersData)}
+	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
 	providers, err := LoadPublicCloudSpecs(config)
 	g.Expect(err).Should(gomega.BeNil())
 	fakeNodeClient := skrnode.FakeNodeClient{}

@@ -3,6 +3,7 @@ package process
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/pkg/errors"
 
@@ -10,24 +11,16 @@ import (
 )
 
 type PublicCloudSpecs struct {
-	Providers Providers
-	Redis     map[string]RedisInfo
+	Providers Providers            `json:"providers"`
+	Redis     map[string]RedisInfo `json:"redis_tiers"`
 }
 
 type Providers struct {
-	Azure     AzureMachines
-	AWS       AWSMachines
-	GCP       GCPMachines
-	OpenStack OpenStackMachines
+	Azure     map[string]Feature `json:"azure"`
+	AWS       map[string]Feature `json:"aws"`
+	GCP       map[string]Feature `json:"gcp"`
+	OpenStack map[string]Feature `json:"sapconvergedcloud"`
 }
-
-type AzureMachines map[string]Feature
-
-type AWSMachines map[string]Feature
-
-type GCPMachines map[string]Feature
-
-type OpenStackMachines map[string]Feature
 
 type Feature struct {
 	CpuCores int     `json:"cpu_cores"`
@@ -35,8 +28,6 @@ type Feature struct {
 	Storage  int     `json:"storage,omitempty"`
 	MaxNICs  int     `json:"max_nics,omitempty"`
 }
-
-type MachineInfo map[string]json.RawMessage
 
 type RedisInfo struct {
 	PriceStorageGB     int `json:"price_storage_gb"`
@@ -67,58 +58,19 @@ func (p Providers) GetFeature(cloudProvider, vmType string) *Feature {
 
 // LoadPublicCloudSpecs loads string data to Providers object from an env var.
 func LoadPublicCloudSpecs(cfg *env.Config) (*PublicCloudSpecs, error) {
-	if cfg.PublicCloudSpecs == "" {
-		return nil, fmt.Errorf("public cloud specification is not configured")
+	if cfg.PublicCloudSpecsPath == "" {
+		return nil, fmt.Errorf("public cloud specification path is not configured")
 	}
 
-	var machineInfo MachineInfo
-	err := json.Unmarshal([]byte(cfg.PublicCloudSpecs), &machineInfo)
+	specsJSON, err := os.ReadFile(cfg.PublicCloudSpecsPath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to unmarshal machine info")
-	}
-	awsMachinesData, err := machineInfo[AWS].MarshalJSON()
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to marshal AWS info")
-	}
-	awsMachines := &AWSMachines{}
-	err = json.Unmarshal(awsMachinesData, &awsMachines)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to unmarshal AWS machines data")
-	}
-	azureMachinesData, err := machineInfo[Azure].MarshalJSON()
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to marshal Azure info")
-	}
-	azureMachines := &AzureMachines{}
-	err = json.Unmarshal(azureMachinesData, azureMachines)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to unmarshal Azure machines data")
-	}
-	gcpMachinesData, err := machineInfo[GCP].MarshalJSON()
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to marshal GCP info")
-	}
-	gcpMachines := &GCPMachines{}
-	if err = json.Unmarshal(gcpMachinesData, gcpMachines); err != nil {
-		return nil, errors.Wrapf(err, "failed to unmarshal GCP machines data")
-	}
-	openStackMachinesData, err := machineInfo[CCEE].MarshalJSON()
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to marshal sapconvergedcloud info")
-	}
-	openStackMachines := &OpenStackMachines{}
-	if err = json.Unmarshal(openStackMachinesData, openStackMachines); err != nil {
-		return nil, errors.Wrapf(err, "failed to unmarshal sapconvergedcloud machines data")
+		return nil, errors.Wrapf(err, "failed to read public cloud specs file")
 	}
 
-	providers := Providers{
-		AWS:       *awsMachines,
-		Azure:     *azureMachines,
-		GCP:       *gcpMachines,
-		OpenStack: *openStackMachines,
+	var specs PublicCloudSpecs
+	if err = json.Unmarshal(specsJSON, &specs); err != nil {
+		return nil, errors.Wrapf(err, "failed to unmarshal public cloud specs")
 	}
 
-	return &PublicCloudSpecs{
-		Providers: providers,
-	}, nil
+	return &specs, nil
 }
