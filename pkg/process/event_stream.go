@@ -70,7 +70,7 @@ func (inp Input) Parse(specs *PublicCloudSpecs) (*edp.ConsumptionMetrics, error)
 		nodeType = strings.ToLower(nodeType)
 
 		// Calculate CPU and Memory
-		vmFeature := specs.Providers.GetFeature(providerType, nodeType)
+		vmFeature := specs.GetFeature(providerType, nodeType)
 		if vmFeature == nil {
 			return nil, fmt.Errorf("providerType: %s and nodeType: %s does not exist in the map", providerType, nodeType)
 		}

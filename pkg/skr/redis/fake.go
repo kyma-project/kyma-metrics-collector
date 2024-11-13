@@ -9,9 +9,9 @@ import (
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
 
-type FakeSvcClient struct{}
+type FakeRedisClient struct{}
 
-func (fakeSvcClient FakeSvcClient) NewClient(kmccache.Record) (*Client, error) {
+func (fakeSvcClient FakeRedisClient) NewClient(kmccache.Record) (*Client, error) {
 	nodeList := kmctesting.GetSvcsWithLoadBalancers()
 	scheme, err := skrcommons.SetupScheme()
 	if err != nil {

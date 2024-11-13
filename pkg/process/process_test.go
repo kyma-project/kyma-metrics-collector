@@ -26,6 +26,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
 	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
+	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
 	skrsvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/svc"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
@@ -852,6 +853,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 			fakeNodeClient := skrnode.FakeNodeClient{}
 			fakePVCClient := skrpvc.FakePVCClient{}
 			fakeSvcClient := skrsvc.FakeSvcClient{}
+			fakeRedisClient := skrredis.FakeRedisClient{}
 
 			// initiate process instance.
 			givenProcess := &Process{
@@ -865,6 +867,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				NodeConfig:        fakeNodeClient,
 				PVCConfig:         fakePVCClient,
 				SvcConfig:         fakeSvcClient,
+				RedisConfig:       fakeRedisClient,
 			}
 
 			// when
@@ -988,6 +991,7 @@ func TestExecute(t *testing.T) {
 	fakeNodeClient := skrnode.FakeNodeClient{}
 	fakePVCClient := skrpvc.FakePVCClient{}
 	fakeSvcClient := skrsvc.FakeSvcClient{}
+	fakeRedisClient := skrredis.FakeRedisClient{}
 
 	newProcess := &Process{
 		EDPClient:         edpClient,
@@ -1000,6 +1004,7 @@ func TestExecute(t *testing.T) {
 		NodeConfig:        fakeNodeClient,
 		PVCConfig:         fakePVCClient,
 		SvcConfig:         fakeSvcClient,
+		RedisConfig:       fakeRedisClient,
 	}
 
 	go func() {

@@ -34,25 +34,33 @@ type RedisInfo struct {
 	PriceCapacityUnits int `json:"price_cu"`
 }
 
-func (p Providers) GetFeature(cloudProvider, vmType string) *Feature {
+func (pcs *PublicCloudSpecs) GetFeature(cloudProvider, vmType string) *Feature {
 	switch cloudProvider {
 	case AWS:
-		if feature, ok := p.AWS[vmType]; ok {
+		if feature, ok := pcs.Providers.AWS[vmType]; ok {
 			return &feature
 		}
 	case Azure:
-		if feature, ok := p.Azure[vmType]; ok {
+		if feature, ok := pcs.Providers.Azure[vmType]; ok {
 			return &feature
 		}
 	case GCP:
-		if feature, ok := p.GCP[vmType]; ok {
+		if feature, ok := pcs.Providers.GCP[vmType]; ok {
 			return &feature
 		}
 	case CCEE:
-		if feature, ok := p.OpenStack[vmType]; ok {
+		if feature, ok := pcs.Providers.OpenStack[vmType]; ok {
 			return &feature
 		}
 	}
+	return nil
+}
+
+func (pcs *PublicCloudSpecs) GetRedisInfo(tier string) *RedisInfo {
+	if redisInfo, ok := pcs.Redis[tier]; ok {
+		return &redisInfo
+	}
+
 	return nil
 }
 
