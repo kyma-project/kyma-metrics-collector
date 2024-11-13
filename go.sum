@@ -183,6 +183,8 @@ github.com/kyma-incubator/hydroform/install v0.0.0-20210525111154-8fe3a378654f h
 github.com/kyma-incubator/hydroform/install v0.0.0-20210525111154-8fe3a378654f/go.mod h1:/qouJL+g8Tsllh/VcxK1Li6NCyuqyXSlq1i9InKSZJk=
 github.com/kyma-project/cloud-manager v0.1.5-0.20241014091706-ba6a5cecdfb7 h1:dLDPuoQyM3pEtstHfRMsuAGbRE4M3nNmSxJK/38YOsI=
 github.com/kyma-project/cloud-manager v0.1.5-0.20241014091706-ba6a5cecdfb7/go.mod h1:sXuiHMp5iU+9b1ZgCV18h9v/ASmNlqTcGPuTTTCsDBU=
+github.com/kyma-project/cloud-manager v0.1.5-0.20241113200138-f935e7d62359 h1:s6bFx8jNTrgmNYkfdwJhmmaN4aA+eQ8+cPqss+2W2HE=
+github.com/kyma-project/cloud-manager v0.1.5-0.20241113200138-f935e7d62359/go.mod h1:sXuiHMp5iU+9b1ZgCV18h9v/ASmNlqTcGPuTTTCsDBU=
 github.com/kyma-project/control-plane/components/provisioner v0.0.0-20230829053645-089304053b8d h1:4CXt3urEn22GxBRNSY6kxlGAIJwKHp6XDjwD2AJhf8Y=
 github.com/kyma-project/control-plane/components/provisioner v0.0.0-20230829053645-089304053b8d/go.mod h1:dskjODHoePep31rb2cpQnSsHXgM8/ES8v55BHmFjgwo=
 github.com/kyma-project/kyma-environment-broker v0.0.1 h1:TuA5ZYLmsQU7Pk4+cLnVvIJYsgWmAj9qT7UvcBWSkGU=

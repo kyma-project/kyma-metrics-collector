@@ -8,7 +8,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/jellydator/ttlcache/v3 v3.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/kyma-project/cloud-manager v0.1.5-0.20241014091706-ba6a5cecdfb7
+	github.com/kyma-project/cloud-manager v0.1.5-0.20241113200138-f935e7d62359
 	github.com/kyma-project/kyma-environment-broker v0.0.1
 	github.com/onsi/gomega v1.35.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
