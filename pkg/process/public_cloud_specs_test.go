@@ -209,7 +209,7 @@ func TestGetFeature(t *testing.T) {
 	}
 }
 
-func TesGetRedisInfo(t *testing.T) {
+func TestGetRedisInfo(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
 	specs, err := LoadPublicCloudSpecs(config)
@@ -221,17 +221,17 @@ func TesGetRedisInfo(t *testing.T) {
 		wantNil       bool
 	}{
 		{
-			tier: "s1",
+			tier: "S1",
 			expectedRedis: RedisInfo{
-				PriceStorageGB:     0,
-				PriceCapacityUnits: 0,
+				PriceStorageGB:     182,
+				PriceCapacityUnits: 74,
 			},
 		},
 		{
-			tier: "p1",
+			tier: "P1",
 			expectedRedis: RedisInfo{
-				PriceStorageGB:     0,
-				PriceCapacityUnits: 0,
+				PriceStorageGB:     1903,
+				PriceCapacityUnits: 773,
 			},
 		},
 		{
@@ -247,6 +247,7 @@ func TesGetRedisInfo(t *testing.T) {
 				g.Expect(gotRedis).Should(gomega.BeNil())
 				return
 			}
+			g.Expect(gotRedis).Should(gomega.Not(gomega.BeNil()))
 			g.Expect(*gotRedis).Should(gomega.Equal(tc.expectedRedis))
 		})
 	}
