@@ -169,6 +169,10 @@ func getSizeInGB(value *resource.Quantity) int64 {
 func listRedisTiers(l *skrredis.RedisList) []string {
 	var tiers []string
 
+	if l == nil {
+		return tiers
+	}
+
 	for _, redis := range l.AWS.Items {
 		tiers = append(tiers, string(redis.Spec.RedisTier))
 	}
