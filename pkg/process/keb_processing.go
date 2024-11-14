@@ -24,6 +24,7 @@ func (p *Process) pollKEBForRuntimes() {
 		if err != nil {
 			p.namedLogger().With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).
 				Error("get runtimes from KEB")
+			p.namedLogger().Infof("waiting to poll KEB again after %v....", p.KEBClient.Config.PollWaitDuration)
 			time.Sleep(p.KEBClient.Config.PollWaitDuration)
 
 			continue
@@ -99,16 +100,17 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 
 			// Cluster is trackable and exists in the cache
 			if record, ok := recordObj.(kmccache.Record); ok {
-				if record.ShootName != runtime.ShootName {
-					// The shootname has changed hence the record in the cache is not valid anymore
-					// No need to queue as the subAccountID already exists in queue
-					p.Cache.Set(runtime.SubAccountID, newRecord, cache.NoExpiration)
-					p.namedLoggerWithRecord(&record).Debug("Resetted the values in cache for subAccount")
+				if record.ShootName == runtime.ShootName {
+					continue
+				}
+				// The shootname has changed hence the record in the cache is not valid anymore
+				// No need to queue as the subAccountID already exists in queue
+				p.Cache.Set(runtime.SubAccountID, newRecord, cache.NoExpiration)
+				p.namedLoggerWithRecord(&record).Debug("Resetted the values in cache for subAccount")
 
-					// delete metrics for old shoot name.
-					if success := deleteMetrics(record); !success {
-						p.namedLoggerWithRecord(&record).Info("prometheus metrics were not successfully removed for subAccount")
-					}
+				// delete metrics for old shoot name.
+				if success := deleteMetrics(record); !success {
+					p.namedLoggerWithRecord(&record).Info("prometheus metrics were not successfully removed for subAccount")
 				}
 			}
 
