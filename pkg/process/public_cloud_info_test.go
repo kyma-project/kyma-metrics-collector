@@ -18,6 +18,7 @@ func TestGetFeature(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 	providersData, err := kmctesting.LoadFixtureFromFile(providersFile)
 	g.Expect(err).Should(gomega.BeNil())
+
 	config := &env.Config{PublicCloudSpecs: string(providersData)}
 	providers, err := LoadPublicCloudSpecs(config)
 	g.Expect(err).Should(gomega.BeNil())
@@ -207,6 +208,7 @@ func TestGetFeature(t *testing.T) {
 				g.Expect(gotFeature).Should(gomega.BeNil())
 				return
 			}
+
 			g.Expect(*gotFeature).Should(gomega.Equal(tc.expectedFeature))
 		})
 	}

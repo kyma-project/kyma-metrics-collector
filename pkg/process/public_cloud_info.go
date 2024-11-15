@@ -52,6 +52,7 @@ func (p Providers) GetFeature(cloudProvider, vmType string) *Feature {
 			return &feature
 		}
 	}
+
 	return nil
 }
 
@@ -62,40 +63,51 @@ func LoadPublicCloudSpecs(cfg *env.Config) (*Providers, error) {
 	}
 
 	var machineInfo MachineInfo
+
 	err := json.Unmarshal([]byte(cfg.PublicCloudSpecs), &machineInfo)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to unmarshal machine info")
 	}
+
 	awsMachinesData, err := machineInfo[AWS].MarshalJSON()
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to marshal AWS info")
 	}
+
 	awsMachines := &AWSMachines{}
+
 	err = json.Unmarshal(awsMachinesData, &awsMachines)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to unmarshal AWS machines data")
 	}
+
 	azureMachinesData, err := machineInfo[Azure].MarshalJSON()
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to marshal Azure info")
 	}
+
 	azureMachines := &AzureMachines{}
+
 	err = json.Unmarshal(azureMachinesData, azureMachines)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to unmarshal Azure machines data")
 	}
+
 	gcpMachinesData, err := machineInfo[GCP].MarshalJSON()
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to marshal GCP info")
 	}
+
 	gcpMachines := &GCPMachines{}
 	if err = json.Unmarshal(gcpMachinesData, gcpMachines); err != nil {
 		return nil, errors.Wrapf(err, "failed to unmarshal GCP machines data")
 	}
+
 	openStackMachinesData, err := machineInfo[CCEE].MarshalJSON()
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to marshal sapconvergedcloud info")
 	}
+
 	openStackMachines := &OpenStackMachines{}
 	if err = json.Unmarshal(openStackMachinesData, openStackMachines); err != nil {
 		return nil, errors.Wrapf(err, "failed to unmarshal sapconvergedcloud machines data")

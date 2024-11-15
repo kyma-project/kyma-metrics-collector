@@ -45,6 +45,7 @@ func DeleteMetrics(shootInfo kmccache.Record) bool {
 		subAccountLabel:    shootInfo.SubAccountID,
 		globalAccountLabel: shootInfo.GlobalAccountID,
 	}
+
 	return TotalQueriesMetric.DeletePartialMatch(matchLabels) > 0
 }
 

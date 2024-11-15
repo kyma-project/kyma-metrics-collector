@@ -25,11 +25,14 @@ func (c Config) NewClient(shootInfo kmccache.Record) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	dynamicClient, err := dynamic.NewForConfig(restClientConfig)
 	if err != nil {
 		return nil, err
 	}
+
 	nsResourceClient := dynamicClient.Resource(GroupVersionResource())
+
 	return &Client{Resource: nsResourceClient, ShootInfo: shootInfo}, nil
 }
 
@@ -39,20 +42,25 @@ func (c Client) List(ctx context.Context) (*corev1.PersistentVolumeClaimList, er
 		skrcommons.RecordSKRQuery(false, skrcommons.ListingPVCsAction, c.ShootInfo)
 		return nil, err
 	}
+
 	skrcommons.RecordSKRQuery(true, skrcommons.ListingPVCsAction, c.ShootInfo)
+
 	return convertUnstructuredListToPVCList(unstructuredPVCList)
 }
 
 func convertUnstructuredListToPVCList(unstructuredPVCList *unstructured.UnstructuredList) (*corev1.PersistentVolumeClaimList, error) {
 	pvcList := new(corev1.PersistentVolumeClaimList)
+
 	pvcListBytes, err := unstructuredPVCList.MarshalJSON()
 	if err != nil {
 		return nil, err
 	}
+
 	err = json.Unmarshal(pvcListBytes, pvcList)
 	if err != nil {
 		return nil, err
 	}
+
 	return pvcList, nil
 }
 

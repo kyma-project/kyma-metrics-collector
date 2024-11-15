@@ -20,6 +20,9 @@ const (
 	// KeyResult is used as a named key for a log message with result.
 	KeyResult = "result"
 
+	// KeyGlobalAccountID is used as a named key for a log message with global account ID.
+	KeyGlobalAccountID = "GlobalAccountID"
+
 	// KeySubAccountID is used as a named key for a log message with subaccount ID.
 	KeySubAccountID = "SubAccountID"
 
@@ -78,6 +81,7 @@ func newLogger(logLevel zapcore.Level) *zap.Logger {
 	encoderConfig.CallerKey = "caller"
 
 	var encoder zapcore.Encoder
+
 	switch outputFormat {
 	case OutputFormatPlain:
 		encoder = zapcore.NewConsoleEncoder(encoderConfig)

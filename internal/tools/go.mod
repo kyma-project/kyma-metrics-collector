@@ -2,7 +2,10 @@ module github.com/kyma-project/kyma-metrics-collector/internal/tools
 
 go 1.23.1
 
-require github.com/golangci/golangci-lint v1.61.0
+require (
+	github.com/bombsimon/wsl/v4 v4.4.1
+	github.com/golangci/golangci-lint v1.61.0
+)
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
@@ -27,7 +30,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bkielbasa/cyclop v1.2.1 // indirect
 	github.com/blizzy78/varnamelen v0.8.0 // indirect
-	github.com/bombsimon/wsl/v4 v4.4.1 // indirect
 	github.com/breml/bidichk v0.2.7 // indirect
 	github.com/breml/errchkjson v0.3.6 // indirect
 	github.com/butuzov/ireturn v0.3.0 // indirect

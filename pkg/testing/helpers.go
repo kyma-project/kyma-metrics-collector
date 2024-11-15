@@ -105,6 +105,7 @@ func StartTestServer(path string, testHandler http.HandlerFunc, g gomega.Gomega)
 func Get2Nodes() *corev1.NodeList {
 	node1 := GetNode("node1", "Standard_D8_v3")
 	node2 := GetNode("node2", "Standard_D8_v3")
+
 	return &corev1.NodeList{
 		Items: []corev1.Node{node1, node2},
 	}
@@ -113,6 +114,7 @@ func Get2Nodes() *corev1.NodeList {
 func Get2NodesOpenStack() *corev1.NodeList {
 	node1 := GetNode("node1", "g_c12_m48")
 	node2 := GetNode("node2", "g_c12_m48")
+
 	return &corev1.NodeList{
 		Items: []corev1.Node{node1, node2},
 	}
@@ -122,6 +124,7 @@ func Get3NodesWithStandardD8v3VMType() *corev1.NodeList {
 	node1 := GetNode("node1", "Standard_D8_v3")
 	node2 := GetNode("node2", "Standard_D8_v3")
 	node3 := GetNode("node3", "Standard_D8_v3")
+
 	return &corev1.NodeList{
 		TypeMeta: metaV1.TypeMeta{
 			Kind:       "NodeList",
@@ -135,6 +138,7 @@ func Get3NodesWithFooVMType() *corev1.NodeList {
 	node1 := GetNode("node1", "foo")
 	node2 := GetNode("node2", "foo")
 	node3 := GetNode("node3", "foo")
+
 	return &corev1.NodeList{
 		Items: []corev1.Node{node1, node2, node3},
 	}
@@ -164,12 +168,15 @@ const (
 
 func GenerateRandomAlphaString(length int) string {
 	const bufferScalingFactor = 1.3
+
 	result := make([]byte, length)
+
 	bufferSize := int(float64(length) * bufferScalingFactor)
 	for i, j, randomBytes := 0, 0, []byte{}; i < length; j++ {
 		if j%bufferSize == 0 {
 			randomBytes = secureRandomBytes(bufferSize)
 		}
+
 		if idx := int(randomBytes[j%length] & letterIdxMask); idx < len(letterBytes) {
 			result[i] = letterBytes[idx]
 			i++
@@ -182,10 +189,12 @@ func GenerateRandomAlphaString(length int) string {
 // secureRandomBytes returns the requested number of bytes using crypto/rand.
 func secureRandomBytes(length int) []byte {
 	randomBytes := make([]byte, length)
+
 	_, err := rand.Read(randomBytes)
 	if err != nil {
 		log.Fatal("Unable to generate random bytes")
 	}
+
 	return randomBytes
 }
 
@@ -304,6 +313,7 @@ func GetNFSPV(name, namespace, capacity string) *corev1.PersistentVolumeClaim {
 func Get2SvcsOfDiffTypes() *corev1.ServiceList {
 	svc1 := GetSvc("svc1", "foo", WithClusterIP)
 	svc2 := GetSvc("svc2", "foo", WithLoadBalancer)
+
 	return &corev1.ServiceList{
 		TypeMeta: metaV1.TypeMeta{
 			Kind:       "ServiceList",
@@ -318,6 +328,7 @@ func Get2SvcsOfDiffTypes() *corev1.ServiceList {
 func GetSvcsWithLoadBalancers() *corev1.ServiceList {
 	svc1 := GetSvc("svc1", "foo", WithLoadBalancer)
 	svc2 := GetSvc("svc2", "bar", WithLoadBalancer)
+
 	return &corev1.ServiceList{
 		TypeMeta: metaV1.TypeMeta{
 			Kind:       "ServiceList",
@@ -385,15 +396,18 @@ func PrometheusGatherAndReturn(c prometheus.Collector, metricName string) (*dto.
 	if err := reg.Register(c); err != nil {
 		return nil, err
 	}
+
 	mf, err := reg.Gather()
 	if err != nil {
 		return nil, err
 	}
+
 	for _, m := range mf {
 		if m.GetName() == metricName {
 			return m, nil
 		}
 	}
+
 	return nil, fmt.Errorf("not found")
 }
 
@@ -403,5 +417,6 @@ func PrometheusFilterLabelPair(pairs []*dto.LabelPair, name string) *dto.LabelPa
 			return p
 		}
 	}
+
 	return nil
 }

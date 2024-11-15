@@ -97,5 +97,6 @@ func NewFakeClient(pvcList *corev1.PersistentVolumeClaimList, shootInfo kmccache
 		}, pvcList)
 
 	nsResourceClient := dynamicClient.Resource(GroupVersionResource())
+
 	return &Client{Resource: nsResourceClient, ShootInfo: shootInfo}, nil
 }
