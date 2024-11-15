@@ -49,7 +49,7 @@ const (
 	testEnv               = "env"
 	retryCount            = 1
 
-	fecthedClustersMetricName = "kmc_process_fetched_clusters"
+	fecthedClustersMetricName = "kmc_process_fetched_clusters_total"
 )
 
 func TestGetOldRecordIfMetricExists(t *testing.T) {
@@ -63,6 +63,7 @@ func TestGetOldRecordIfMetricExists(t *testing.T) {
 		Metric:       NewMetric(),
 	}
 	expectedSubAccIDWithNoMetrics := uuid.New().String()
+
 	recordsToBeAdded := []kmccache.Record{
 		expectedRecord,
 		{
@@ -116,14 +117,17 @@ func TestPollKEBForRuntimes(t *testing.T) {
 		expectedRuntimes := new(kebruntime.RuntimesPage)
 		err = json.Unmarshal(runtimesResponse, expectedRuntimes)
 		g.Expect(err).Should(gomega.BeNil())
+
 		timesVisited := 0
 		expectedTimesVisited := 2
+
 		var newProcess *Process
 
 		getRuntimesHandler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			timesVisited += 1
 			t.Logf("time visited: %d", timesVisited)
 			g.Expect(req.URL.Path).To(gomega.Equal(expectedPathPrefix))
+
 			_, err := rw.Write(runtimesResponse)
 			g.Expect(err).Should(gomega.BeNil())
 			rw.WriteHeader(http.StatusOK)
@@ -178,6 +182,7 @@ func TestPollKEBForRuntimes(t *testing.T) {
 		metricName := fecthedClustersMetricName
 		numberOfAllClusters := 4
 		expectedMetricValue := 1
+
 		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
 		// check each metric with labels has the expected value
 		for _, runtimeData := range expectedRuntimes.Data {
@@ -388,7 +393,9 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		metricName := fecthedClustersMetricName
 		numberOfAllClusters := 4
 		expectedMetricValue := 1
+
 		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
+
 		for _, runtimeData := range runtimesPage.Data {
 			verifyKEBAllClustersCountMetricValue(expectedMetricValue, g, runtimeData)
 		}
@@ -428,7 +435,9 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		metricName := fecthedClustersMetricName
 		numberOfAllClusters := 4
 		expectedMetricValue := 1
+
 		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
+
 		for _, runtimeData := range runtimesPage.Data {
 			verifyKEBAllClustersCountMetricValue(expectedMetricValue, g, runtimeData)
 		}
@@ -467,7 +476,9 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		metricName := fecthedClustersMetricName
 		numberOfAllClusters := 0
 		expectedMetricValue := 0
+
 		g.Eventually(testutil.CollectAndCount(kebFetchedClusters, metricName)).Should(gomega.Equal(numberOfAllClusters))
+
 		for _, runtimeData := range runtimesPageWithNoRuntimes.Data {
 			verifyKEBAllClustersCountMetricValue(expectedMetricValue, g, runtimeData)
 		}
@@ -517,6 +528,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(err).Should(gomega.BeNil())
 
 		runtimesPage.Data = []kebruntime.RuntimeDTO{rntme}
+
 		p.populateCacheAndQueue(skrRuntimesPageWithProvisioning)
 		g.Expect(*p.Cache).To(gomega.Equal(*expectedCache))
 		gotSubAccID, _ := p.Queue.Get()
@@ -531,6 +543,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		// old shoot should not be present in the metric
 		for _, runtimeData := range runtimesPage.Data {
 			expectedMetricValue := 0
+
 			switch shootName := runtimeData.ShootName; shootName {
 			case oldShootName:
 				expectedMetricValue = 0
@@ -658,6 +671,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 			runtime := kmctesting.NewRuntimesDTO(tc.givenShoot1.SubAccountID,
 				tc.givenShoot1.ShootName, kmctesting.WithProvisioningSucceededStatus(kebruntime.StateSucceeded))
 			runtimesPage.Data = append(runtimesPage.Data, runtime)
+
 			if tc.givenIsShoot2ReturnedByKEB {
 				runtime = kmctesting.NewRuntimesDTO(tc.givenShoot2.SubAccountID,
 					tc.givenShoot2.ShootName, kmctesting.WithProvisionedAndDeprovisionedStatus(kebruntime.StateDeprovisioned))
@@ -665,6 +679,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 					runtime = kmctesting.NewRuntimesDTO(tc.givenShoot2.SubAccountID,
 						tc.givenShoot2NewName, kmctesting.WithProvisioningSucceededStatus(kebruntime.StateSucceeded))
 				}
+
 				runtimesPage.Data = append(runtimesPage.Data, runtime)
 			}
 
@@ -734,7 +749,9 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 	// given (common for all test cases).
 	logger := logger.NewLogger(zapcore.DebugLevel)
+
 	const givenMethodRecalls = 3
+
 	givenKubeConfig := "eyJmb28iOiAiYmFyIn0="
 
 	// cloud providers.
@@ -750,10 +767,12 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 			rw.WriteHeader(http.StatusCreated)
 			return
 		}
+
 		rw.WriteHeader(http.StatusBadRequest)
 	})
 	edpPath := fmt.Sprintf("/namespaces/%s/dataStreams/%s/%s/dataTenants/{tenantID}/%s/events", testNamespace,
 		testDataStream, testDataStreamVersion, testEnv)
+
 	srv := kmctesting.StartTestServer(edpPath, edpTestHandler, g)
 	defer srv.Close()
 
@@ -837,6 +856,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// given
 			testStartTimeUnix := time.Now().Unix()
+
 			subAccountProcessed.Reset()
 			subAccountProcessedTimeStamp.Reset()
 			oldMetricsPublishedGauge.Reset()
@@ -848,6 +868,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 
 			// k8s fake clients.
 			g.Expect(err).Should(gomega.BeNil())
+
 			secretKCPStored := kmctesting.NewKCPStoredSecret(tc.givenShoot.RuntimeID, tc.givenShoot.KubeConfig)
 			secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
 			fakeNodeClient := skrnode.FakeNodeClient{}
@@ -901,6 +922,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				tc.givenShoot.GlobalAccountID,
 			)
 			g.Expect(err).Should(gomega.BeNil())
+
 			if tc.wantOldMetricReused {
 				// it should have kept increasing to track consecutive number of re-use.
 				g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(givenMethodRecalls)))
@@ -944,6 +966,7 @@ func TestExecute(t *testing.T) {
 	expectedHeaders := expectedHeadersInEDPReq()
 	edpTestHandler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		timesVisited += 1
+
 		g.Expect(req.Header).To(gomega.Equal(expectedHeaders))
 		g.Expect(req.URL.Path).To(gomega.Equal(expectedPath))
 		g.Expect(req.Method).To(gomega.Equal(http.MethodPost))
@@ -983,11 +1006,13 @@ func TestExecute(t *testing.T) {
 	queue.Add(subAccID)
 
 	g.Expect(err).Should(gomega.BeNil())
+
 	secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
 
 	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
 	providers, err := LoadPublicCloudSpecs(config)
 	g.Expect(err).Should(gomega.BeNil())
+
 	fakeNodeClient := skrnode.FakeNodeClient{}
 	fakePVCClient := skrpvc.FakePVCClient{}
 	fakeSvcClient := skrsvc.FakeSvcClient{}
@@ -1048,6 +1073,7 @@ func TestExecute(t *testing.T) {
 	// The process should keep on publishing events for this subaccount to EDP.
 	// We confirm this by check if the count of published events is getting increased.
 	oldEventsSentCount := timesVisited
+
 	g.Eventually(func() bool {
 		// With a ScrapeInterval of 3 secs in an interval of 10 seconds, expected timesVisited should have at least
 		// increased by 2.
@@ -1056,12 +1082,14 @@ func TestExecute(t *testing.T) {
 
 	// Clean it from the cache once SKR is deprovisioned
 	newProcess.Cache.Delete(subAccID)
+
 	go func() {
 		newProcess.execute(1)
 	}()
 	// The process should not publish more events for this subaccount to EDP.
 	// We confirm this by check if the count of published events remains the same after some time.
 	oldEventsSentCount = timesVisited
+
 	time.Sleep(timeout)
 	g.Expect(timesVisited).To(gomega.Equal(oldEventsSentCount))
 	// the queue should be empty.
@@ -1081,13 +1109,16 @@ func areQueuesEqual(src, dest workqueue.TypedDelayingInterface[string]) bool {
 	if src.Len() != dest.Len() {
 		return false
 	}
+
 	for src.Len() > 0 {
 		srcItem, _ := src.Get()
 		destItem, _ := dest.Get()
+
 		if srcItem != destItem {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -1097,6 +1128,7 @@ func AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage *kebruntime.RuntimesPa
 		shootName := fmt.Sprintf("shoot-%s", shootID)
 		runtime := kmctesting.NewRuntimesDTO(successfulID, shootName, kmctesting.WithProvisioningSucceededStatus(kebruntime.StateSucceeded))
 		runtimesPage.Data = append(runtimesPage.Data, runtime)
+
 		err := expectedCache.Add(successfulID, kmccache.Record{
 			SubAccountID: successfulID,
 			ShootName:    shootName,
@@ -1104,8 +1136,10 @@ func AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage *kebruntime.RuntimesPa
 		if err != nil {
 			return nil, nil, nil, err
 		}
+
 		expectedQueue.Add(successfulID)
 	}
+
 	return runtimesPage, expectedCache, expectedQueue, nil
 }
 

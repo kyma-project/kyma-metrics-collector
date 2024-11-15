@@ -92,5 +92,6 @@ func NewFakeClient(nodeList *corev1.NodeList, shootInfo kmccache.Record) (*Clien
 		}, nodeList)
 
 	nsResourceClient := dynamicClient.Resource(GroupVersionResource())
+
 	return &Client{Resource: nsResourceClient, ShootInfo: shootInfo}, nil
 }

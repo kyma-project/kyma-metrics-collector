@@ -14,5 +14,6 @@ func SetupScheme() (*runtime.Scheme, error) {
 	if err := cloudresourcesv1beta1.AddToScheme(scheme); err != nil {
 		return nil, err
 	}
+
 	return scheme, nil
 }

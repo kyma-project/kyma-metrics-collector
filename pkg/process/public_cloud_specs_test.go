@@ -204,6 +204,7 @@ func TestGetFeature(t *testing.T) {
 				g.Expect(gotFeature).Should(gomega.BeNil())
 				return
 			}
+
 			g.Expect(*gotFeature).Should(gomega.Equal(tc.expectedFeature))
 		})
 	}

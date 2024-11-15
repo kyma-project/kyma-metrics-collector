@@ -14,7 +14,6 @@ import (
 	"go.uber.org/zap"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/util/workqueue"
 
 	"github.com/kyma-project/kyma-metrics-collector/env"
 	"github.com/kyma-project/kyma-metrics-collector/options"
@@ -22,6 +21,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	kmcprocess "github.com/kyma-project/kyma-metrics-collector/pkg/process"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/queue"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/service"
 	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
 	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
@@ -50,12 +50,14 @@ func main() {
 	if err != nil {
 		logger.With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("Load public cloud spec")
 	}
+
 	logger.Debugf("public cloud spec: %v", publicCloudSpecs)
 
 	k8sConfig, err := rest.InClusterConfig()
 	if err != nil {
 		logger.With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("Load InCluster Config")
 	}
+
 	secretCacheClient, err := kubernetes.NewForConfig(k8sConfig)
 	if err != nil {
 		logger.With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("Setup secrets client")
@@ -66,6 +68,7 @@ func main() {
 	if err := envconfig.Process("", kebConfig); err != nil {
 		logger.With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("Load KEB config")
 	}
+
 	kebClient := keb.NewClient(kebConfig, logger)
 	logger.Debugf("keb config: %v", kebConfig)
 
@@ -83,11 +86,10 @@ func main() {
 	if err != nil {
 		logger.With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("Load EDP token")
 	}
+
 	edpConfig.Token = token
 
 	edpClient := edp.NewClient(edpConfig, logger)
-
-	queue := workqueue.TypedNewDelayingQueue[string]()
 
 	kmcProcess := kmcprocess.Process{
 		KEBClient:         kebClient,
@@ -97,7 +99,7 @@ func main() {
 		PublicCloudSpecs:  publicCloudSpecs,
 		Cache:             cache,
 		ScrapeInterval:    opts.ScrapeInterval,
-		Queue:             queue,
+		Queue:             queue.NewQueue("trackable-skrs"),
 		WorkersPoolSize:   opts.WorkerPoolSize,
 		NodeConfig:        skrnode.Config{},
 		PVCConfig:         skrpvc.Config{},
@@ -112,6 +114,7 @@ func main() {
 	if opts.DebugPort > 0 {
 		enableDebugging(opts.DebugPort, logger)
 	}
+
 	router := mux.NewRouter()
 	router.Path(healthzPath).HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusOK)
@@ -146,6 +149,7 @@ func enableDebugging(debugPort int, log *zap.SugaredLogger) {
 	debugRouter.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
 	debugRouter.Handle("/debug/pprof/heap", pprof.Handler("heap"))
 	debugRouter.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+
 	go func() {
 		debugSvc.Start()
 	}()
@@ -157,6 +161,8 @@ func getEDPToken() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	trimmedToken := strings.TrimSuffix(string(token), "\n")
+
 	return trimmedToken, nil
 }

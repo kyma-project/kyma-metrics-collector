@@ -33,14 +33,17 @@ func GetKubeConfigFromCache(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interface
 	error,
 ) {
 	kubeConfigCache.DeleteExpired()
+	recordMetrics()
 
 	if kubeConfigCache.Has(runtimeID) {
 		logger.Debugf("Kubeconfig cache found kubeconfig for cluster (runtimeID: %s) in cache", runtimeID)
+
 		cacheEntry := kubeConfigCache.Get(runtimeID)
 		if cacheEntry.Value() == "" {
 			return "", fmt.Errorf("kubeconfig cache failed to find valid kubeconfig for cluster (runtimeID: %s), will retry the kubeconfig retrieval after %s",
 				runtimeID, cacheEntry.ExpiresAt())
 		}
+
 		return cacheEntry.Value(), nil
 	}
 
@@ -64,6 +67,7 @@ func getKubeConfigFromSecret(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interfac
 	error,
 ) {
 	secretResourceName := fmt.Sprintf("kubeconfig-%s", runtimeID)
+
 	secret, err := getKubeConfigSecret(logger, coreV1, runtimeID, secretResourceName)
 	if err != nil {
 		return "", err
@@ -98,10 +102,13 @@ func getKubeConfigSecret(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interface,
 				secretResourceName, runtimeID, err)
 			return nil, err
 		}
+
 		logger.Errorf("kubeconfig cache failed to lookup kubeconfig-secret '%s' for cluster with runtimeID %s: %s",
 			secretResourceName, runtimeID, err)
+
 		return nil, err
 	}
+
 	return secret, nil
 }
 
@@ -110,10 +117,12 @@ func getTTL() time.Duration {
 	if ttl == "" {
 		return defaultTTL
 	}
+
 	ttlDuration, err := time.ParseDuration(ttl)
 	if err != nil {
 		return defaultTTL
 	}
+
 	return ttlDuration
 }
 
@@ -121,5 +130,6 @@ func getJitterTTL() time.Duration {
 	maxTTL := getTTL()
 	buffer := int64(maxTTL.Minutes() / 3) //nolint:mnd // we accept TTLS with 1/3 length above maxTTL
 	jitter := rand.Int63n(buffer) + int64(maxTTL.Minutes())
+
 	return time.Duration(jitter) * time.Minute
 }

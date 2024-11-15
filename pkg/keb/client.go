@@ -32,6 +32,7 @@ func NewClient(config *Config, logger *zap.SugaredLogger) *Client {
 		Transport: http.DefaultTransport,
 		Timeout:   config.Timeout,
 	}
+
 	return &Client{
 		HTTPClient: kebHTTPClient,
 		Logger:     logger,
@@ -44,10 +45,12 @@ func (c Client) NewRequest() (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	req := &http.Request{
 		Method: http.MethodGet,
 		URL:    kebURL,
 	}
+
 	return req, nil
 }
 
@@ -56,29 +59,36 @@ func (c Client) GetAllRuntimes(req *http.Request) (*kebruntime.RuntimesPage, err
 	pageNum := 1
 	recordsSeen := 0
 	finalRuntimesPage := new(kebruntime.RuntimesPage)
+
 	for morePages {
 		runtimesPage, err := c.getRuntimesPerPage(req, pageNum)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get runtimes from KEB")
 		}
+
 		finalRuntimesPage.Data = append(finalRuntimesPage.Data, runtimesPage.Data...)
 		finalRuntimesPage.Count = len(finalRuntimesPage.Data)
 		recordsSeen += runtimesPage.Count
 		c.namedLogger().Debugf("count: %d, records-seen: %d, page-num: %d, total-count: %d",
 			runtimesPage.Count, recordsSeen, pageNum, runtimesPage.TotalCount)
+
 		if recordsSeen >= runtimesPage.TotalCount {
 			morePages = false
 			continue
 		}
+
 		pageNum += 1
 	}
+
 	finalRuntimesPage.TotalCount = recordsSeen
+
 	return finalRuntimesPage, nil
 }
 
 func (c Client) getRuntimesPerPage(req *http.Request, pageNum int) (*kebruntime.RuntimesPage, error) {
 	// define URL.
 	c.Logger.Debugf("polling for runtimes with URL: %s", req.URL.String())
+
 	query := url.Values{
 		"page": []string{fmt.Sprintf("%d", pageNum)},
 	}
@@ -105,9 +115,11 @@ func (c Client) getRuntimesPerPage(req *http.Request, pageNum int) (*kebruntime.
 				// record metric.
 				responseCode := http.StatusBadRequest
 				urlErr := err.(*url.Error)
+
 				if urlErr.Timeout() {
 					responseCode = http.StatusRequestTimeout
 				}
+
 				recordKEBLatency(duration, responseCode, c.Config.URL)
 				// return error.
 				return nil, err
@@ -142,10 +154,12 @@ func (c Client) getRuntimesPerPage(req *http.Request, pageNum int) (*kebruntime.
 			if err = json.Unmarshal(body, runtimesPage); err != nil {
 				return nil, errors.Wrapf(err, "failed to unmarshal runtimes response")
 			}
+
 			return runtimesPage, err
 		},
 		retryOptions...,
 	)
+
 	return runtimesPage, err
 }
 

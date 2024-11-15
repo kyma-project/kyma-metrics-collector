@@ -13,6 +13,7 @@ type FakeNodeClient struct{}
 
 func (fakeNodeClient FakeNodeClient) NewClient(kmccache.Record) (*Client, error) {
 	nodeList := kmctesting.Get3NodesWithStandardD8v3VMType()
+
 	scheme, err := skrcommons.SetupScheme()
 	if err != nil {
 		return nil, err
@@ -24,5 +25,6 @@ func (fakeNodeClient FakeNodeClient) NewClient(kmccache.Record) (*Client, error)
 		}, nodeList)
 
 	nsResourceClient := dynamicClient.Resource(GroupVersionResource())
+
 	return &Client{Resource: nsResourceClient}, nil
 }
