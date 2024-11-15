@@ -96,10 +96,12 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 
 	// Get Redis resources
 	var redisList *skrredis.RedisList
+
 	redisClient, err := p.RedisConfig.NewClient(record)
 	if err != nil {
 		return record, err
 	}
+
 	redisList, err = redisClient.List(ctx)
 	if err != nil {
 		return record, err
@@ -113,6 +115,7 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 		svcList:   svcList,
 		redisList: redisList,
 	}
+
 	metric, err := input.Parse(p.PublicCloudSpecs)
 	if err != nil {
 		return record, err

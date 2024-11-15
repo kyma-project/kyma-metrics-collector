@@ -13,6 +13,7 @@ type FakeRedisClient struct{}
 
 func (fakeSvcClient FakeRedisClient) NewClient(kmccache.Record) (*Client, error) {
 	nodeList := kmctesting.GetSvcsWithLoadBalancers()
+
 	scheme, err := skrcommons.SetupScheme()
 	if err != nil {
 		return nil, err

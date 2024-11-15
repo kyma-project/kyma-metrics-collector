@@ -97,6 +97,7 @@ func (c Client) listRedisInstances(
 		}
 
 		skrcommons.RecordSKRQuery(false, actionPromLabel, c.ShootInfo)
+
 		return err
 	}
 

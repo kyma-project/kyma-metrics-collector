@@ -248,6 +248,7 @@ func TestGetRedisInfo(t *testing.T) {
 				g.Expect(gotRedis).Should(gomega.BeNil())
 				return
 			}
+
 			g.Expect(gotRedis).Should(gomega.Not(gomega.BeNil()))
 			g.Expect(*gotRedis).Should(gomega.Equal(tc.expectedRedis))
 		})

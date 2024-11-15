@@ -53,6 +53,7 @@ func (pcs *PublicCloudSpecs) GetFeature(cloudProvider, vmType string) *Feature {
 			return &feature
 		}
 	}
+
 	return nil
 }
 
