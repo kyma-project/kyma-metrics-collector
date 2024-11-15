@@ -31,7 +31,7 @@ var (
 		Namespace:   namespace,
 		Subsystem:   subsystem,
 		Name:        depthKey,
-		Help:        "Current depth of workqueue",
+		Help:        "Current depth of workqueue.",
 		ConstLabels: nil,
 	}, []string{"name"})
 
@@ -39,14 +39,14 @@ var (
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      addsKey,
-		Help:      "Total number of adds handled by workqueue",
+		Help:      "Total number of adds handled by workqueue.",
 	}, []string{"name"})
 
 	latency = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      queueLatencyKey,
-		Help:      "How long in seconds an item stays in workqueue before being requested.",
+		Help:      "Amount of time (in seconds) when an item stays in workqueue before being requested.",
 		Buckets:   prometheus.ExponentialBuckets(smallestBucket, bucketFactor, bucketCount),
 	}, []string{"name"})
 
@@ -54,7 +54,7 @@ var (
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      workDurationKey,
-		Help:      "How long in seconds processing an item from workqueue takes.",
+		Help:      "Amount of time (in seconds) taken for processing an item from workqueue.",
 		Buckets:   prometheus.ExponentialBuckets(smallestBucket, bucketFactor, bucketCount),
 	}, []string{"name"})
 
@@ -62,25 +62,21 @@ var (
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      unfinishedWorkKey,
-		Help: "How many seconds of work has done that " +
-			"is in progress and hasn't been observed by work_duration. Large " +
-			"values indicate stuck threads. One can deduce the number of stuck " +
-			"threads by observing the rate at which this increases.",
+		Help:      "Amount of time (in seconds) already taken by the work in progress that hasn't been observed by **work_duration**. Large values indicate stuck threads. You can deduce the number of stuck threads by observing the rate at which the metric increases.",
 	}, []string{"name"})
 
 	longestRunningProcessor = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      longestRunningProcessorKey,
-		Help: "How many seconds has the longest running " +
-			"processor for workqueue been running.",
+		Help:      "Amount of time (in seconds) taken by the longest running processor for workqueue.",
 	}, []string{"name"})
 
 	retries = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
 		Subsystem: subsystem,
 		Name:      retriesKey,
-		Help:      "Total number of retries handled by workqueue",
+		Help:      "Total number of retries handled by workqueue.",
 	}, []string{"name"})
 )
 

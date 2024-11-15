@@ -1,4 +1,4 @@
-### Metrics Emitted by Kyma Metrics Collector:
+# Metrics Emitted by Kyma Metrics Collector
 
 | Metric                                                          | Description                                                                                   |
 |-----------------------------------------------------------------|:----------------------------------------------------------------------------------------------|
