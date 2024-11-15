@@ -135,6 +135,6 @@ func (eClient Client) Send(req *http.Request, payload []byte) (*http.Response, e
 	return resp, nil
 }
 
-func (c *Client) namedLogger() *zap.SugaredLogger {
+func (c Client) namedLogger() *zap.SugaredLogger {
 	return c.Logger.Named(clientName).With("component", "EDP")
 }
