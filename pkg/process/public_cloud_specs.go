@@ -81,5 +81,25 @@ func LoadPublicCloudSpecs(cfg *env.Config) (*PublicCloudSpecs, error) {
 		return nil, errors.Wrapf(err, "failed to unmarshal public cloud specs")
 	}
 
+	if len(specs.Redis) == 0 {
+		return nil, fmt.Errorf("public cloud specs do not contain Redis tiers")
+	}
+
+	if len(specs.Providers.AWS) == 0 {
+		return nil, fmt.Errorf("public cloud specs do not contain AWS VM types")
+	}
+
+	if len(specs.Providers.Azure) == 0 {
+		return nil, fmt.Errorf("public cloud specs do not contain Azure VM types")
+	}
+
+	if len(specs.Providers.GCP) == 0 {
+		return nil, fmt.Errorf("public cloud specs do not contain GCP VM types")
+	}
+
+	if len(specs.Providers.OpenStack) == 0 {
+		return nil, fmt.Errorf("public cloud specs do not contain OpenStack VM types")
+	}
+
 	return &specs, nil
 }
