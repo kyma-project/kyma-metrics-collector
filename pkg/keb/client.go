@@ -163,6 +163,6 @@ func (c Client) getRuntimesPerPage(req *http.Request, pageNum int) (*kebruntime.
 	return runtimesPage, err
 }
 
-func (c *Client) namedLogger() *zap.SugaredLogger {
+func (c Client) namedLogger() *zap.SugaredLogger {
 	return c.Logger.Named(clientName).With("component", "KEB")
 }
