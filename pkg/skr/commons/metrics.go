@@ -10,19 +10,22 @@ import (
 )
 
 const (
-	namespace              = "kmc"
-	subsystem              = "skr"
-	TotalQueriesMetricName = "query_total"
-	ListingNodesAction     = "listing_nodes"
-	ListingPVCsAction      = "listing_pvc"
-	ListingSVCsAction      = "listing_svc"
-	shootNameLabel         = "shoot_name"
-	instanceIdLabel        = "instance_id"
-	runtimeIdLabel         = "runtime_id"
-	subAccountLabel        = "sub_account_id"
-	globalAccountLabel     = "global_account_id"
-	successLabel           = "success"
-	actionLabel            = "action"
+	namespace                 = "kmc"
+	subsystem                 = "skr"
+	TotalQueriesMetricName    = "query_total"
+	ListingNodesAction        = "listing_nodes"
+	ListingPVCsAction         = "listing_pvc"
+	ListingSVCsAction         = "listing_svc"
+	ListingRedisesAWSAction   = "listing_redis_aws"
+	ListingRedisesAzureAction = "listing_redis_azure"
+	ListingRedisesGCPAction   = "listing_redis_gcp"
+	shootNameLabel            = "shoot_name"
+	instanceIdLabel           = "instance_id"
+	runtimeIdLabel            = "runtime_id"
+	subAccountLabel           = "sub_account_id"
+	globalAccountLabel        = "global_account_id"
+	successLabel              = "success"
+	actionLabel               = "action"
 )
 
 var TotalQueriesMetric = promauto.NewCounterVec(

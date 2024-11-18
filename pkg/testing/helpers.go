@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 	kebruntime "github.com/kyma-project/kyma-environment-broker/common/runtime"
 	"github.com/onsi/gomega"
 	"github.com/prometheus/client_golang/prometheus"
@@ -419,4 +420,67 @@ func PrometheusFilterLabelPair(pairs []*dto.LabelPair, name string) *dto.LabelPa
 	}
 
 	return nil
+}
+
+func AWSRedis(name, namespace string, tier cloudresourcesv1beta1.AwsRedisTier) *cloudresourcesv1beta1.AwsRedisInstance {
+	return &cloudresourcesv1beta1.AwsRedisInstance{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: cloudresourcesv1beta1.AwsRedisInstanceSpec{
+			RedisTier: tier,
+		},
+	}
+}
+
+func AWSRedisList() *cloudresourcesv1beta1.AwsRedisInstanceList {
+	return &cloudresourcesv1beta1.AwsRedisInstanceList{
+		Items: []cloudresourcesv1beta1.AwsRedisInstance{
+			*AWSRedis("aws-redis-1", "aws-redis-1-namespace", cloudresourcesv1beta1.AwsRedisTierS1),
+			*AWSRedis("aws-redis-2", "aws-redis-2-namespace", cloudresourcesv1beta1.AwsRedisTierP1),
+		},
+	}
+}
+
+func AzureRedis(name, namespace string, tier cloudresourcesv1beta1.AzureRedisTier) *cloudresourcesv1beta1.AzureRedisInstance {
+	return &cloudresourcesv1beta1.AzureRedisInstance{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: cloudresourcesv1beta1.AzureRedisInstanceSpec{
+			RedisTier: tier,
+		},
+	}
+}
+
+func AzureRedisList() *cloudresourcesv1beta1.AzureRedisInstanceList {
+	return &cloudresourcesv1beta1.AzureRedisInstanceList{
+		Items: []cloudresourcesv1beta1.AzureRedisInstance{
+			*AzureRedis("azure-redis-1", "azure-redis-1-namespace", cloudresourcesv1beta1.AzureRedisTierP1),
+			*AzureRedis("azure-redis-2", "azure-redis-2-namespace", cloudresourcesv1beta1.AzureRedisTierP2),
+		},
+	}
+}
+
+func GCPRedis(name, namespace string, tier cloudresourcesv1beta1.GcpRedisTier) *cloudresourcesv1beta1.GcpRedisInstance {
+	return &cloudresourcesv1beta1.GcpRedisInstance{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: cloudresourcesv1beta1.GcpRedisInstanceSpec{
+			RedisTier: tier,
+		},
+	}
+}
+
+func GCPRedisList() *cloudresourcesv1beta1.GcpRedisInstanceList {
+	return &cloudresourcesv1beta1.GcpRedisInstanceList{
+		Items: []cloudresourcesv1beta1.GcpRedisInstance{
+			*GCPRedis("gcp-redis-1", "gcp-redis-1-namespace", cloudresourcesv1beta1.GcpRedisTierS1),
+			*GCPRedis("gcp-redis-2", "gcp-redis-2-namespace", cloudresourcesv1beta1.GcpRedisTierP1),
+		},
+	}
 }

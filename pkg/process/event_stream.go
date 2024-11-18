@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
+	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
 )
 
 const (
@@ -42,13 +43,14 @@ type EventStream struct {
 }
 
 type Input struct {
-	provider string
-	nodeList *corev1.NodeList
-	pvcList  *corev1.PersistentVolumeClaimList
-	svcList  *corev1.ServiceList
+	provider  string
+	nodeList  *corev1.NodeList
+	pvcList   *corev1.PersistentVolumeClaimList
+	svcList   *corev1.ServiceList
+	redisList *skrredis.RedisList
 }
 
-func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
+func (inp Input) Parse(specs *PublicCloudSpecs) (*edp.ConsumptionMetrics, error) {
 	if inp.nodeList == nil {
 		return nil, fmt.Errorf("no nodes data to compute metrics on")
 	}
@@ -68,7 +70,7 @@ func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
 		nodeType = strings.ToLower(nodeType)
 
 		// Calculate CPU and Memory
-		vmFeature := providers.GetFeature(providerType, nodeType)
+		vmFeature := specs.GetFeature(providerType, nodeType)
 		if vmFeature == nil {
 			return nil, fmt.Errorf("providerType: %s and nodeType: %s does not exist in the map", providerType, nodeType)
 		}
@@ -102,6 +104,20 @@ func (inp Input) Parse(providers *Providers) (*edp.ConsumptionMetrics, error) {
 				volumeCount += 1
 			}
 		}
+	}
+
+	for _, tier := range listRedisTiers(inp.redisList) {
+		redisStorage := specs.GetRedisInfo(tier)
+		if redisStorage == nil {
+			return nil, fmt.Errorf("redis tier %s does not exist in the map", tier)
+		}
+
+		// Redis storage is calculated in the same way as PVC storage, but no rounding is needed
+		pvcStorageRounded += int64(redisStorage.PriceStorageGB)
+
+		// Setting size GB total and count for consistency even though those values are ignored by EDP
+		pvcStorage += int64(redisStorage.PriceStorageGB)
+		volumeCount += 1
 	}
 
 	// Calculate vnets(for Azure) or vpc(for AWS)
@@ -153,4 +169,26 @@ func getSizeInGB(value *resource.Quantity) int64 {
 	gVal := int64((float64(milliVal) / GiB) / 1000) //nolint:mnd // 1000 is the factor to convert from milli to original
 
 	return gVal
+}
+
+func listRedisTiers(l *skrredis.RedisList) []string {
+	var tiers []string
+
+	if l == nil {
+		return tiers
+	}
+
+	for _, redis := range l.AWS.Items {
+		tiers = append(tiers, string(redis.Spec.RedisTier))
+	}
+
+	for _, redis := range l.Azure.Items {
+		tiers = append(tiers, string(redis.Spec.RedisTier))
+	}
+
+	for _, redis := range l.GCP.Items {
+		tiers = append(tiers, string(redis.Spec.RedisTier))
+	}
+
+	return tiers
 }
