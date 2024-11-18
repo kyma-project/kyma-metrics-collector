@@ -15,6 +15,7 @@ import (
 
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
+	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
 )
 
 func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID string) (kmccache.Record, error) {
@@ -93,15 +94,29 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 		return record, err
 	}
 
-	// Create input
-	input := Input{
-		provider: record.ProviderType,
-		nodeList: nodes,
-		pvcList:  pvcList,
-		svcList:  svcList,
+	// Get Redis resources
+	var redisList *skrredis.RedisList
+
+	redisClient, err := p.RedisConfig.NewClient(record)
+	if err != nil {
+		return record, err
 	}
 
-	metric, err := input.Parse(p.Providers)
+	redisList, err = redisClient.List(ctx)
+	if err != nil {
+		return record, err
+	}
+
+	// Create input
+	input := Input{
+		provider:  record.ProviderType,
+		nodeList:  nodes,
+		pvcList:   pvcList,
+		svcList:   svcList,
+		redisList: redisList,
+	}
+
+	metric, err := input.Parse(p.PublicCloudSpecs)
 	if err != nil {
 		return record, err
 	}

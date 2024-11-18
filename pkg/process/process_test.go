@@ -26,6 +26,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
 	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
+	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
 	skrsvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/svc"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
@@ -754,10 +755,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 	givenKubeConfig := "eyJmb28iOiAiYmFyIn0="
 
 	// cloud providers.
-	providersData, err := kmctesting.LoadFixtureFromFile(providersFile)
-	g.Expect(err).Should(gomega.BeNil())
-
-	config := &env.Config{PublicCloudSpecs: string(providersData)}
+	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
 	givenProviders, err := LoadPublicCloudSpecs(config)
 	g.Expect(err).Should(gomega.BeNil())
 
@@ -876,6 +874,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 			fakeNodeClient := skrnode.FakeNodeClient{}
 			fakePVCClient := skrpvc.FakePVCClient{}
 			fakeSvcClient := skrsvc.FakeSvcClient{}
+			fakeRedisClient := skrredis.FakeRedisClient{}
 
 			// initiate process instance.
 			givenProcess := &Process{
@@ -883,12 +882,13 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				Queue:             workqueue.TypedNewDelayingQueue[string](),
 				SecretCacheClient: secretCacheClient.CoreV1(),
 				Cache:             cache,
-				Providers:         givenProviders,
+				PublicCloudSpecs:  givenProviders,
 				ScrapeInterval:    3 * time.Second,
 				Logger:            logger,
 				NodeConfig:        fakeNodeClient,
 				PVCConfig:         fakePVCClient,
 				SvcConfig:         fakeSvcClient,
+				RedisConfig:       fakeRedisClient,
 			}
 
 			// when
@@ -1009,28 +1009,27 @@ func TestExecute(t *testing.T) {
 
 	secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
 
-	providersData, err := kmctesting.LoadFixtureFromFile(providersFile)
-	g.Expect(err).Should(gomega.BeNil())
-
-	config := &env.Config{PublicCloudSpecs: string(providersData)}
+	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
 	providers, err := LoadPublicCloudSpecs(config)
 	g.Expect(err).Should(gomega.BeNil())
 
 	fakeNodeClient := skrnode.FakeNodeClient{}
 	fakePVCClient := skrpvc.FakePVCClient{}
 	fakeSvcClient := skrsvc.FakeSvcClient{}
+	fakeRedisClient := skrredis.FakeRedisClient{}
 
 	newProcess := &Process{
 		EDPClient:         edpClient,
 		Queue:             queue,
 		SecretCacheClient: secretCacheClient.CoreV1(),
 		Cache:             cache,
-		Providers:         providers,
+		PublicCloudSpecs:  providers,
 		ScrapeInterval:    3 * time.Second,
 		Logger:            log,
 		NodeConfig:        fakeNodeClient,
 		PVCConfig:         fakePVCClient,
 		SvcConfig:         fakeSvcClient,
+		RedisConfig:       fakeRedisClient,
 	}
 
 	go func() {

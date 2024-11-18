@@ -7,20 +7,16 @@ import (
 	"github.com/onsi/gomega"
 
 	"github.com/kyma-project/kyma-metrics-collector/env"
-	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
 
 const (
-	providersFile = "../testing/fixtures/static_providers.json"
+	testPublicCloudSpecsPath = "../testing/fixtures/public_cloud_specs.json"
 )
 
 func TestGetFeature(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
-	providersData, err := kmctesting.LoadFixtureFromFile(providersFile)
-	g.Expect(err).Should(gomega.BeNil())
-
-	config := &env.Config{PublicCloudSpecs: string(providersData)}
-	providers, err := LoadPublicCloudSpecs(config)
+	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
+	specs, err := LoadPublicCloudSpecs(config)
 	g.Expect(err).Should(gomega.BeNil())
 
 	testCases := []struct {
@@ -203,13 +199,58 @@ func TestGetFeature(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("%s-%s", tc.cloudProvider, tc.vmType), func(t *testing.T) {
-			gotFeature := providers.GetFeature(tc.cloudProvider, tc.vmType)
+			gotFeature := specs.GetFeature(tc.cloudProvider, tc.vmType)
 			if tc.wantNil {
 				g.Expect(gotFeature).Should(gomega.BeNil())
 				return
 			}
 
 			g.Expect(*gotFeature).Should(gomega.Equal(tc.expectedFeature))
+		})
+	}
+}
+
+func TestGetRedisInfo(t *testing.T) {
+	g := gomega.NewGomegaWithT(t)
+	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
+	specs, err := LoadPublicCloudSpecs(config)
+	g.Expect(err).Should(gomega.BeNil())
+
+	testCases := []struct {
+		tier          string
+		expectedRedis RedisInfo
+		wantNil       bool
+	}{
+		{
+			tier: "S1",
+			expectedRedis: RedisInfo{
+				PriceStorageGB:     182,
+				PriceCapacityUnits: 74,
+			},
+		},
+		{
+			tier: "P1",
+			expectedRedis: RedisInfo{
+				PriceStorageGB:     1903,
+				PriceCapacityUnits: 773,
+			},
+		},
+		{
+			tier:    "foo",
+			wantNil: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.tier, func(t *testing.T) {
+			gotRedis := specs.GetRedisInfo(tc.tier)
+			if tc.wantNil {
+				g.Expect(gotRedis).Should(gomega.BeNil())
+				return
+			}
+
+			g.Expect(gotRedis).Should(gomega.Not(gomega.BeNil()))
+			g.Expect(*gotRedis).Should(gomega.Equal(tc.expectedRedis))
 		})
 	}
 }
