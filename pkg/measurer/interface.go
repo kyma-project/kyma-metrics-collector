@@ -26,9 +26,9 @@ type Measurer interface {
 type Measurement interface {
 	// UpdateUM updates the UMRecord with the measure. All billing logic such as convertion to capacity units must be done here.
 	// The duration is the time passed since the last measure was taken.
-	UM(duration time.Duration) UMData
+	UM(duration time.Duration) (UMData, error)
 
 	// UpdateEDP updates the EDPRecord with the measure. All billing logic such as convertion to storage / cpu / memory units must be done here.
 	// As the EDPRecord is not time dependent, the duration is not passed.
-	EDP(specs process.PublicCloudSpecs) EDPData
+	EDP(specs *process.PublicCloudSpecs) (EDPData, error)
 }

@@ -21,7 +21,7 @@ type Measurement struct {
 	GCP   cloudresourcesv1beta1.GcpRedisInstanceList
 }
 
-func (m *Measurement) UM(duration time.Duration) measurer.UMData {
+func (m *Measurement) UM(duration time.Duration) (measurer.UMData, error) {
 	// TODO implement me
 	panic("implement me")
 }
@@ -33,7 +33,7 @@ func (m *Measurement) EDP(specs *process.PublicCloudSpecs) (measurer.EDPData, er
 	for _, tier := range m.listTiers() {
 		redisStorage := specs.GetRedisInfo(tier)
 		if redisStorage == nil {
-			errs = append(errs, fmt.Errorf("%w: %s", tier))
+			errs = append(errs, fmt.Errorf("%w: %s", ErrRedisTierNotDefined, tier))
 			continue
 		}
 
