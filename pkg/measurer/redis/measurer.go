@@ -50,15 +50,15 @@ func (m Measurer) Measure(ctx context.Context, config *rest.Config) (measurer.Me
 
 	msrmnt := Measurement{}
 	var errs []error
-	if err := listRedisInstances(ctx, c.aws, skrcommons.ListingRedisesAWSAction, &msrmnt.AWSRedises); err != nil {
+	if err := listRedisInstances(ctx, c.aws, skrcommons.ListingRedisesAWSAction, &msrmnt.AWS); err != nil {
 		errs = append(errs, err)
 	}
 
-	if err := listRedisInstances(ctx, c.azure, skrcommons.ListingRedisesAzureAction, &msrmnt.AzureRedises); err != nil {
+	if err := listRedisInstances(ctx, c.azure, skrcommons.ListingRedisesAzureAction, &msrmnt.Azure); err != nil {
 		errs = append(errs, err)
 	}
 
-	if err := listRedisInstances(ctx, c.gcp, skrcommons.ListingRedisesGCPAction, &msrmnt.GCPRedises); err != nil {
+	if err := listRedisInstances(ctx, c.gcp, skrcommons.ListingRedisesGCPAction, &msrmnt.GCP); err != nil {
 		errs = append(errs, err)
 	}
 
