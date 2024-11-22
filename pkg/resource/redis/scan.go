@@ -6,28 +6,27 @@ import (
 	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
-
-	"github.com/kyma-project/kyma-metrics-collector/pkg/measurer"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/process"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 )
 
 var (
 	ErrRedisTierNotDefined = errors.New("Redis tier not defined")
 )
 
-type Measurement struct {
+type Scan struct {
 	AWS   cloudresourcesv1beta1.AwsRedisInstanceList
 	Azure cloudresourcesv1beta1.AzureRedisInstanceList
 	GCP   cloudresourcesv1beta1.GcpRedisInstanceList
 }
 
-func (m *Measurement) UM(duration time.Duration) (measurer.UMData, error) {
+func (m *Scan) UM(duration time.Duration) (resource.UMMeasurement, error) {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (m *Measurement) EDP(specs *process.PublicCloudSpecs) (measurer.EDPData, error) {
-	edp := measurer.EDPData{}
+func (m *Scan) EDP(specs *process.PublicCloudSpecs) (resource.EDPMeasurement, error) {
+	edp := resource.EDPMeasurement{}
 
 	var errs []error
 	for _, tier := range m.listTiers() {
@@ -45,7 +44,7 @@ func (m *Measurement) EDP(specs *process.PublicCloudSpecs) (measurer.EDPData, er
 	return edp, errors.Join(errs...)
 }
 
-func (m *Measurement) listTiers() []string {
+func (m *Scan) listTiers() []string {
 	var tiers []string
 
 	for _, redis := range m.AWS.Items {
@@ -63,4 +62,4 @@ func (m *Measurement) listTiers() []string {
 	return tiers
 }
 
-var _ measurer.Measurement = &Measurement{}
+var _ resource.Scan = &Scan{}

@@ -1,15 +1,15 @@
-package measurer
+package resource
 
-type VMType struct {
-	Name  string `json:"name"  validate:"required"`
-	Count int    `json:"count" validate:"numeric"`
-}
-
-type EDPData struct {
+type EDPMeasurement struct {
 	VMTypes            []VMType           `json:"vm_types"            validate:"required"`
 	ProvisionedCpus    int                `json:"provisioned_cpus"    validate:"numeric"`
 	ProvisionedRAMGb   float64            `json:"provisioned_ram_gb"  validate:"numeric"`
 	ProvisionedVolumes ProvisionedVolumes `json:"provisioned_volumes" validate:"required"`
+}
+
+type VMType struct {
+	Name  string `json:"name"  validate:"required"`
+	Count int    `json:"count" validate:"numeric"`
 }
 
 type ProvisionedVolumes struct {
@@ -18,5 +18,5 @@ type ProvisionedVolumes struct {
 	SizeGbRounded int64 `json:"size_gb_rounded" validate:"numeric"`
 }
 
-type UMData struct {
+type UMMeasurement struct {
 }

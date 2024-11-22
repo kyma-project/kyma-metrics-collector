@@ -1,45 +1,48 @@
 package unifiedmetering
 
 import (
+	"context"
+	"maps"
 	"time"
 
 	"go.uber.org/zap"
+	"k8s.io/client-go/rest"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/measurer"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 )
 
 type Collector struct {
-	measurers []measurer.Measurer
-	logger    *zap.Logger
+	scanners []resource.Scanner
+	logger   *zap.Logger
 }
 
 var _ collector.CollectorSender = &Collector{}
 
-func NewCollector(measurers ...measurer.Measurer) collector.CollectorSender {
+func NewCollector(scanner ...resource.Scanner) collector.CollectorSender {
 	return &Collector{
-		measurers: measurers,
+		scanners: scanner,
 	}
 }
 
-func (c *Collector) CollectAndSend(clusterid string, previousMeasures map[measurer.MeasurerID]measurement.Measure) (map[measurer.MeasurerID]measurement.Measure, error) {
-	measures := make(map[measurer.MeasurerID]measurement.Measure)
-	for _, m := range c.measurers {
+func (c *Collector) CollectAndSend(ctx context.Context, config *rest.Config, previousScans collector.ScanMap) (collector.ScanMap, error) {
+	measures := make(collector.ScanMap)
+	for _, s := range c.scanners {
 
 		// record metrics about success/failure
 		// record spans for timing
-		msr, err := m.Measure(clusterid)
+		scan, err := s.Scan(ctx, config)
 		if err != nil {
 			// log errors here, but continue with other measures
 			c.logger.Error("error measuring", zap.Error(err))
 			// use previous measure
-			msr = previousMeasures[m.ID()]
+			scan = previousScans[s.ID()]
 		}
 		// use new or old measure
-		measures[m.ID()] = msr
+		measures[s.ID()] = scan
 	}
 
-	record := NewRecord(time.Now(), time.Now(), measures)
+	record := NewRecord(time.Now(), time.Now(), maps.Values(measures))
 	err := c.sendRecord(record)
 	return measures, err
 	// use new or old measure

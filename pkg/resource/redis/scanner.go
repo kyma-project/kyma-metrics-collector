@@ -14,7 +14,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 
-	"github.com/kyma-project/kyma-metrics-collector/pkg/measurer"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
 )
 
@@ -29,41 +29,34 @@ var (
 	GCPRedisGVR   = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "gcpredisinstances"}
 )
 
-type Measurer struct {
+type Scanner struct {
 }
 
-type client struct {
-	aws, azure, gcp dynamic.NamespaceableResourceInterface
-}
-
-func (m Measurer) Measure(ctx context.Context, config *rest.Config) (measurer.Measurement, error) {
+func (m Scanner) Scan(ctx context.Context, config *rest.Config) (resource.Scan, error) {
 	dynamicClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}
 
-	c := client{
-		aws:   dynamicClient.Resource(AWSRedisGVR),
-		azure: dynamicClient.Resource(AzureRedisGVR),
-		gcp:   dynamicClient.Resource(GCPRedisGVR),
-	}
+	aws := dynamicClient.Resource(AWSRedisGVR)
+	azure := dynamicClient.Resource(AzureRedisGVR)
+	gcp := dynamicClient.Resource(GCPRedisGVR)
 
-	msrmnt := Measurement{}
+	scan := Scan{}
 	var errs []error
-	if err := listRedisInstances(ctx, c.aws, skrcommons.ListingRedisesAWSAction, &msrmnt.AWS); err != nil {
+	if err := listRedisInstances(ctx, aws, skrcommons.ListingRedisesAWSAction, &scan.AWS); err != nil {
 		errs = append(errs, err)
 	}
 
-	if err := listRedisInstances(ctx, c.azure, skrcommons.ListingRedisesAzureAction, &msrmnt.Azure); err != nil {
+	if err := listRedisInstances(ctx, azure, skrcommons.ListingRedisesAzureAction, &scan.Azure); err != nil {
 		errs = append(errs, err)
 	}
 
-	if err := listRedisInstances(ctx, c.gcp, skrcommons.ListingRedisesGCPAction, &msrmnt.GCP); err != nil {
+	if err := listRedisInstances(ctx, gcp, skrcommons.ListingRedisesGCPAction, &scan.GCP); err != nil {
 		errs = append(errs, err)
 	}
 
-	return msrmnt, errors.Join(errs...)
-
+	return &scan, errors.Join(errs...)
 }
 
 func listRedisInstances(
@@ -100,9 +93,9 @@ func convertUnstructuredListToRedisList(unstructuredList *unstructured.Unstructu
 	return nil
 }
 
-func (m Measurer) ID() measurer.MeasurerID {
+func (m Scanner) ID() resource.ScannerID {
 	// TODO implement me
 	panic("implement me")
 }
 
-var _ measurer.Measurer = &Measurer{}
+var _ resource.Scanner = &Scanner{}

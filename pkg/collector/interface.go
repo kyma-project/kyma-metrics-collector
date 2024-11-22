@@ -1,13 +1,15 @@
 package collector
 
 import (
-	"github.com/kyma-project/kyma-metrics-collector/pkg/measurement"
+	"context"
 
-	"github.com/kyma-project/kyma-metrics-collector/pkg/measurer"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
+	"k8s.io/client-go/rest"
 )
 
-type MeasurementMap map[measurer.MeasurerID]measurement.Measurement
+type ScanMap map[resource.ScannerID]resource.Scan
+
 type CollectorSender interface {
 	// CollectAndSend collects and sends the measures to the backend. It returns the measures collected.
-	CollectAndSend(clusterid string, previousMeasures MeasurementMap) (MeasurementMap, error)
+	CollectAndSend(context context.Context, config *rest.Config, previousScans ScanMap) (ScanMap, error)
 }
