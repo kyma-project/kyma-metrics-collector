@@ -32,7 +32,7 @@ var (
 type Scanner struct {
 }
 
-func (m Scanner) Scan(ctx context.Context, config *rest.Config) (resource.Scan, error) {
+func (m Scanner) Scan(ctx context.Context, config *rest.Config) (resource.ScanConverter, error) {
 	dynamicClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return nil, err

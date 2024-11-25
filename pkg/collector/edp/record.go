@@ -10,6 +10,9 @@ import (
 type Record struct {
 }
 
-func NewRecord(from, to time.Time, scans iter.Seq[resource.Scan]) *Record {
+func NewRecord(from, to time.Time, scans iter.Seq[resource.ScanConverter]) *Record {
+	for i := range scans {
+
+	}
 	return &Record{}
 }

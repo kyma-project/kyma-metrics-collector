@@ -62,4 +62,4 @@ func (m *Scan) listTiers() []string {
 	return tiers
 }
 
-var _ resource.Scan = &Scan{}
+var _ resource.ScanConverter = &Scan{}
