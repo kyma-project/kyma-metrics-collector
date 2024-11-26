@@ -27,8 +27,8 @@ func NewCollector(scanner ...resource.Scanner) collector.CollectorSender {
 
 func (c *Collector) CollectAndSend(ctx context.Context, config *rest.Config, previousScans collector.ScanMap) (collector.ScanMap, error) {
 	measures := make(collector.ScanMap)
-	for _, s := range c.scanners {
 
+	for _, s := range c.scanners {
 		// record metrics about success/failure
 		// record spans for timing
 		scan, err := s.Scan(ctx, config)
@@ -44,6 +44,7 @@ func (c *Collector) CollectAndSend(ctx context.Context, config *rest.Config, pre
 
 	record := NewRecord(time.Now(), time.Now(), maps.Values(measures))
 	err := c.sendRecord(record)
+
 	return measures, err
 	// use new or old measure
 }

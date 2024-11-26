@@ -29,6 +29,7 @@ func (m *Scan) EDP(specs *process.PublicCloudSpecs) (resource.EDPMeasurement, er
 	edp := resource.EDPMeasurement{}
 
 	var errs []error
+
 	for _, tier := range m.listTiers() {
 		redisStorage := specs.GetRedisInfo(tier)
 		if redisStorage == nil {
@@ -41,6 +42,7 @@ func (m *Scan) EDP(specs *process.PublicCloudSpecs) (resource.EDPMeasurement, er
 		edp.ProvisionedVolumes.SizeGbRounded += int64(redisStorage.PriceStorageGB)
 		edp.ProvisionedVolumes.Count++
 	}
+
 	return edp, errors.Join(errs...)
 }
 

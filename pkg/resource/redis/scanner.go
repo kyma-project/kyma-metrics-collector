@@ -43,7 +43,9 @@ func (m Scanner) Scan(ctx context.Context, config *rest.Config) (resource.ScanCo
 	gcp := dynamicClient.Resource(GCPRedisGVR)
 
 	scan := Scan{}
+
 	var errs []error
+
 	if err := listRedisInstances(ctx, aws, skrcommons.ListingRedisesAWSAction, &scan.AWS); err != nil {
 		errs = append(errs, err)
 	}

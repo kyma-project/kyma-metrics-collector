@@ -14,5 +14,6 @@ func NewRecord(from, to time.Time, scans iter.Seq[resource.ScanConverter]) *Reco
 	for i := range scans {
 
 	}
+
 	return &Record{}
 }
