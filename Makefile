@@ -87,7 +87,7 @@ lint-compact: $(GOLANGCI_LINT) ## Check lint issues using `golangci-lint` in com
 
 .PHONY: lint-fix
 lint-fix: $(GOLANGCI_LINT) $(WSL) ## Check and fix lint issues using `golangci-lint`
-	$(WSL) -fix ./...
+	-$(WSL) -fix ./...
 	$(GOLANGCI_LINT) run --fix
 
 .PHONY: lint-report
