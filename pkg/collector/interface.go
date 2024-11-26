@@ -3,8 +3,9 @@ package collector
 import (
 	"context"
 
-	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"k8s.io/client-go/rest"
+
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 )
 
 type ScanMap map[resource.ScannerID]resource.ScanConverter

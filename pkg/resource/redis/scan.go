@@ -6,13 +6,12 @@ import (
 	"time"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+
 	"github.com/kyma-project/kyma-metrics-collector/pkg/process"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 )
 
-var (
-	ErrRedisTierNotDefined = errors.New("Redis tier not defined")
-)
+var ErrRedisTierNotDefined = errors.New("Redis tier not defined")
 
 type Scan struct {
 	AWS   cloudresourcesv1beta1.AwsRedisInstanceList
@@ -21,7 +20,6 @@ type Scan struct {
 }
 
 func (m *Scan) UM(duration time.Duration) (resource.UMMeasurement, error) {
-	// TODO implement me
 	panic("implement me")
 }
 

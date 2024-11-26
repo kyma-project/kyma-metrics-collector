@@ -29,8 +29,7 @@ var (
 	GCPRedisGVR   = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "gcpredisinstances"}
 )
 
-type Scanner struct {
-}
+type Scanner struct{}
 
 func (m Scanner) Scan(ctx context.Context, config *rest.Config) (resource.ScanConverter, error) {
 	dynamicClient, err := dynamic.NewForConfig(config)
@@ -96,7 +95,6 @@ func convertUnstructuredListToRedisList(unstructuredList *unstructured.Unstructu
 }
 
 func (m Scanner) ID() resource.ScannerID {
-	// TODO implement me
 	panic("implement me")
 }
 

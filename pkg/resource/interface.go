@@ -11,7 +11,7 @@ import (
 
 type ScannerID string
 
-// Scanner is an interface for measuring a specific resource related to a single cluster
+// Scanner is an interface for measuring a specific resource related to a single cluster.
 type Scanner interface {
 	// ScanConverter returns the measure for the given clusterid. If an error occurs, the measure is nil.
 	// The scan is time dependent and should be taken at the time of the call.
@@ -30,7 +30,7 @@ type UMMeasurementConverter interface {
 }
 
 type EDPMeasurementConverter interface {
-	// EDP updates the EDPRecord with the measure. All billing logic such as convertion to storage / cpu / memory units must be done here.
+	// EDP updates the EDPRecord with the measure. All billing logic such as conversion to storage / cpu / memory units must be done here.
 	// As the EDPRecord is not time dependent, the duration is not passed.
 	EDP(specs *process.PublicCloudSpecs) (EDPMeasurement, error)
 }

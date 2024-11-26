@@ -49,7 +49,7 @@ func (c *Collector) CollectAndSend(ctx context.Context, config *rest.Config, pre
 	// use new or old measure
 }
 
-// sendRecord sends the record to the UM backend
+// sendRecord sends the record to the UM backend.
 func (c *Collector) sendRecord(record *Record) error {
 	return nil
 }

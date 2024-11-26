@@ -18,5 +18,4 @@ type ProvisionedVolumes struct {
 	SizeGbRounded int64 `json:"size_gb_rounded" validate:"numeric"`
 }
 
-type UMMeasurement struct {
-}
+type UMMeasurement struct{}
