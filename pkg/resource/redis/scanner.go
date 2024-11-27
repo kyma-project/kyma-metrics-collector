@@ -12,10 +12,9 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
-	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
 const (
@@ -29,10 +28,16 @@ var (
 	GCPRedisGVR   = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "gcpredisinstances"}
 )
 
+var _ resource.Scanner = &Scanner{}
+
 type Scanner struct{}
 
-func (m Scanner) Scan(ctx context.Context, config *rest.Config) (resource.ScanConverter, error) {
-	dynamicClient, err := dynamic.NewForConfig(config)
+func (m Scanner) ID() resource.ScannerID {
+	return "redis"
+}
+
+func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
+	dynamicClient, err := dynamic.NewForConfig(&runtime.Kubeconfig)
 	if err != nil {
 		return nil, err
 	}
@@ -45,15 +50,15 @@ func (m Scanner) Scan(ctx context.Context, config *rest.Config) (resource.ScanCo
 
 	var errs []error
 
-	if err := listRedisInstances(ctx, aws, skrcommons.ListingRedisesAWSAction, &scan.AWS); err != nil {
+	if err := listRedisInstances(ctx, aws, any(&scan.aws)); err != nil {
 		errs = append(errs, err)
 	}
 
-	if err := listRedisInstances(ctx, azure, skrcommons.ListingRedisesAzureAction, &scan.Azure); err != nil {
+	if err := listRedisInstances(ctx, azure, any(&scan.azure)); err != nil {
 		errs = append(errs, err)
 	}
 
-	if err := listRedisInstances(ctx, gcp, skrcommons.ListingRedisesGCPAction, &scan.GCP); err != nil {
+	if err := listRedisInstances(ctx, gcp, any(&scan.gcp)); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -63,7 +68,6 @@ func (m Scanner) Scan(ctx context.Context, config *rest.Config) (resource.ScanCo
 func listRedisInstances(
 	ctx context.Context,
 	client dynamic.NamespaceableResourceInterface,
-	actionPromLabel string,
 	targetList any,
 ) error {
 	unstructuredList, err := client.Namespace(corev1.NamespaceAll).List(ctx, metaV1.ListOptions{})
@@ -93,9 +97,3 @@ func convertUnstructuredListToRedisList(unstructuredList *unstructured.Unstructu
 
 	return nil
 }
-
-func (m Scanner) ID() resource.ScannerID {
-	panic("implement me")
-}
-
-var _ resource.Scanner = &Scanner{}

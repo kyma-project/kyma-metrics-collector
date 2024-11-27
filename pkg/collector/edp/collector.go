@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	"k8s.io/client-go/rest"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
 type Collector struct {
@@ -25,13 +25,13 @@ func NewCollector(scanner ...resource.Scanner) collector.CollectorSender {
 	}
 }
 
-func (c *Collector) CollectAndSend(ctx context.Context, config *rest.Config, previousScans collector.ScanMap) (collector.ScanMap, error) {
+func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, previousScans collector.ScanMap) (collector.ScanMap, error) {
 	scans := make(collector.ScanMap)
 
 	for _, s := range c.scanners {
 		// record metrics about success/failure
 		// record spans for timing
-		scan, err := s.Scan(ctx, config)
+		scan, err := s.Scan(ctx, runtime)
 		if err != nil {
 			// log errors here, but continue with other measures
 			c.logger.Error("error measuring", zap.Error(err))

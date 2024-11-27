@@ -13,14 +13,16 @@ import (
 
 var ErrRedisTierNotDefined = errors.New("Redis tier not defined")
 
+var _ resource.ScanConverter = &Scan{}
+
 type Scan struct {
-	AWS   cloudresourcesv1beta1.AwsRedisInstanceList
-	Azure cloudresourcesv1beta1.AzureRedisInstanceList
-	GCP   cloudresourcesv1beta1.GcpRedisInstanceList
+	aws   cloudresourcesv1beta1.AwsRedisInstanceList
+	azure cloudresourcesv1beta1.AzureRedisInstanceList
+	gcp   cloudresourcesv1beta1.GcpRedisInstanceList
 }
 
 func (m *Scan) UM(duration time.Duration) (resource.UMMeasurement, error) {
-	panic("implement me")
+	return resource.UMMeasurement{}, nil
 }
 
 func (m *Scan) EDP(specs *process.PublicCloudSpecs) (resource.EDPMeasurement, error) {
@@ -47,19 +49,17 @@ func (m *Scan) EDP(specs *process.PublicCloudSpecs) (resource.EDPMeasurement, er
 func (m *Scan) listTiers() []string {
 	var tiers []string
 
-	for _, redis := range m.AWS.Items {
+	for _, redis := range m.aws.Items {
 		tiers = append(tiers, string(redis.Spec.RedisTier))
 	}
 
-	for _, redis := range m.Azure.Items {
+	for _, redis := range m.azure.Items {
 		tiers = append(tiers, string(redis.Spec.RedisTier))
 	}
 
-	for _, redis := range m.GCP.Items {
+	for _, redis := range m.gcp.Items {
 		tiers = append(tiers, string(redis.Spec.RedisTier))
 	}
 
 	return tiers
 }
-
-var _ resource.ScanConverter = &Scan{}

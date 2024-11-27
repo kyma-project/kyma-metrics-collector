@@ -4,9 +4,8 @@ import (
 	"context"
 	"time"
 
-	"k8s.io/client-go/rest"
-
 	"github.com/kyma-project/kyma-metrics-collector/pkg/process"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
 type ScannerID string
@@ -17,7 +16,7 @@ type Scanner interface {
 	// The scan is time dependent and should be taken at the time of the call.
 	// The scanner is responsible for exposing metrics about the values retrieved. All measurers should follow a similar pattern.
 	// These metrics are just for informational purposes and must not be used for alerting or billing.
-	Scan(ctx context.Context, config *rest.Config) (ScanConverter, error)
+	Scan(ctx context.Context, runtime *runtime.Info) (ScanConverter, error)
 
 	// ID returns the ID of the scanner. This name is used to identify the measure in the record.
 	ID() ScannerID
