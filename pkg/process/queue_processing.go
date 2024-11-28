@@ -17,6 +17,7 @@ import (
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	edpcollector "github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/pvc"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/redis"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
@@ -139,6 +140,7 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 
 	collector := edpcollector.NewCollector(
 		redis.Scanner{},
+		pvc.Scanner{},
 	)
 	collector.CollectAndSend(
 		ctx,

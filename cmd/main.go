@@ -43,7 +43,7 @@ func main() {
 	logger := log.NewLogger(opts.LogLevel)
 	logger.Infof("Starting application with options: %v", opts.String())
 
-	// Set up OpenTelemetry.
+	logger.Info("Setting up OpenTelemetry SDK")
 	otelShutdown, err := otel.SetupSDK(context.Background())
 	if err != nil {
 		return
