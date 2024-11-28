@@ -39,7 +39,7 @@ func (m Scanner) ID() resource.ScannerID {
 }
 
 func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
-	ctx, span := otel.Tracer("resource/redis").Start(ctx, "scan")
+	ctx, span := otel.Tracer("").Start(ctx, "kmc.redis_scan")
 	defer span.End()
 
 	dynamicClient, err := dynamic.NewForConfig(&runtime.Kubeconfig)

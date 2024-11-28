@@ -23,7 +23,7 @@ func (s Scanner) ID() resource.ScannerID {
 }
 
 func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
-	ctx, span := otel.Tracer("resource/pvc").Start(ctx, "scan")
+	ctx, span := otel.Tracer("").Start(ctx, "kmc.pvc_scan")
 	defer span.End()
 
 	clientset, err := kubernetes.NewForConfig(&runtime.Kubeconfig)

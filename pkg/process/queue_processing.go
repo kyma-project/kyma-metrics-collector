@@ -17,6 +17,7 @@ import (
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	edpcollector "github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/node"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/pvc"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/redis"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
@@ -139,6 +140,7 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 	restClientConfig, _ := clientcmd.RESTConfigFromKubeConfig([]byte(record.KubeConfig))
 
 	collector := edpcollector.NewCollector(
+		node.Scanner{},
 		redis.Scanner{},
 		pvc.Scanner{},
 	)
@@ -147,6 +149,7 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 		&runtime.Info{
 			Kubeconfig:   *restClientConfig,
 			ProviderType: runtime.ProviderType(record.ProviderType),
+			ShootID:      record.ShootName,
 		},
 		nil,
 	)

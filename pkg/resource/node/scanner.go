@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -20,14 +22,23 @@ func (s Scanner) ID() resource.ScannerID {
 }
 
 func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "kmc.redis_scan")
+	defer span.End()
+
 	clientset, err := kubernetes.NewForConfig(&runtime.Kubeconfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create clientset: %w", err)
+		retErr := fmt.Errorf("failed to create clientset: %w", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, retErr
 	}
 
 	nodes, err := clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to list nodes: %w", err)
+		retErr := fmt.Errorf("failed to list nodes: %w", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, retErr
 	}
 
 	return &Scan{
