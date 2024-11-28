@@ -7,7 +7,7 @@ import (
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
 
-	"github.com/kyma-project/kyma-metrics-collector/pkg/process"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 )
 
@@ -25,7 +25,7 @@ func (m *Scan) UM(duration time.Duration) (resource.UMMeasurement, error) {
 	return resource.UMMeasurement{}, nil
 }
 
-func (m *Scan) EDP(specs *process.PublicCloudSpecs) (resource.EDPMeasurement, error) {
+func (m *Scan) EDP(specs *config.PublicCloudSpecs) (resource.EDPMeasurement, error) {
 	edp := resource.EDPMeasurement{}
 
 	var errs []error

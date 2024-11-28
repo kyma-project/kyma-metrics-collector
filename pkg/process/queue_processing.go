@@ -18,6 +18,10 @@ import (
 	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
 )
 
+const (
+	testPublicCloudSpecsPath = "../testing/fixtures/public_cloud_specs.json"
+)
+
 func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID string) (kmccache.Record, error) {
 	ctx := context.Background()
 

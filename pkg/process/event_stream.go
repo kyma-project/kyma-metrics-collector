@@ -9,6 +9,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
 )
@@ -20,11 +21,6 @@ const (
 
 	// nfsPriceMultiplier is the factor by which the NFS PVCs are multiplied to compensate for the higher price.
 	nfsPriceMultiplier = 3
-
-	Azure = "azure"
-	AWS   = "aws"
-	GCP   = "gcp"
-	CCEE  = "sapconvergedcloud"
 )
 
 const (
@@ -50,7 +46,7 @@ type Input struct {
 	redisList *skrredis.RedisList
 }
 
-func (inp Input) Parse(specs *PublicCloudSpecs) (*edp.ConsumptionMetrics, error) {
+func (inp Input) Parse(specs *config.PublicCloudSpecs) (*edp.ConsumptionMetrics, error) {
 	if inp.nodeList == nil {
 		return nil, fmt.Errorf("no nodes data to compute metrics on")
 	}

@@ -8,7 +8,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/kyma-project/kyma-metrics-collector/pkg/process"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
@@ -26,7 +26,7 @@ func (s *Scan) UM(duration time.Duration) (resource.UMMeasurement, error) {
 	return resource.UMMeasurement{}, nil
 }
 
-func (s *Scan) EDP(specs *process.PublicCloudSpecs) (resource.EDPMeasurement, error) {
+func (s *Scan) EDP(specs *config.PublicCloudSpecs) (resource.EDPMeasurement, error) {
 	edp := resource.EDPMeasurement{}
 	var errs []error
 	vmTypes := make(map[string]int)
