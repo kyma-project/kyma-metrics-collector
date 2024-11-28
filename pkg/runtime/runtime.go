@@ -7,4 +7,5 @@ type ProviderType string
 type Info struct {
 	Kubeconfig   rest.Config
 	ProviderType ProviderType
+	ShootID      string
 }

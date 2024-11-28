@@ -14,10 +14,6 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
-const (
-	tracerName = "kmc.resource.pvc"
-)
-
 var _ resource.Scanner = &Scanner{}
 
 type Scanner struct{}
@@ -27,7 +23,7 @@ func (s Scanner) ID() resource.ScannerID {
 }
 
 func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
-	ctx, span := otel.Tracer(tracerName).Start(ctx, "Scanner.Scan")
+	ctx, span := otel.Tracer("resource/pvc").Start(ctx, "scan")
 	defer span.End()
 
 	clientset, err := kubernetes.NewForConfig(&runtime.Kubeconfig)

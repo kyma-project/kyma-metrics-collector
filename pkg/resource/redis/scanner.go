@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,6 +39,9 @@ func (m Scanner) ID() resource.ScannerID {
 }
 
 func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
+	ctx, span := otel.Tracer("resource/redis").Start(ctx, "scan")
+	defer span.End()
+
 	dynamicClient, err := dynamic.NewForConfig(&runtime.Kubeconfig)
 	if err != nil {
 		return nil, err
@@ -51,14 +56,20 @@ func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Scan
 	var errs []error
 
 	if err := listRedisInstances(ctx, aws, any(&scan.aws)); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		errs = append(errs, err)
 	}
 
 	if err := listRedisInstances(ctx, azure, any(&scan.azure)); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		errs = append(errs, err)
 	}
 
 	if err := listRedisInstances(ctx, gcp, any(&scan.gcp)); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		errs = append(errs, err)
 	}
 

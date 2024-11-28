@@ -5,6 +5,9 @@ import (
 	"maps"
 	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
@@ -26,12 +29,20 @@ func NewCollector(scanner ...resource.Scanner) collector.CollectorSender {
 }
 
 func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, previousScans collector.ScanMap) (collector.ScanMap, error) {
+	childCtx, span := otel.Tracer("collector/edp").Start(ctx, "collect-and-send",
+		trace.WithAttributes(
+			attribute.String("provider", string(runtime.ProviderType)),
+			attribute.String("shootID", runtime.ShootID),
+		),
+	)
+	defer span.End()
+
 	scans := make(collector.ScanMap)
 
 	for _, s := range c.scanners {
 		// record metrics about success/failure
 		// record spans for timing
-		scan, err := s.Scan(ctx, runtime)
+		scan, err := s.Scan(childCtx, runtime)
 		if err != nil {
 			// log errors here, but continue with other measures
 			c.logger.Error("error measuring", zap.Error(err))
