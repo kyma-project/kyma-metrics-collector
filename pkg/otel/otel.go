@@ -6,14 +6,19 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 )
+
+const serviceName = "kmc"
 
 // SetupSDK bootstraps the OpenTelemetry pipeline.
 // If it does not return an error, make sure to call shutdown for proper cleanup.
@@ -79,14 +84,30 @@ func newPropagator() propagation.TextMapPropagator {
 }
 
 func newTraceProvider() (*trace.TracerProvider, error) {
-	traceExporter, err := stdouttrace.New(
-		stdouttrace.WithPrettyPrint())
+	collectorURL := "telemetry-otlp-traces.kyma-system:4317"
+	traceExporter, err := otlptrace.New(
+		context.Background(),
+		otlptracegrpc.NewClient(
+			otlptracegrpc.WithInsecure(),
+			otlptracegrpc.WithEndpoint(collectorURL),
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
 
+	resources, err := resource.New(
+		context.Background(),
+		resource.WithAttributes(
+			attribute.String("service.name", serviceName),
+			attribute.String("library.language", "go"),
+		),
+	)
+
 	traceProvider := trace.NewTracerProvider(
+		trace.WithSampler(trace.AlwaysSample()),
 		trace.WithBatcher(traceExporter),
+		trace.WithResource(resources),
 	)
 	return traceProvider, nil
 }
