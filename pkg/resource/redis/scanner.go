@@ -58,25 +58,29 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 
 	var errs []error
 
-	if err := listRedisInstances(ctx, aws, any(&scan.aws)); err != nil {
+	if err := listRedisInstances(ctx, aws, &scan.aws); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		errs = append(errs, err)
 	}
 
-	if err := listRedisInstances(ctx, azure, any(&scan.azure)); err != nil {
+	if err := listRedisInstances(ctx, azure, &scan.azure); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		errs = append(errs, err)
 	}
 
-	if err := listRedisInstances(ctx, gcp, any(&scan.gcp)); err != nil {
+	if err := listRedisInstances(ctx, gcp, &scan.gcp); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		errs = append(errs, err)
 	}
 
-	return &scan, errors.Join(errs...)
+	if len(errs) == 0 {
+		return &scan, nil
+	}
+
+	return nil, errors.Join(errs...)
 }
 
 func (s *Scanner) createClientFactory(config *rest.Config) (dynamic.Interface, error) {
