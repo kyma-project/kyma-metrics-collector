@@ -8,6 +8,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
@@ -15,17 +16,19 @@ import (
 
 var _ resource.Scanner = &Scanner{}
 
-type Scanner struct{}
+type Scanner struct {
+	clientFactory func(config *rest.Config) (kubernetes.Interface, error)
+}
 
-func (s Scanner) ID() resource.ScannerID {
+func (s *Scanner) ID() resource.ScannerID {
 	return "node"
 }
 
-func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
+func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
 	ctx, span := otel.Tracer("").Start(ctx, "kmc.node_scan")
 	defer span.End()
 
-	clientset, err := kubernetes.NewForConfig(&runtime.Kubeconfig)
+	clientset, err := s.createClientset(&runtime.Kubeconfig)
 	if err != nil {
 		retErr := fmt.Errorf("failed to create clientset: %w", err)
 		span.RecordError(err)
@@ -45,4 +48,11 @@ func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Scan
 		provider: runtime.ProviderType,
 		nodes:    *nodes,
 	}, nil
+}
+
+func (s *Scanner) createClientset(config *rest.Config) (kubernetes.Interface, error) {
+	if s.clientFactory == nil {
+		return kubernetes.NewForConfig(config)
+	}
+	return s.clientFactory(config)
 }
