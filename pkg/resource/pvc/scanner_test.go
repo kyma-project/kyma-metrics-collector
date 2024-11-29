@@ -47,9 +47,9 @@ func TestScanner_Scan_Successful(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result)
 
-	nodeScan, ok := result.(*Scan)
+	pvcScan, ok := result.(*Scan)
 	require.True(t, ok)
-	require.Equal(t, pvcs.Items, nodeScan.pvcs.Items)
+	require.Equal(t, pvcs.Items, pvcScan.pvcs.Items)
 }
 
 func TestScanner_Scan_Error(t *testing.T) {

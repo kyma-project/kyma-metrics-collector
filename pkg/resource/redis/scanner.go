@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
@@ -25,31 +26,33 @@ const (
 )
 
 var (
-	AWSRedisGVR   = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "awsredisinstances"}
-	AzureRedisGVR = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "azureredisinstances"}
-	GCPRedisGVR   = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "gcpredisinstances"}
+	awsRedisGVR   = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "awsredisinstances"}
+	azureRedisGVR = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "azureredisinstances"}
+	gcpRedisGVR   = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "gcpredisinstances"}
 )
 
 var _ resource.Scanner = &Scanner{}
 
-type Scanner struct{}
+type Scanner struct {
+	clientFactory func(config *rest.Config) (dynamic.Interface, error)
+}
 
-func (m Scanner) ID() resource.ScannerID {
+func (s *Scanner) ID() resource.ScannerID {
 	return "redis"
 }
 
-func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
+func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
 	ctx, span := otel.Tracer("").Start(ctx, "kmc.redis_scan")
 	defer span.End()
 
-	dynamicClient, err := dynamic.NewForConfig(&runtime.Kubeconfig)
+	dynamicClient, err := s.createClientFactory(&runtime.Kubeconfig)
 	if err != nil {
 		return nil, err
 	}
 
-	aws := dynamicClient.Resource(AWSRedisGVR)
-	azure := dynamicClient.Resource(AzureRedisGVR)
-	gcp := dynamicClient.Resource(GCPRedisGVR)
+	aws := dynamicClient.Resource(awsRedisGVR)
+	azure := dynamicClient.Resource(azureRedisGVR)
+	gcp := dynamicClient.Resource(gcpRedisGVR)
 
 	scan := Scan{}
 
@@ -76,6 +79,13 @@ func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Scan
 	return &scan, errors.Join(errs...)
 }
 
+func (s *Scanner) createClientFactory(config *rest.Config) (dynamic.Interface, error) {
+	if s.clientFactory == nil {
+		return dynamic.NewForConfig(config)
+	}
+	return s.clientFactory(config)
+}
+
 func listRedisInstances(
 	ctx context.Context,
 	client dynamic.NamespaceableResourceInterface,
@@ -86,6 +96,7 @@ func listRedisInstances(
 		if apierrors.IsNotFound(err) {
 			return nil
 		}
+		return err
 	}
 
 	if err := convertUnstructuredListToRedisList(unstructuredList, targetList); err != nil {

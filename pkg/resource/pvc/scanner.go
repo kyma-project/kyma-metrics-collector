@@ -21,11 +21,11 @@ type Scanner struct {
 	clientFactory func(config *rest.Config) (kubernetes.Interface, error)
 }
 
-func (s Scanner) ID() resource.ScannerID {
+func (s *Scanner) ID() resource.ScannerID {
 	return "pvc"
 }
 
-func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
+func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
 	ctx, span := otel.Tracer("").Start(ctx, "kmc.pvc_scan")
 	defer span.End()
 
