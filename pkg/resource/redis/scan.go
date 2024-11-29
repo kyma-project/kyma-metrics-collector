@@ -11,7 +11,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 )
 
-var ErrRedisTierNotDefined = errors.New("Redis tier not defined")
+var ErrUnknownRedisTier = errors.New("Redis tier not defined")
 
 var _ resource.ScanConverter = &Scan{}
 
@@ -35,7 +35,7 @@ func (s *Scan) EDP() (resource.EDPMeasurement, error) {
 	for _, tier := range s.listTiers() {
 		redisStorage := s.specs.GetRedisInfo(tier)
 		if redisStorage == nil {
-			errs = append(errs, fmt.Errorf("%w: %s", ErrRedisTierNotDefined, tier))
+			errs = append(errs, fmt.Errorf("%w: %s", ErrUnknownRedisTier, tier))
 			continue
 		}
 
