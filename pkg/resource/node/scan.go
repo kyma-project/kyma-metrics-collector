@@ -19,14 +19,16 @@ var _ resource.ScanConverter = &Scan{}
 
 type Scan struct {
 	provider runtime.ProviderType
-	nodes    corev1.NodeList
+	specs    *config.PublicCloudSpecs
+
+	nodes corev1.NodeList
 }
 
 func (s *Scan) UM(duration time.Duration) (resource.UMMeasurement, error) {
 	return resource.UMMeasurement{}, nil
 }
 
-func (s *Scan) EDP(specs *config.PublicCloudSpecs) (resource.EDPMeasurement, error) {
+func (s *Scan) EDP() (resource.EDPMeasurement, error) {
 	edp := resource.EDPMeasurement{}
 	var errs []error
 	vmTypes := make(map[string]int)
@@ -35,7 +37,7 @@ func (s *Scan) EDP(specs *config.PublicCloudSpecs) (resource.EDPMeasurement, err
 		nodeType := node.Labels[nodeInstanceTypeLabel]
 		nodeType = strings.ToLower(nodeType)
 
-		vmFeature := specs.GetFeature(string(s.provider), nodeType)
+		vmFeature := s.specs.GetFeature(string(s.provider), nodeType)
 		if vmFeature == nil {
 			errs = append(errs, fmt.Errorf("providerType: %s and nodeType: %s does not exist in the map", s.provider, nodeType))
 			continue

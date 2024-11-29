@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 
+	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
@@ -35,6 +36,14 @@ var _ resource.Scanner = &Scanner{}
 
 type Scanner struct {
 	clientFactory func(config *rest.Config) (dynamic.Interface, error)
+
+	specs *config.PublicCloudSpecs
+}
+
+func NewScanner(specs *config.PublicCloudSpecs) *Scanner {
+	return &Scanner{
+		specs: specs,
+	}
 }
 
 func (s *Scanner) ID() resource.ScannerID {
@@ -54,7 +63,9 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 	azure := dynamicClient.Resource(azureRedisGVR)
 	gcp := dynamicClient.Resource(gcpRedisGVR)
 
-	scan := Scan{}
+	scan := Scan{
+		specs: s.specs,
+	}
 
 	var errs []error
 

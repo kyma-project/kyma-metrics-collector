@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
@@ -31,7 +30,7 @@ type UMMeasurementConverter interface {
 type EDPMeasurementConverter interface {
 	// EDP updates the EDPRecord with the measure. All billing logic such as conversion to storage / cpu / memory units must be done here.
 	// As the EDPRecord is not time dependent, the duration is not passed.
-	EDP(specs *config.PublicCloudSpecs) (EDPMeasurement, error)
+	EDP() (EDPMeasurement, error)
 }
 
 type ScanConverter interface {

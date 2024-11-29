@@ -140,9 +140,9 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 	restClientConfig, _ := clientcmd.RESTConfigFromKubeConfig([]byte(record.KubeConfig))
 
 	collector := edpcollector.NewCollector(
-		&node.Scanner{},
-		&redis.Scanner{},
-		&pvc.Scanner{},
+		node.NewScanner(p.PublicCloudSpecs),
+		redis.NewScanner(p.PublicCloudSpecs),
+		pvc.NewScanner(),
 	)
 	collector.CollectAndSend(
 		ctx,

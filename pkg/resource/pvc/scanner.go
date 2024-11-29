@@ -21,6 +21,13 @@ type Scanner struct {
 	clientFactory func(config *rest.Config) (kubernetes.Interface, error)
 }
 
+// NewScanner creates a new instance of Scanner.
+// While not strictly necessary, this factory function is provided
+// for consistency with other scanner implementations.
+func NewScanner() *Scanner {
+	return &Scanner{}
+}
+
 func (s *Scanner) ID() resource.ScannerID {
 	return "pvc"
 }
