@@ -8,13 +8,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/kyma-project/kyma-metrics-collector/env"
-)
-
-const (
-	Azure = "azure"
-	AWS   = "aws"
-	GCP   = "gcp"
-	CCEE  = "sapconvergedcloud"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
 type PublicCloudSpecs struct {
@@ -41,21 +35,21 @@ type RedisInfo struct {
 	PriceCapacityUnits int `json:"price_cu"`
 }
 
-func (pcs *PublicCloudSpecs) GetFeature(cloudProvider, vmType string) *Feature {
-	switch cloudProvider {
-	case AWS:
+func (pcs *PublicCloudSpecs) GetFeature(provider runtime.ProviderType, vmType string) *Feature {
+	switch provider {
+	case runtime.ProviderAWS:
 		if feature, ok := pcs.Providers.AWS[vmType]; ok {
 			return &feature
 		}
-	case Azure:
+	case runtime.ProviderAzure:
 		if feature, ok := pcs.Providers.Azure[vmType]; ok {
 			return &feature
 		}
-	case GCP:
+	case runtime.ProviderGCP:
 		if feature, ok := pcs.Providers.GCP[vmType]; ok {
 			return &feature
 		}
-	case CCEE:
+	case runtime.ProviderCCEE:
 		if feature, ok := pcs.Providers.OpenStack[vmType]; ok {
 			return &feature
 		}

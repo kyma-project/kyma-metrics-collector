@@ -15,6 +15,8 @@ import (
 
 const nodeInstanceTypeLabel = "node.kubernetes.io/instance-type"
 
+var ErrUnknownVM = errors.New("unknown provider and node type combination")
+
 var _ resource.ScanConverter = &Scan{}
 
 type Scan struct {
@@ -37,9 +39,9 @@ func (s *Scan) EDP() (resource.EDPMeasurement, error) {
 		nodeType := node.Labels[nodeInstanceTypeLabel]
 		nodeType = strings.ToLower(nodeType)
 
-		vmFeature := s.specs.GetFeature(string(s.provider), nodeType)
+		vmFeature := s.specs.GetFeature(s.provider, nodeType)
 		if vmFeature == nil {
-			errs = append(errs, fmt.Errorf("providerType: %s and nodeType: %s does not exist in the map", s.provider, nodeType))
+			errs = append(errs, fmt.Errorf("%w: provider: %s, node: %s", ErrUnknownVM, s.provider, nodeType))
 			continue
 		}
 
