@@ -107,7 +107,7 @@ func deleteMetrics(shootInfo kmccache.Record) bool {
 }
 
 func recordSubAccountProcessed(success bool, shootInfo kmccache.Record) {
-	// the order if the values should be same as defined in the metric declaration.
+	// the order of the values should be the same as defined in the metric declaration.
 	subAccountProcessed.WithLabelValues(
 		strconv.FormatBool(success),
 		shootInfo.ShootName,
@@ -119,7 +119,7 @@ func recordSubAccountProcessed(success bool, shootInfo kmccache.Record) {
 }
 
 func recordSubAccountProcessedTimeStamp(withOldMetric bool, shootInfo kmccache.Record) {
-	// the order if the values should be same as defined in the metric declaration.
+	// the order of the values should be the same as defined in the metric declaration.
 	subAccountProcessedTimeStamp.WithLabelValues(
 		strconv.FormatBool(withOldMetric),
 		shootInfo.ShootName,
@@ -131,7 +131,7 @@ func recordSubAccountProcessedTimeStamp(withOldMetric bool, shootInfo kmccache.R
 }
 
 func recordOldMetricsPublishedGauge(shootInfo kmccache.Record) {
-	// the order if the values should be same as defined in the metric declaration.
+	// the order of the values should be the same as defined in the metric declaration.
 	oldMetricsPublishedGauge.WithLabelValues(
 		shootInfo.ShootName,
 		shootInfo.InstanceID,
@@ -142,7 +142,7 @@ func recordOldMetricsPublishedGauge(shootInfo kmccache.Record) {
 }
 
 func resetOldMetricsPublishedGauge(shootInfo kmccache.Record) {
-	// the order if the values should be same as defined in the metric declaration.
+	// the order of the values should be the same as defined in the metric declaration.
 	oldMetricsPublishedGauge.WithLabelValues(
 		shootInfo.ShootName,
 		shootInfo.InstanceID,
