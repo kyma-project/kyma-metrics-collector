@@ -9,6 +9,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
@@ -16,7 +17,9 @@ import (
 
 var _ resource.Scanner = &Scanner{}
 
-type Scanner struct{}
+type Scanner struct {
+	clientFactory func(config *rest.Config) (kubernetes.Interface, error)
+}
 
 func (s Scanner) ID() resource.ScannerID {
 	return "pvc"
@@ -26,7 +29,7 @@ func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Scan
 	ctx, span := otel.Tracer("").Start(ctx, "kmc.pvc_scan")
 	defer span.End()
 
-	clientset, err := kubernetes.NewForConfig(&runtime.Kubeconfig)
+	clientset, err := s.createClientset(&runtime.Kubeconfig)
 	if err != nil {
 		retErr := fmt.Errorf("failed to create clientset: %w", err)
 		span.RecordError(retErr)
@@ -45,4 +48,11 @@ func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Scan
 	return &Scan{
 		pvcs: *pvcs,
 	}, nil
+}
+
+func (s *Scanner) createClientset(config *rest.Config) (kubernetes.Interface, error) {
+	if s.clientFactory == nil {
+		return kubernetes.NewForConfig(config)
+	}
+	return s.clientFactory(config)
 }
