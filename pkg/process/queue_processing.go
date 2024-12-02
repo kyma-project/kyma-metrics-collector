@@ -12,15 +12,9 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/tools/clientcmd"
 
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
-	edpcollector "github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/node"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/pvc"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/redis"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
 )
 
@@ -136,24 +130,23 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 	metric.ShootName = record.ShootName
 	record.Metric = metric
 
-	// Running new collector in parallel to test OTel instrumentation
-	restClientConfig, _ := clientcmd.RESTConfigFromKubeConfig([]byte(record.KubeConfig))
-
-	collector := edpcollector.NewCollector(
-		node.NewScanner(p.PublicCloudSpecs),
-		redis.NewScanner(p.PublicCloudSpecs),
-		pvc.NewScanner(),
-	)
-	collector.CollectAndSend(
-		ctx,
-		&runtime.Info{
-			Kubeconfig:   *restClientConfig,
-			ProviderType: record.ProviderType,
-			ShootID:      record.ShootName,
-		},
-		nil,
-	)
-
+	// restClientConfig, _ := clientcmd.RESTConfigFromKubeConfig([]byte(record.KubeConfig))
+	//
+	// collector := edpcollector.NewCollector(
+	// 	node.NewScanner(p.PublicCloudSpecs),
+	// 	redis.NewScanner(p.PublicCloudSpecs),
+	// 	pvc.NewScanner(),
+	// )
+	// collector.CollectAndSend(
+	// 	ctx,
+	// 	&runtime.Info{
+	// 		Kubeconfig:   *restClientConfig,
+	// 		ProviderType: record.ProviderType,
+	// 		ShootInfo:    record,
+	// 	},
+	// 	nil,
+	// )
+	//
 	return record, nil
 }
 

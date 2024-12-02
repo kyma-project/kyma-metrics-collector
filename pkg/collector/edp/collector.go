@@ -32,7 +32,7 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 	childCtx, span := otel.Tracer("collector/edp").Start(ctx, "collect",
 		trace.WithAttributes(
 			attribute.String("provider", runtime.ProviderType),
-			attribute.String("shoot_id", runtime.ShootID),
+			attribute.String("shoot_id", runtime.ShootInfo.ShootName),
 		),
 	)
 	defer span.End()
