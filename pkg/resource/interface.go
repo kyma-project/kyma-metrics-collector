@@ -13,7 +13,7 @@ type ScannerID string
 type Scanner interface {
 	// ScanConverter returns the measure for the given clusterid. If an error occurs, the measure is nil.
 	// The scan is time dependent and should be taken at the time of the call.
-	// The scanner is responsible for exposing metrics about the values retrieved. All measurers should follow a similar pattern.
+	// The scanner is responsible for exposing metrics about the values retrieved. All scanners should follow a similar pattern.
 	// These metrics are just for informational purposes and must not be used for alerting or billing.
 	Scan(ctx context.Context, runtime *runtime.Info) (ScanConverter, error)
 
