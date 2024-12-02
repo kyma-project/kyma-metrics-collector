@@ -26,9 +26,7 @@ func SetupSDK(ctx context.Context) (func(context.Context) error, error) {
 func newTraceProvider(ctx context.Context) (*trace.TracerProvider, error) {
 	traceExporter, err := otlptrace.New(
 		ctx,
-		otlptracegrpc.NewClient(
-			otlptracegrpc.WithInsecure(),
-		),
+		otlptracegrpc.NewClient(),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
