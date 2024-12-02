@@ -130,23 +130,6 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 	metric.ShootName = record.ShootName
 	record.Metric = metric
 
-	// restClientConfig, _ := clientcmd.RESTConfigFromKubeConfig([]byte(record.KubeConfig))
-	//
-	// collector := edpcollector.NewCollector(
-	// 	node.NewScanner(p.PublicCloudSpecs),
-	// 	redis.NewScanner(p.PublicCloudSpecs),
-	// 	pvc.NewScanner(),
-	// )
-	// collector.CollectAndSend(
-	// 	ctx,
-	// 	&runtime.Info{
-	// 		Kubeconfig:   *restClientConfig,
-	// 		ProviderType: record.ProviderType,
-	// 		ShootInfo:    record,
-	// 	},
-	// 	nil,
-	// )
-	//
 	return record, nil
 }
 
