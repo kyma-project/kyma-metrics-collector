@@ -3,9 +3,11 @@ package redis
 import (
 	"context"
 	"errors"
+	"strconv"
 	"testing"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
@@ -15,9 +17,19 @@ import (
 	"k8s.io/client-go/rest"
 	k8stesting "k8s.io/client-go/testing"
 
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
 )
+
+var fakeShootInfo = kmccache.Record{
+	InstanceID:      "adccb200-6052-4192-8adf-785b8a5af306",
+	RuntimeID:       "fe5ab5d6-5b0b-4b70-9644-7f89d230b516",
+	SubAccountID:    "1ae0dbe1-d13d-4e39-bed4-7c83364084d5",
+	GlobalAccountID: "0c22f798-e572-4fc7-a502-cd825c742ff6",
+	ShootName:       "c-987654",
+}
 
 func TestScanner_ID(t *testing.T) {
 	scanner := Scanner{}
@@ -31,6 +43,7 @@ func TestScanner_Scan_Successful(t *testing.T) {
 			{ObjectMeta: metav1.ObjectMeta{Name: "aws-redis-2"}},
 		},
 	}
+
 	clientFactory := func(*rest.Config) (dynamic.Interface, error) {
 		scheme := k8sruntime.NewScheme()
 		if err := cloudresourcesv1beta1.AddToScheme(scheme); err != nil {
@@ -53,10 +66,11 @@ func TestScanner_Scan_Successful(t *testing.T) {
 	}
 
 	provider := "test-provider"
+
 	result, err := scanner.Scan(context.Background(), &runtime.Info{
 		ProviderType: provider,
+		ShootInfo:    fakeShootInfo,
 	})
-
 	require.NoError(t, err)
 	require.NotNil(t, result)
 
@@ -64,6 +78,24 @@ func TestScanner_Scan_Successful(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, awsRedises.Items, redisScan.aws.Items)
 	require.Equal(t, scanner.specs, redisScan.specs)
+
+	for _, actions := range []string{
+		skrcommons.ListingRedisesAWSAction,
+		skrcommons.ListingRedisesAzureAction,
+		skrcommons.ListingRedisesGCPAction,
+	} {
+		gotMetrics, err := skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
+			actions,
+			strconv.FormatBool(true),
+			fakeShootInfo.ShootName,
+			fakeShootInfo.InstanceID,
+			fakeShootInfo.RuntimeID,
+			fakeShootInfo.SubAccountID,
+			fakeShootInfo.GlobalAccountID,
+		)
+		require.NoError(t, err)
+		require.Equal(t, 1, int(testutil.ToFloat64(gotMetrics)))
+	}
 }
 
 func TestScanner_Scan_Error(t *testing.T) {
@@ -84,8 +116,21 @@ func TestScanner_Scan_Error(t *testing.T) {
 	scanner := Scanner{
 		clientFactory: clientFactory,
 	}
-	result, err := scanner.Scan(context.Background(), &runtime.Info{})
+
+	result, err := scanner.Scan(context.Background(), &runtime.Info{ShootInfo: fakeShootInfo})
 
 	require.Error(t, err)
 	require.Nil(t, result)
+
+	gotMetrics, err := skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
+		skrcommons.ListingRedisesAWSAction,
+		strconv.FormatBool(false),
+		fakeShootInfo.ShootName,
+		fakeShootInfo.InstanceID,
+		fakeShootInfo.RuntimeID,
+		fakeShootInfo.SubAccountID,
+		fakeShootInfo.GlobalAccountID,
+	)
+	require.NoError(t, err)
+	require.Equal(t, 1, int(testutil.ToFloat64(gotMetrics)))
 }

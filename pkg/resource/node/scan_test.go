@@ -9,6 +9,7 @@ import (
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
+	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
 
 func TestScan_EDP(t *testing.T) {
@@ -151,7 +152,7 @@ func TestScan_EDP(t *testing.T) {
 			actualEDP, err := scan.EDP()
 
 			require.Equal(t, test.expectedEDP.ProvisionedCPUs, actualEDP.ProvisionedCPUs)
-			require.InDelta(t, test.expectedEDP.ProvisionedRAMGb, actualEDP.ProvisionedRAMGb, 0.0001)
+			require.InDelta(t, test.expectedEDP.ProvisionedRAMGb, actualEDP.ProvisionedRAMGb, kmctesting.Epsilon)
 			require.ElementsMatch(t, test.expectedEDP.VMTypes, actualEDP.VMTypes)
 
 			if test.expectedError != nil {
