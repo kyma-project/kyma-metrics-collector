@@ -106,7 +106,6 @@ func listRedisInstances(
 	ctx context.Context,
 	client dynamic.NamespaceableResourceInterface,
 	targetList any,
-
 ) error {
 	unstructuredList, err := client.Namespace(corev1.NamespaceAll).List(ctx, metaV1.ListOptions{})
 	if err != nil {

@@ -50,7 +50,11 @@ func main() {
 		return
 	}
 
-	defer otelShutdown(context.Background())
+	defer func() {
+		if err := otelShutdown(context.Background()); err != nil {
+			logger.Errorf("Failed to shutdown OpenTelemetry SDK: %v", err)
+		}
+	}()
 
 	cfg := new(env.Config)
 	if err := envconfig.Process("", cfg); err != nil {
