@@ -30,7 +30,7 @@ func NewCollector(scanner ...resource.Scanner) collector.CollectorSender {
 }
 
 func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, previousScans collector.ScanMap) (collector.ScanMap, error) {
-	childCtx, span := otel.Tracer("collector/edp").Start(ctx, "collect",
+	childCtx, span := otel.Tracer("").Start(ctx, "collect",
 		trace.WithAttributes(
 			attribute.String("provider", runtime.ProviderType),
 			attribute.String("shoot_id", runtime.ShootInfo.ShootName),
