@@ -2,6 +2,7 @@ package otel
 
 import (
 	"context"
+	"fmt"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -12,7 +13,7 @@ import (
 // SetupSDK bootstraps the OpenTelemetry pipeline.
 // If it does not return an error, make sure to call shutdown for proper cleanup.
 func SetupSDK(ctx context.Context) (func(context.Context) error, error) {
-	tracerProvider, err := newTraceProvider()
+	tracerProvider, err := newTraceProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -22,13 +23,15 @@ func SetupSDK(ctx context.Context) (func(context.Context) error, error) {
 	return tracerProvider.Shutdown, nil
 }
 
-func newTraceProvider() (*trace.TracerProvider, error) {
+func newTraceProvider(ctx context.Context) (*trace.TracerProvider, error) {
 	traceExporter, err := otlptrace.New(
-		context.Background(),
-		otlptracegrpc.NewClient(),
+		ctx,
+		otlptracegrpc.NewClient(
+			otlptracegrpc.WithInsecure(),
+		),
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
 	}
 
 	traceProvider := trace.NewTracerProvider(

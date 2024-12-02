@@ -46,12 +46,12 @@ func main() {
 	logger.Info("Setting up OTel SDK")
 	otelShutdown, err := otel.SetupSDK(context.Background())
 	if err != nil {
-		logger.With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("Setup OTel")
+		logger.With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("Set up OTel SDK")
 	}
 
 	defer func() {
 		if err := otelShutdown(context.Background()); err != nil {
-			logger.Errorf("Failed to shutdown OpenTelemetry SDK: %v", err)
+			logger.Errorf("Failed to shutdown OTel SDK: %v", err)
 		}
 	}()
 
