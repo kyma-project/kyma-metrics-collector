@@ -8,7 +8,7 @@ To bill hyperscaler resources used by SKR clusters, the Kyma Control Plane (KCP)
 
 Every SKR cluster runs in a hyperscaler account dedicated to the related global account, so it is shared between many clusters of the same customer. The hyperscaler account is paid by Kyma, and individual resource usage is charged to the customer. The bill to the end user contains one entry, listing the consumed capacity units (CU) without any further breakdown. The bill is created by the Unified Metering service.
 
-[!arch](./assets/arch.drawio.svg)
+![arch](./assets/arch.drawio.svg)
 
 The following step happens once for every SKR registration and deregistration:
 
