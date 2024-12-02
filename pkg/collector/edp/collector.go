@@ -13,6 +13,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
 )
 
 type Collector struct {
@@ -51,6 +52,9 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 		}
 		// use new or old measure
 		scans[s.ID()] = scan
+
+		// Use scanner ID as the label temporarily, the metric has to be reconsidered when we migrate to OTel
+		skrcommons.RecordSKRQuery(err != nil, string(s.ID()), runtime.ShootInfo)
 	}
 
 	record := NewRecord(time.Now(), time.Now(), maps.Values(scans))

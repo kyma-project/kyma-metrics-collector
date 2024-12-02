@@ -19,7 +19,6 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
-	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
 )
 
 const (
@@ -70,25 +69,19 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 
 	var errs []error
 
-	if err := listRedisInstances(ctx, aws, &scan.aws, func(success bool) {
-		skrcommons.RecordSKRQuery(success, skrcommons.ListingRedisesAWSAction, runtime.ShootInfo)
-	}); err != nil {
+	if err := listRedisInstances(ctx, aws, any(&scan.aws)); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		errs = append(errs, err)
 	}
 
-	if err := listRedisInstances(ctx, azure, &scan.azure, func(success bool) {
-		skrcommons.RecordSKRQuery(success, skrcommons.ListingRedisesAzureAction, runtime.ShootInfo)
-	}); err != nil {
+	if err := listRedisInstances(ctx, azure, any(&scan.azure)); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		errs = append(errs, err)
 	}
 
-	if err := listRedisInstances(ctx, gcp, &scan.gcp, func(success bool) {
-		skrcommons.RecordSKRQuery(success, skrcommons.ListingRedisesGCPAction, runtime.ShootInfo)
-	}); err != nil {
+	if err := listRedisInstances(ctx, gcp, any(&scan.gcp)); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		errs = append(errs, err)
@@ -113,7 +106,7 @@ func listRedisInstances(
 	ctx context.Context,
 	client dynamic.NamespaceableResourceInterface,
 	targetList any,
-	recordMetricFn func(bool),
+
 ) error {
 	unstructuredList, err := client.Namespace(corev1.NamespaceAll).List(ctx, metaV1.ListOptions{})
 	if err != nil {
@@ -121,13 +114,8 @@ func listRedisInstances(
 			return nil
 		}
 
-		// do not return error if CRD is not found
-		recordMetricFn(false)
-
 		return err
 	}
-
-	recordMetricFn(true)
 
 	if err := convertUnstructuredListToRedisList(unstructuredList, targetList); err != nil {
 		return err

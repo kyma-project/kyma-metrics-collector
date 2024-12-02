@@ -13,7 +13,6 @@ import (
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
-	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
 )
 
 var _ resource.Scanner = &Scanner{}
@@ -51,12 +50,9 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 		retErr := fmt.Errorf("failed to list pvcs: %w", err)
 		span.RecordError(retErr)
 		span.SetStatus(codes.Error, retErr.Error())
-		skrcommons.RecordSKRQuery(false, skrcommons.ListingPVCsAction, runtime.ShootInfo)
 
 		return nil, retErr
 	}
-
-	skrcommons.RecordSKRQuery(true, skrcommons.ListingPVCsAction, runtime.ShootInfo)
 
 	return &Scan{
 		pvcs: *pvcs,

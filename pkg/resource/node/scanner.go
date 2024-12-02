@@ -13,7 +13,6 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
-	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
 )
 
 var _ resource.Scanner = &Scanner{}
@@ -52,12 +51,9 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 		retErr := fmt.Errorf("failed to list nodes: %w", err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		skrcommons.RecordSKRQuery(false, skrcommons.ListingNodesAction, runtime.ShootInfo)
 
 		return nil, retErr
 	}
-
-	skrcommons.RecordSKRQuery(true, skrcommons.ListingNodesAction, runtime.ShootInfo)
 
 	return &Scan{
 		providerType: runtime.ProviderType,

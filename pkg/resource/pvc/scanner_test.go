@@ -3,10 +3,8 @@ package pvc
 import (
 	"context"
 	"errors"
-	"strconv"
 	"testing"
 
-	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,18 +14,8 @@ import (
 	"k8s.io/client-go/rest"
 	k8stesting "k8s.io/client-go/testing"
 
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
-	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
 )
-
-var fakeShootInfo = kmccache.Record{
-	InstanceID:      "adccb200-6052-4192-8adf-785b8a5af306",
-	RuntimeID:       "fe5ab5d6-5b0b-4b70-9644-7f89d230b516",
-	SubAccountID:    "1ae0dbe1-d13d-4e39-bed4-7c83364084d5",
-	GlobalAccountID: "0c22f798-e572-4fc7-a502-cd825c742ff6",
-	ShootName:       "c-987654",
-}
 
 func TestScanner_ID(t *testing.T) {
 	scanner := Scanner{}
@@ -54,7 +42,6 @@ func TestScanner_Scan_Successful(t *testing.T) {
 	provider := "test-provider"
 	result, err := scanner.Scan(context.Background(), &runtime.Info{
 		ProviderType: provider,
-		ShootInfo:    fakeShootInfo,
 	})
 	require.NoError(t, err)
 	require.NotNil(t, result)
@@ -62,18 +49,6 @@ func TestScanner_Scan_Successful(t *testing.T) {
 	pvcScan, ok := result.(*Scan)
 	require.True(t, ok)
 	require.Equal(t, pvcs.Items, pvcScan.pvcs.Items)
-
-	gotMetrics, err := skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
-		skrcommons.ListingPVCsAction,
-		strconv.FormatBool(true),
-		fakeShootInfo.ShootName,
-		fakeShootInfo.InstanceID,
-		fakeShootInfo.RuntimeID,
-		fakeShootInfo.SubAccountID,
-		fakeShootInfo.GlobalAccountID,
-	)
-	require.NoError(t, err)
-	require.Equal(t, 1, int(testutil.ToFloat64(gotMetrics)))
 }
 
 func TestScanner_Scan_Error(t *testing.T) {
@@ -89,20 +64,8 @@ func TestScanner_Scan_Error(t *testing.T) {
 	scanner := Scanner{
 		clientFactory: clientFactory,
 	}
-	result, err := scanner.Scan(context.Background(), &runtime.Info{ShootInfo: fakeShootInfo})
+	result, err := scanner.Scan(context.Background(), &runtime.Info{})
 
 	require.Error(t, err)
 	require.Nil(t, result)
-
-	gotMetrics, err := skrcommons.TotalQueriesMetric.GetMetricWithLabelValues(
-		skrcommons.ListingPVCsAction,
-		strconv.FormatBool(false),
-		fakeShootInfo.ShootName,
-		fakeShootInfo.InstanceID,
-		fakeShootInfo.RuntimeID,
-		fakeShootInfo.SubAccountID,
-		fakeShootInfo.GlobalAccountID,
-	)
-	require.NoError(t, err)
-	require.Equal(t, 1, int(testutil.ToFloat64(gotMetrics)))
 }
