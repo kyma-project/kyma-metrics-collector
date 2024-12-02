@@ -58,6 +58,7 @@ func TestScanner_Scan_Error(t *testing.T) {
 		clientset.PrependReactor("list", "persistentvolumeclaims", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, nil, errors.New("failed to list pvcs")
 		})
+
 		return clientset, nil
 	}
 

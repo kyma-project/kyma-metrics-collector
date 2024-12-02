@@ -43,6 +43,7 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 		retErr := fmt.Errorf("failed to create clientset: %w", err)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
+
 		return nil, retErr
 	}
 
@@ -52,6 +53,7 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		skrcommons.RecordSKRQuery(false, skrcommons.ListingNodesAction, runtime.ShootInfo)
+
 		return nil, retErr
 	}
 
@@ -67,5 +69,6 @@ func (s *Scanner) createClientset(config *rest.Config) (kubernetes.Interface, er
 	if s.clientFactory == nil {
 		return kubernetes.NewForConfig(config)
 	}
+
 	return s.clientFactory(config)
 }

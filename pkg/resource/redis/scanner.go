@@ -105,6 +105,7 @@ func (s *Scanner) createClientFactory(config *rest.Config) (dynamic.Interface, e
 	if s.clientFactory == nil {
 		return dynamic.NewForConfig(config)
 	}
+
 	return s.clientFactory(config)
 }
 
@@ -122,6 +123,7 @@ func listRedisInstances(
 
 		// do not return error if CRD is not found
 		recordMetricFn(false)
+
 		return err
 	}
 

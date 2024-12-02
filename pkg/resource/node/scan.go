@@ -31,7 +31,9 @@ func (s *Scan) UM(duration time.Duration) (resource.UMMeasurement, error) {
 
 func (s *Scan) EDP() (resource.EDPMeasurement, error) {
 	edp := resource.EDPMeasurement{}
+
 	var errs []error
+
 	vmTypes := make(map[string]int)
 
 	for _, node := range s.nodes.Items {

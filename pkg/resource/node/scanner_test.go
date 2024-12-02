@@ -59,6 +59,7 @@ func TestScanner_Scan_Error(t *testing.T) {
 		clientset.PrependReactor("list", "nodes", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, nil, errors.New("failed to list nodes")
 		})
+
 		return clientset, nil
 	}
 

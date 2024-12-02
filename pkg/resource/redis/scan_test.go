@@ -1,13 +1,13 @@
 package redis
 
 import (
-	"errors"
 	"testing"
 
 	cloudresourcesv1beta1 "github.com/kyma-project/cloud-manager/api/cloud-resources/v1beta1"
+	"github.com/stretchr/testify/require"
+
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestScan_EDP(t *testing.T) {
@@ -135,14 +135,12 @@ func TestScan_EDP(t *testing.T) {
 
 			actualEDP, err := scan.EDP()
 
-			// Validate EDP output
-			assert.Equal(t, test.expected.ProvisionedVolumes, actualEDP.ProvisionedVolumes, "EDPMeasurement mismatch")
+			require.Equal(t, test.expected.ProvisionedVolumes, actualEDP.ProvisionedVolumes)
 
-			// Validate error
 			if test.expectedError != nil {
-				assert.True(t, errors.Is(err, test.expectedError), "unexpected error: got %v, want %v", err, test.expectedError)
+				require.ErrorIs(t, err, test.expectedError)
 			} else {
-				assert.NoError(t, err, "unexpected error: got %v", err)
+				require.NoError(t, err)
 			}
 		})
 	}

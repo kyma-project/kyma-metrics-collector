@@ -3,12 +3,12 @@ package pvc
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	apiresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
-	"github.com/stretchr/testify/require"
 )
 
 func TestScan_EDP(t *testing.T) {

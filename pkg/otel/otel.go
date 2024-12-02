@@ -28,7 +28,9 @@ func SetupSDK(ctx context.Context) (shutdown func(context.Context) error, err er
 		for _, fn := range shutdownFuncs {
 			err = errors.Join(err, fn(ctx))
 		}
+
 		shutdownFuncs = nil
+
 		return err
 	}
 
@@ -47,6 +49,7 @@ func SetupSDK(ctx context.Context) (shutdown func(context.Context) error, err er
 		handleErr(err)
 		return
 	}
+
 	shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
 	otel.SetTracerProvider(tracerProvider)
 
@@ -62,6 +65,7 @@ func newPropagator() propagation.TextMapPropagator {
 
 func newTraceProvider() (*trace.TracerProvider, error) {
 	collectorURL := "telemetry-otlp-traces.kyma-system:4317"
+
 	traceExporter, err := otlptrace.New(
 		context.Background(),
 		otlptracegrpc.NewClient(
@@ -86,5 +90,6 @@ func newTraceProvider() (*trace.TracerProvider, error) {
 		trace.WithBatcher(traceExporter),
 		trace.WithResource(resources),
 	)
+
 	return traceProvider, nil
 }

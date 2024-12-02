@@ -44,6 +44,7 @@ func main() {
 	logger.Infof("Starting application with options: %v", opts.String())
 
 	logger.Info("Setting up OpenTelemetry SDK")
+
 	otelShutdown, err := otel.SetupSDK(context.Background())
 	if err != nil {
 		return

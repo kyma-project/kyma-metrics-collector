@@ -1,7 +1,6 @@
 package node
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -152,13 +151,13 @@ func TestScan_EDP(t *testing.T) {
 			actualEDP, err := scan.EDP()
 
 			require.Equal(t, test.expectedEDP.ProvisionedCPUs, actualEDP.ProvisionedCPUs)
-			require.Equal(t, test.expectedEDP.ProvisionedRAMGb, actualEDP.ProvisionedRAMGb)
+			require.InDelta(t, test.expectedEDP.ProvisionedRAMGb, actualEDP.ProvisionedRAMGb, 0.0001)
 			require.ElementsMatch(t, test.expectedEDP.VMTypes, actualEDP.VMTypes)
 
 			if test.expectedError != nil {
-				require.True(t, errors.Is(err, test.expectedError), "unexpected error: got %v, want %v", err, test.expectedError)
+				require.ErrorIs(t, err, test.expectedError)
 			} else {
-				require.NoError(t, err, "unexpected error: got %v", err)
+				require.NoError(t, err)
 			}
 		})
 	}

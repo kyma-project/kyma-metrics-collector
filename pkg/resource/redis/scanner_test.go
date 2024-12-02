@@ -43,6 +43,7 @@ func TestScanner_Scan_Successful(t *testing.T) {
 				azureRedisGVR: "AzureRedisInstanceList",
 				gcpRedisGVR:   "GcpRedisInstanceList",
 			}, awsRedises)
+
 		return dynamicClient, nil
 	}
 
@@ -76,6 +77,7 @@ func TestScanner_Scan_Error(t *testing.T) {
 		dynamicClient.PrependReactor("list", "awsredisinstances", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, nil, errors.New("failed to list aws redis instances")
 		})
+
 		return dynamicClient, nil
 	}
 

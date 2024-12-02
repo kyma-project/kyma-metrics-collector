@@ -39,6 +39,7 @@ func (s *Scan) UM(duration time.Duration) (resource.UMMeasurement, error) {
 
 func (s *Scan) EDP() (resource.EDPMeasurement, error) {
 	edp := resource.EDPMeasurement{}
+
 	var errs []error
 
 	for _, pvc := range s.pvcs.Items {
