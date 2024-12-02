@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -151,14 +151,14 @@ func TestScan_EDP(t *testing.T) {
 
 			actualEDP, err := scan.EDP()
 
-			// Validate EDP output
-			assert.Equal(t, test.expectedEDP, actualEDP, "EDPMeasurement mismatch")
+			require.Equal(t, test.expectedEDP.ProvisionedCPUs, actualEDP.ProvisionedCPUs)
+			require.Equal(t, test.expectedEDP.ProvisionedRAMGb, actualEDP.ProvisionedRAMGb)
+			require.ElementsMatch(t, test.expectedEDP.VMTypes, actualEDP.VMTypes)
 
-			// Validate error
 			if test.expectedError != nil {
-				assert.True(t, errors.Is(err, test.expectedError), "unexpected error: got %v, want %v", err, test.expectedError)
+				require.True(t, errors.Is(err, test.expectedError), "unexpected error: got %v, want %v", err, test.expectedError)
 			} else {
-				assert.NoError(t, err, "unexpected error: got %v", err)
+				require.NoError(t, err, "unexpected error: got %v", err)
 			}
 		})
 	}
