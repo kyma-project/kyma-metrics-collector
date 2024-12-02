@@ -39,7 +39,7 @@ func TestScanner_Scan_Successful(t *testing.T) {
 		clientFactory: clientFactory,
 	}
 
-	provider := runtime.ProviderType("test-provider")
+	provider := "test-provider"
 	result, err := scanner.Scan(context.Background(), &runtime.Info{
 		ProviderType: provider,
 	})
@@ -49,7 +49,7 @@ func TestScanner_Scan_Successful(t *testing.T) {
 
 	nodeScan, ok := result.(*Scan)
 	require.True(t, ok)
-	require.Equal(t, provider, nodeScan.provider)
+	require.Equal(t, provider, nodeScan.providerType)
 	require.Equal(t, nodes.Items, nodeScan.nodes.Items)
 }
 

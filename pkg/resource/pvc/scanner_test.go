@@ -39,7 +39,7 @@ func TestScanner_Scan_Successful(t *testing.T) {
 		clientFactory: clientFactory,
 	}
 
-	provider := runtime.ProviderType("test-provider")
+	provider := "test-provider"
 	result, err := scanner.Scan(context.Background(), &runtime.Info{
 		ProviderType: provider,
 	})

@@ -148,7 +148,7 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 		ctx,
 		&runtime.Info{
 			Kubeconfig:   *restClientConfig,
-			ProviderType: runtime.ProviderType(record.ProviderType),
+			ProviderType: record.ProviderType,
 			ShootID:      record.ShootName,
 		},
 		nil,

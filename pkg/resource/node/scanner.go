@@ -54,8 +54,8 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 	}
 
 	return &Scan{
-		provider: runtime.ProviderType,
-		nodes:    *nodes,
+		providerType: runtime.ProviderType,
+		nodes:        *nodes,
 	}, nil
 }
 
