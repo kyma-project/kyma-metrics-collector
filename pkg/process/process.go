@@ -11,6 +11,7 @@ import (
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/util/workqueue"
 
+	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
@@ -25,7 +26,7 @@ type Process struct {
 	Queue             workqueue.TypedDelayingInterface[string]
 	SecretCacheClient v1.CoreV1Interface
 	Cache             *cache.Cache
-	PublicCloudSpecs  *PublicCloudSpecs
+	PublicCloudSpecs  *config.PublicCloudSpecs
 	ScrapeInterval    time.Duration
 	WorkersPoolSize   int
 	NodeConfig        skrnode.ConfigInf

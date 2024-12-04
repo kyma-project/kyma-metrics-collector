@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,8 +16,9 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 
+	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
-	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
 const (
@@ -24,46 +27,84 @@ const (
 )
 
 var (
-	AWSRedisGVR   = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "awsredisinstances"}
-	AzureRedisGVR = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "azureredisinstances"}
-	GCPRedisGVR   = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "gcpredisinstances"}
+	awsRedisGVR   = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "awsredisinstances"}
+	azureRedisGVR = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "azureredisinstances"}
+	gcpRedisGVR   = schema.GroupVersionResource{Group: cloudResourcesGroup, Version: cloudResourcesVersion, Resource: "gcpredisinstances"}
 )
 
-type Scanner struct{}
+var _ resource.Scanner = &Scanner{}
 
-func (m Scanner) Scan(ctx context.Context, config *rest.Config) (resource.ScanConverter, error) {
-	dynamicClient, err := dynamic.NewForConfig(config)
+type Scanner struct {
+	clientFactory func(config *rest.Config) (dynamic.Interface, error)
+
+	specs *config.PublicCloudSpecs
+}
+
+func NewScanner(specs *config.PublicCloudSpecs) *Scanner {
+	return &Scanner{
+		specs: specs,
+	}
+}
+
+func (s *Scanner) ID() resource.ScannerID {
+	return "redis"
+}
+
+func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "kmc.redis_scan")
+	defer span.End()
+
+	dynamicClient, err := s.createClientFactory(&runtime.Kubeconfig)
 	if err != nil {
 		return nil, err
 	}
 
-	aws := dynamicClient.Resource(AWSRedisGVR)
-	azure := dynamicClient.Resource(AzureRedisGVR)
-	gcp := dynamicClient.Resource(GCPRedisGVR)
+	aws := dynamicClient.Resource(awsRedisGVR)
+	azure := dynamicClient.Resource(azureRedisGVR)
+	gcp := dynamicClient.Resource(gcpRedisGVR)
 
-	scan := Scan{}
+	scan := Scan{
+		specs: s.specs,
+	}
 
 	var errs []error
 
-	if err := listRedisInstances(ctx, aws, skrcommons.ListingRedisesAWSAction, &scan.AWS); err != nil {
+	if err := listRedisInstances(ctx, aws, any(&scan.aws)); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		errs = append(errs, err)
 	}
 
-	if err := listRedisInstances(ctx, azure, skrcommons.ListingRedisesAzureAction, &scan.Azure); err != nil {
+	if err := listRedisInstances(ctx, azure, any(&scan.azure)); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		errs = append(errs, err)
 	}
 
-	if err := listRedisInstances(ctx, gcp, skrcommons.ListingRedisesGCPAction, &scan.GCP); err != nil {
+	if err := listRedisInstances(ctx, gcp, any(&scan.gcp)); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		errs = append(errs, err)
 	}
 
-	return &scan, errors.Join(errs...)
+	if len(errs) == 0 {
+		return &scan, nil
+	}
+
+	return nil, errors.Join(errs...)
+}
+
+func (s *Scanner) createClientFactory(config *rest.Config) (dynamic.Interface, error) {
+	if s.clientFactory == nil {
+		return dynamic.NewForConfig(config)
+	}
+
+	return s.clientFactory(config)
 }
 
 func listRedisInstances(
 	ctx context.Context,
 	client dynamic.NamespaceableResourceInterface,
-	actionPromLabel string,
 	targetList any,
 ) error {
 	unstructuredList, err := client.Namespace(corev1.NamespaceAll).List(ctx, metaV1.ListOptions{})
@@ -71,6 +112,8 @@ func listRedisInstances(
 		if apierrors.IsNotFound(err) {
 			return nil
 		}
+
+		return err
 	}
 
 	if err := convertUnstructuredListToRedisList(unstructuredList, targetList); err != nil {
@@ -93,9 +136,3 @@ func convertUnstructuredListToRedisList(unstructuredList *unstructured.Unstructu
 
 	return nil
 }
-
-func (m Scanner) ID() resource.ScannerID {
-	panic("implement me")
-}
-
-var _ resource.Scanner = &Scanner{}

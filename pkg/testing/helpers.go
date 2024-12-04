@@ -21,6 +21,11 @@ import (
 )
 
 const (
+	// Epsilon is used to compare floating point numbers using testify's InDelta and InEpsilon.
+	Epsilon = 0.0001
+)
+
+const (
 	timeout           = 10 * time.Second
 	defaultServerPort = 80
 )
