@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/pprof"
@@ -18,8 +19,10 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/env"
 	"github.com/kyma-project/kyma-metrics-collector/options"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/otel"
 	kmcprocess "github.com/kyma-project/kyma-metrics-collector/pkg/process"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/queue"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/service"
@@ -40,13 +43,25 @@ func main() {
 	logger := log.NewLogger(opts.LogLevel)
 	logger.Infof("Starting application with options: %v", opts.String())
 
+	logger.Info("Setting up OTel SDK")
+	otelShutdown, err := otel.SetupSDK(context.Background())
+	if err != nil {
+		logger.With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("Set up OTel SDK")
+	}
+
+	defer func() {
+		if err := otelShutdown(context.Background()); err != nil {
+			logger.Errorf("Failed to shutdown OTel SDK: %v", err)
+		}
+	}()
+
 	cfg := new(env.Config)
 	if err := envconfig.Process("", cfg); err != nil {
 		logger.With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("Load env config")
 	}
 
 	// Load public cloud specs
-	publicCloudSpecs, err := kmcprocess.LoadPublicCloudSpecs(cfg)
+	publicCloudSpecs, err := config.LoadPublicCloudSpecs(cfg)
 	if err != nil {
 		logger.With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("Load public cloud spec")
 	}

@@ -1,4 +1,4 @@
-package process
+package config
 
 import (
 	"encoding/json"
@@ -8,6 +8,13 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/kyma-project/kyma-metrics-collector/env"
+)
+
+const (
+	Azure = "azure"
+	AWS   = "aws"
+	GCP   = "gcp"
+	CCEE  = "sapconvergedcloud"
 )
 
 type PublicCloudSpecs struct {

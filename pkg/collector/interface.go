@@ -3,15 +3,13 @@ package collector
 import (
 	"context"
 
-	"k8s.io/client-go/rest"
-
-	"github.com/kyma-project/kyma-metrics-collector/pkg/process"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
 type ScanMap map[resource.ScannerID]resource.ScanConverter
 
 type CollectorSender interface {
 	// CollectAndSend collects and sends the measures to the backend. It returns the measures collected.
-	CollectAndSend(context context.Context, config *rest.Config, specs *process.PublicCloudSpecs, previousScans ScanMap) (ScanMap, error)
+	CollectAndSend(context context.Context, runtime *runtime.Info, previousScans ScanMap) (ScanMap, error)
 }

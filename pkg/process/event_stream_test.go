@@ -7,6 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/kyma-project/kyma-metrics-collector/env"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
@@ -14,21 +15,21 @@ import (
 
 func TestParse(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
-	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
-	publicCloudSpecs, err := LoadPublicCloudSpecs(config)
+	cfg := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
+	publicCloudSpecs, err := config.LoadPublicCloudSpecs(cfg)
 	g.Expect(err).Should(gomega.BeNil())
 
 	testCases := []struct {
 		name            string
 		input           Input
-		specs           PublicCloudSpecs
+		specs           config.PublicCloudSpecs
 		expectedMetrics edp.ConsumptionMetrics
 		expectedErr     bool
 	}{
 		{
 			name: "with Azure, 2 vm types, 1 NFS pvc (20Gi) and 2 svcs(1 clusterIP and 1 LoadBalancer)",
 			input: Input{
-				provider: Azure,
+				provider: config.Azure,
 				nodeList: kmctesting.Get2Nodes(),
 				pvcList:  kmctesting.Get1NFSPVC(),
 				svcList:  kmctesting.Get2SvcsOfDiffTypes(),
@@ -54,7 +55,7 @@ func TestParse(t *testing.T) {
 		{
 			name: "with Azure, 2 vm types, 3 pvcs(5,10 and 20Gi) and 2 svcs(1 clusterIP and 1 LoadBalancer)",
 			input: Input{
-				provider: Azure,
+				provider: config.Azure,
 				nodeList: kmctesting.Get2Nodes(),
 				pvcList:  kmctesting.Get3PVCs(),
 				svcList:  kmctesting.Get2SvcsOfDiffTypes(),
@@ -80,7 +81,7 @@ func TestParse(t *testing.T) {
 		{
 			name: "with Azure with 3 vms and no pvc and svc",
 			input: Input{
-				provider: Azure,
+				provider: config.Azure,
 				nodeList: kmctesting.Get3NodesWithStandardD8v3VMType(),
 			},
 			specs: *publicCloudSpecs,
@@ -104,7 +105,7 @@ func TestParse(t *testing.T) {
 		{
 			name: "with Azure with 3 vms and no pvc and svc",
 			input: Input{
-				provider: Azure,
+				provider: config.Azure,
 				nodeList: kmctesting.Get3NodesWithStandardD8v3VMType(),
 			},
 			specs: *publicCloudSpecs,
@@ -127,7 +128,7 @@ func TestParse(t *testing.T) {
 		{
 			name: "with Azure with 3 vms and 2 redis, no pvc and svc",
 			input: Input{
-				provider: Azure,
+				provider: config.Azure,
 				nodeList: kmctesting.Get3NodesWithStandardD8v3VMType(),
 				redisList: &skrredis.RedisList{
 					Azure: *kmctesting.AzureRedisList(),
@@ -153,7 +154,7 @@ func TestParse(t *testing.T) {
 		{
 			name: "with Azure and vm type missing from the list of vmtypes",
 			input: Input{
-				provider: Azure,
+				provider: config.Azure,
 				nodeList: kmctesting.Get3NodesWithFooVMType(),
 			},
 			specs:       *publicCloudSpecs,
@@ -162,7 +163,7 @@ func TestParse(t *testing.T) {
 		{
 			name: "with sapconvergedcloud, 2 vm types, 3 pvcs(5,10 and 20Gi), and 2 svcs(1 clusterIP and 1 LoadBalancer)",
 			input: Input{
-				provider: CCEE,
+				provider: config.CCEE,
 				nodeList: kmctesting.Get2NodesOpenStack(),
 				pvcList:  kmctesting.Get3PVCs(),
 				svcList:  kmctesting.Get2SvcsOfDiffTypes(),

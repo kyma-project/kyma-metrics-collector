@@ -3,15 +3,18 @@ package edp
 import (
 	"context"
 	"encoding/json"
+	"time"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
-	"k8s.io/client-go/rest"
 
 	"fmt"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/process"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"net/http"
-	"time"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
 type Collector struct {
@@ -35,11 +38,19 @@ func NewCollector(EDPClient *Client, runtimeID, subAccountID, shootName string, 
 	}
 }
 
-func (c *Collector) CollectAndSend(ctx context.Context, config *rest.Config, specs *process.PublicCloudSpecs, previousScans collector.ScanMap) (collector.ScanMap, error) {
+func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, previousScans collector.ScanMap) (collector.ScanMap, error) {
+	childCtx, span := otel.Tracer("").Start(ctx, "collect",
+		trace.WithAttributes(
+			attribute.String("provider", runtime.ProviderType),
+			attribute.String("shoot_id", runtime.ShootInfo.ShootName),
+		),
+	)
+	defer span.End()
+
 	currentTimestamp := getTimestampNow()
 
-	scans := c.executeScans(ctx, config, previousScans)
-	EDPMeasurements := c.convertScansToEDPMeasurements(specs, scans, previousScans)
+	scans := c.executeScans(childCtx, runtime, previousScans)
+	EDPMeasurements := c.convertScansToEDPMeasurements(scans, previousScans)
 	payload := NewPayload(
 		c.runtimeID,
 		c.subAccountID,
@@ -52,11 +63,11 @@ func (c *Collector) CollectAndSend(ctx context.Context, config *rest.Config, spe
 	return scans, err
 }
 
-func (c *Collector) executeScans(ctx context.Context, config *rest.Config, previousScans collector.ScanMap) collector.ScanMap {
+func (c *Collector) executeScans(childCtx context.Context, runtime *runtime.Info, previousScans collector.ScanMap) collector.ScanMap {
 	scans := make(collector.ScanMap)
 
 	for _, s := range c.scanners {
-		scan, err := s.Scan(ctx, config)
+		scan, err := s.Scan(childCtx, runtime)
 		if err != nil {
 			c.logger.Error("error scanning", zap.Error(err), zap.String("scanner ID", string(s.ID())))
 			// use previous scan
@@ -74,11 +85,11 @@ func (c *Collector) executeScans(ctx context.Context, config *rest.Config, previ
 	return scans
 }
 
-func (c *Collector) convertScansToEDPMeasurements(specs *process.PublicCloudSpecs, currentScans collector.ScanMap, previousScans collector.ScanMap) []resource.EDPMeasurement {
+func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap, previousScans collector.ScanMap) []resource.EDPMeasurement {
 	EDPMeasurements := []resource.EDPMeasurement{}
 
 	for scannerID, scan := range currentScans {
-		edp, err := scan.EDP(specs)
+		edp, err := scan.EDP()
 		if err != nil {
 			c.logger.Error("error converting scan to EDP measurements", zap.Error(err), zap.String("scanner", string(scannerID)))
 			// attempt to get the previous scan and convert it to EDP measurement
@@ -87,7 +98,7 @@ func (c *Collector) convertScansToEDPMeasurements(specs *process.PublicCloudSpec
 				c.logger.Error("no previous scan found", zap.String("scanner", string(scannerID)))
 				continue
 			}
-			edp, err = previousScan.EDP(specs)
+			edp, err = previousScan.EDP()
 			if err != nil {
 				c.logger.Error("error converting previous scan to EDP measurements", zap.Error(err), zap.String("scanner", string(scannerID)))
 				continue
