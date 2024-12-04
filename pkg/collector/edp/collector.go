@@ -42,7 +42,7 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 	defer span.End()
 
 	currentTimestamp := getTimestampNow()
-	scans := c.executeScans(childCtx, runtime, previousScans)
+	scans := c.executeScans(childCtx, runtime)
 	EDPMeasurements := c.convertScansToEDPMeasurements(scans, previousScans)
 	payload := NewPayload(
 		runtime.ShootInfo.RuntimeID,
@@ -56,22 +56,16 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 	return scans, err
 }
 
-func (c *Collector) executeScans(childCtx context.Context, runtime *runtime.Info, previousScans collector.ScanMap) collector.ScanMap {
+func (c *Collector) executeScans(childCtx context.Context, runtime *runtime.Info) collector.ScanMap {
 	scans := make(collector.ScanMap)
 
 	for _, s := range c.scanners {
 		scan, err := s.Scan(childCtx, runtime)
 		if err != nil {
 			c.logger.Error("error scanning", zap.Error(err), zap.String("scanner ID", string(s.ID())))
-			// use previous scan
-			previousScan, exists := previousScans[s.ID()]
-			if !exists {
-				c.logger.Error("no previous scan found", zap.String("scanner ID", string(s.ID())))
-				continue
-			}
-			scan = previousScan
+			continue
 		}
-		// use new or old measure
+		// store only successful scans in the scan map
 		scans[s.ID()] = scan
 	}
 
@@ -81,24 +75,37 @@ func (c *Collector) executeScans(childCtx context.Context, runtime *runtime.Info
 func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap, previousScans collector.ScanMap) []resource.EDPMeasurement {
 	EDPMeasurements := []resource.EDPMeasurement{}
 
-	for scannerID, scan := range currentScans {
-		edp, err := scan.EDP()
-		if err != nil {
-			c.logger.Error("error converting scan to EDP measurements", zap.Error(err), zap.String("scanner", string(scannerID)))
-			// attempt to get the previous scan and convert it to EDP measurement
-			previousScan, exists := previousScans[scannerID]
-			if !exists {
-				c.logger.Error("no previous scan found", zap.String("scanner", string(scannerID)))
+	for _, s := range c.scanners {
+		scan, currentScanExists := currentScans[s.ID()]
+		// if current scan doesn't exist (because of a failure during execution), attempt to use the previous scan
+		if !currentScanExists {
+			previousScan, previousScanExists := previousScans[s.ID()]
+			if !previousScanExists {
+				c.logger.Error("no previous scan found", zap.String("scanner", string(s.ID())))
 				continue
 			}
-			edp, err = previousScan.EDP()
-			if err != nil {
-				c.logger.Error("error converting previous scan to EDP measurements", zap.Error(err), zap.String("scanner", string(scannerID)))
-				continue
-			}
+			currentScans[s.ID()] = previousScan
+			scan = previousScan
 		}
 
-		EDPMeasurements = append(EDPMeasurements, edp)
+		EDPMeasurement, err := scan.EDP()
+		if err != nil {
+			c.logger.Error("error converting scan to an EDP measurement", zap.Error(err), zap.String("scanner", string(s.ID())))
+			// attempt to get the previous scan and convert it to EDP measurement
+			previousScan, previousScanExists := previousScans[s.ID()]
+			if !previousScanExists {
+				c.logger.Error("no previous scan found", zap.String("scanner", string(s.ID())))
+				continue
+			}
+			EDPMeasurement, err = previousScan.EDP()
+			if err != nil {
+				c.logger.Error("error converting previous scan to an EDP measurement", zap.Error(err), zap.String("scanner", string(s.ID())))
+				continue
+			}
+			currentScans[s.ID()] = previousScan
+		}
+
+		EDPMeasurements = append(EDPMeasurements, EDPMeasurement)
 	}
 
 	return EDPMeasurements
