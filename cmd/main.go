@@ -25,6 +25,9 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/otel"
 	kmcprocess "github.com/kyma-project/kyma-metrics-collector/pkg/process"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/queue"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/node"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/pvc"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/redis"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/service"
 	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
 	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
@@ -106,10 +109,21 @@ func main() {
 
 	edpClient := edp.NewClient(edpConfig, logger)
 
+	nodeScanner := node.NewScanner(publicCloudSpecs)
+	pvcScanner := pvc.NewScanner()
+	redisScanner := redis.NewScanner(publicCloudSpecs)
+	edpCollector := edp.NewCollector(
+		edpClient,
+		nodeScanner,
+		pvcScanner,
+		redisScanner,
+	)
+
 	kmcProcess := kmcprocess.Process{
 		KEBClient:         kebClient,
 		SecretCacheClient: secretCacheClient.CoreV1(),
 		EDPClient:         edpClient,
+		EDPCollector:      edpCollector,
 		Logger:            logger,
 		PublicCloudSpecs:  publicCloudSpecs,
 		Cache:             cache,
