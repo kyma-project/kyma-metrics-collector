@@ -21,6 +21,7 @@ import (
 
 	"github.com/kyma-project/kyma-metrics-collector/env"
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	kmckeb "github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
@@ -580,7 +581,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    Azure,
+				ProviderType:    config.Azure,
 			},
 			givenShoot2: kmccache.Record{
 				SubAccountID:    uuid.New().String(),
@@ -588,7 +589,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    Azure,
+				ProviderType:    config.Azure,
 			},
 			givenIsShoot2ReturnedByKEB: false,
 		},
@@ -600,7 +601,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    Azure,
+				ProviderType:    config.Azure,
 			},
 			givenShoot2: kmccache.Record{
 				SubAccountID:    uuid.New().String(),
@@ -608,7 +609,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    Azure,
+				ProviderType:    config.Azure,
 			},
 			givenIsShoot2ReturnedByKEB: true,
 		},
@@ -620,7 +621,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    Azure,
+				ProviderType:    config.Azure,
 			},
 			givenShoot2: kmccache.Record{
 				SubAccountID:    uuid.New().String(),
@@ -628,7 +629,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    Azure,
+				ProviderType:    config.Azure,
 			},
 			givenIsShoot2ReturnedByKEB: true,
 			givenShoot2NewName:         fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
@@ -755,8 +756,8 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 	givenKubeConfig := "eyJmb28iOiAiYmFyIn0="
 
 	// cloud providers.
-	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
-	givenProviders, err := LoadPublicCloudSpecs(config)
+	cfg := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
+	givenProviders, err := config.LoadPublicCloudSpecs(cfg)
 	g.Expect(err).Should(gomega.BeNil())
 
 	// setup EDP server.
@@ -795,7 +796,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    Azure,
+				ProviderType:    config.Azure,
 				KubeConfig:      givenKubeConfig,
 			},
 			wantSuccess:         true,
@@ -811,7 +812,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    Azure,
+				ProviderType:    config.Azure,
 				Metric:          NewMetric(),
 				KubeConfig:      "invalid",
 			},
@@ -826,7 +827,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    Azure,
+				ProviderType:    config.Azure,
 				KubeConfig:      givenKubeConfig,
 			},
 			wantSuccess:         false,
@@ -843,7 +844,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    Azure,
+				ProviderType:    config.Azure,
 				KubeConfig:      "invalid",
 				Metric:          nil,
 			},
@@ -988,7 +989,7 @@ func TestExecute(t *testing.T) {
 		RuntimeID:    runtimeID,
 		ShootName:    shootName,
 		KubeConfig:   "",
-		ProviderType: Azure,
+		ProviderType: config.Azure,
 		Metric:       nil,
 	}
 	expectedRecord := newRecord
@@ -1009,8 +1010,8 @@ func TestExecute(t *testing.T) {
 
 	secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
 
-	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
-	providers, err := LoadPublicCloudSpecs(config)
+	cfg := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
+	providers, err := config.LoadPublicCloudSpecs(cfg)
 	g.Expect(err).Should(gomega.BeNil())
 
 	fakeNodeClient := skrnode.FakeNodeClient{}
