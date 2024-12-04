@@ -25,11 +25,7 @@ func (p *Process) generateRecordWithNewMetrics(identifier int, subAccountID stri
 
 	obj, isFound := p.Cache.Get(subAccountID)
 	if !isFound {
-		err := errSubAccountIDNotTrackable
-
-		return kmccache.Record{
-			SubAccountID: subAccountID,
-		}, err
+		return kmccache.Record{SubAccountID: subAccountID}, errSubAccountIDNotTrackable
 	}
 
 	var record kmccache.Record

@@ -17,7 +17,7 @@ import (
 
 	"github.com/kyma-project/kyma-metrics-collector/env"
 	"github.com/kyma-project/kyma-metrics-collector/options"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	kmcprocess "github.com/kyma-project/kyma-metrics-collector/pkg/process"

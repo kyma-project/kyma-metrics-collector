@@ -21,7 +21,7 @@ import (
 
 	"github.com/kyma-project/kyma-metrics-collector/env"
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
+	edp "github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	kmckeb "github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
@@ -778,7 +778,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 
 	// EDP client.
 	edpConfig := newEDPConfig(srv.URL)
-	edpClient := edp.NewClient(edpConfig, logger)
+	edpClient := edp2.NewClient(edpConfig, logger)
 
 	// test cases. These cases are not safe to be run in parallel.
 	testCases := []struct {
@@ -977,7 +977,7 @@ func TestExecute(t *testing.T) {
 	defer srv.Close()
 
 	edpConfig := newEDPConfig(srv.URL)
-	edpClient := edp.NewClient(edpConfig, log)
+	edpClient := edp2.NewClient(edpConfig, log)
 	shootName := fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5))
 	secretKCPStored := kmctesting.NewKCPStoredSecret(runtimeID, expectedKubeconfig)
 
@@ -1143,8 +1143,8 @@ func AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage *kebruntime.RuntimesPa
 	return runtimesPage, expectedCache, expectedQueue, nil
 }
 
-func newEDPConfig(url string) *edp.Config {
-	return &edp.Config{
+func newEDPConfig(url string) *edp2.Config {
+	return &edp2.Config{
 		URL:               url,
 		Token:             testToken,
 		Namespace:         testNamespace,

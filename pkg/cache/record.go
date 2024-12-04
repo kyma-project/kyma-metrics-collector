@@ -1,6 +1,8 @@
 package cache
 
-import "github.com/kyma-project/kyma-metrics-collector/pkg/edp"
+import (
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
+)
 
 type Record struct {
 	InstanceID      string
@@ -10,5 +12,5 @@ type Record struct {
 	ShootName       string
 	ProviderType    string
 	KubeConfig      string
-	Metric          *edp.ConsumptionMetrics
+	Metric          *resource.EDPMeasurement
 }

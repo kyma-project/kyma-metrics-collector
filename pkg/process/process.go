@@ -11,7 +11,7 @@ import (
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/util/workqueue"
 
-	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
 	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
