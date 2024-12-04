@@ -13,28 +13,22 @@ import (
 	"fmt"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
-	"net/http"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	"net/http"
 )
 
 type Collector struct {
-	EDPClient    *Client
-	runtimeID    string
-	subAccountID string
-	shootName    string
-	scanners     []resource.Scanner
-	logger       *zap.Logger
+	EDPClient *Client
+	scanners  []resource.Scanner
+	logger    *zap.Logger
 }
 
 var _ collector.CollectorSender = &Collector{}
 
 func NewCollector(EDPClient *Client, runtimeID, subAccountID, shootName string, scanner ...resource.Scanner) collector.CollectorSender {
 	return &Collector{
-		EDPClient:    EDPClient,
-		runtimeID:    runtimeID,
-		subAccountID: subAccountID,
-		shootName:    shootName,
-		scanners:     scanner,
+		EDPClient: EDPClient,
+		scanners:  scanner,
 	}
 }
 
@@ -48,17 +42,16 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 	defer span.End()
 
 	currentTimestamp := getTimestampNow()
-
 	scans := c.executeScans(childCtx, runtime, previousScans)
 	EDPMeasurements := c.convertScansToEDPMeasurements(scans, previousScans)
 	payload := NewPayload(
-		c.runtimeID,
-		c.subAccountID,
-		c.shootName,
+		runtime.ShootInfo.RuntimeID,
+		runtime.ShootInfo.SubAccountID,
+		runtime.ShootInfo.ShootName,
 		currentTimestamp,
 		EDPMeasurements,
 	)
-	err := c.sendPayload(payload)
+	err := c.sendPayload(payload, runtime.ShootInfo.SubAccountID)
 
 	return scans, err
 }
@@ -112,24 +105,24 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 }
 
 // sendPayload sends the payload to the EDP backend.
-func (c *Collector) sendPayload(payload Payload) error {
+func (c *Collector) sendPayload(payload Payload, subAccountID string) error {
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("failed to marshal payload for subAccountID (%s): %w", c.subAccountID, err)
+		return fmt.Errorf("failed to marshal payload for subAccountID (%s): %w", subAccountID, err)
 	}
 
-	edpRequest, err := c.EDPClient.NewRequest(c.subAccountID)
+	edpRequest, err := c.EDPClient.NewRequest(subAccountID)
 	if err != nil {
-		return fmt.Errorf("failed to create a new request for EDP for subAccountID (%s): %w", c.subAccountID, err)
+		return fmt.Errorf("failed to create a new request for EDP for subAccountID (%s): %w", subAccountID, err)
 	}
 
 	resp, err := c.EDPClient.Send(edpRequest, payloadJSON)
 	if err != nil {
-		return fmt.Errorf("failed to send payload to EDP for subAccountID (%s): %w", c.subAccountID, err)
+		return fmt.Errorf("failed to send payload to EDP for subAccountID (%s): %w", subAccountID, err)
 	}
 
 	if !isSuccess(resp.StatusCode) {
-		return fmt.Errorf("failed to send payload to EDP for subAccountID (%s) as it returned HTTP status code %d", c.subAccountID, resp.StatusCode)
+		return fmt.Errorf("failed to send payload to EDP for subAccountID (%s) as it returned HTTP status code %d", subAccountID, resp.StatusCode)
 	}
 
 	return nil
