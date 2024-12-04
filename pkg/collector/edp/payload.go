@@ -36,7 +36,7 @@ func aggregateEDPMeasurements(EDPMeasurements []resource.EDPMeasurement) resourc
 			aggregatedEDPMeasurement.VMTypes = append(aggregatedEDPMeasurement.VMTypes, vmType)
 		}
 
-		aggregatedEDPMeasurement.ProvisionedCpus += m.ProvisionedCpus
+		aggregatedEDPMeasurement.ProvisionedCPUs += m.ProvisionedCPUs
 		aggregatedEDPMeasurement.ProvisionedRAMGb += m.ProvisionedRAMGb
 
 		aggregatedEDPMeasurement.ProvisionedVolumes.SizeGbTotal += m.ProvisionedVolumes.SizeGbTotal
