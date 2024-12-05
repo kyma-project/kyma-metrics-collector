@@ -48,7 +48,7 @@ var (
 			Name:      "sub_account_processed_timestamp_seconds",
 			Help:      "Unix timestamp (in seconds) of last successful processing of subaccount.",
 		},
-		[]string{withOldMetricLabel, shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
+		[]string{shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
 	)
 	oldMetricsPublishedGauge = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -118,10 +118,9 @@ func recordSubAccountProcessed(success bool, shootInfo kmccache.Record) {
 	).Inc()
 }
 
-func recordSubAccountProcessedTimeStamp(withOldMetric bool, shootInfo kmccache.Record) {
+func recordSubAccountProcessedTimeStamp(shootInfo kmccache.Record) {
 	// the order of the values should be the same as defined in the metric declaration.
 	subAccountProcessedTimeStamp.WithLabelValues(
-		strconv.FormatBool(withOldMetric),
 		shootInfo.ShootName,
 		shootInfo.InstanceID,
 		shootInfo.RuntimeID,

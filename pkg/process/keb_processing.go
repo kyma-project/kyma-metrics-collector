@@ -9,6 +9,7 @@ import (
 
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
+	"go.uber.org/zap"
 )
 
 // pollKEBForRuntimes polls KEB for runtimes information.
@@ -206,4 +207,8 @@ func isTrackableState(state kebruntime.State) bool {
 	}
 
 	return false
+}
+
+func (p *Process) namedLoggerWithRuntime(runtime kebruntime.RuntimeDTO) *zap.SugaredLogger {
+	return p.Logger.With("component", "kmc").With(log.KeyRuntimeID, runtime.RuntimeID).With(log.KeyShoot, runtime.ShootName).With(log.KeySubAccountID, runtime.SubAccountID).With(log.KeyGlobalAccountID, runtime.GlobalAccountID)
 }

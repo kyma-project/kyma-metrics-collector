@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 )
 
 type Record struct {
@@ -12,5 +12,5 @@ type Record struct {
 	ShootName       string
 	ProviderType    string
 	KubeConfig      string
-	Metric          *resource.EDPMeasurement
+	Metric          *collector.ScanMap
 }

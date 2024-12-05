@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/patrickmn/go-cache"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/util/workqueue"
@@ -37,12 +36,6 @@ type Process struct {
 	RedisConfig       skrredis.ConfigInf
 	Logger            *zap.SugaredLogger
 }
-
-var (
-	errSubAccountIDNotTrackable = errors.New("subAccountID is not trackable")
-	ErrLoadingFailed            = errors.New("could not load resource")
-	errBadItemFromCache         = errors.New("bad item from cache, could not cast to a record obj")
-)
 
 const (
 	trackableTrue  = true
