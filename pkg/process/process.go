@@ -14,10 +14,6 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
-	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
-	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
-	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
-	skrsvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/svc"
 )
 
 type Process struct {
@@ -30,10 +26,6 @@ type Process struct {
 	PublicCloudSpecs  *config.PublicCloudSpecs
 	ScrapeInterval    time.Duration
 	WorkersPoolSize   int
-	NodeConfig        skrnode.ConfigInf
-	PVCConfig         skrpvc.ConfigInf
-	SvcConfig         skrsvc.ConfigInf
-	RedisConfig       skrredis.ConfigInf
 	Logger            *zap.SugaredLogger
 }
 

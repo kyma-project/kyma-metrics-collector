@@ -82,7 +82,9 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	runtimeInfo := runtime.Info{
 		Kubeconfig:   *restClientConfig,
 		ProviderType: record.ProviderType,
-		ShootInfo:    record,
+		RuntimeID:    record.RuntimeID,
+		SubAccountID: record.RuntimeID,
+		ShootName:    record.ShootName,
 	}
 	newScans, err := p.EDPCollector.CollectAndSend(ctx, &runtimeInfo, *record.Metric)
 	if err != nil {

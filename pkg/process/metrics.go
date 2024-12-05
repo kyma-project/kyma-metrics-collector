@@ -7,7 +7,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
-	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
 )
 
 const (
@@ -19,7 +18,6 @@ const (
 	subAccountLabel    = "sub_account_id"
 	globalAccountLabel = "global_account_id"
 	successLabel       = "success"
-	withOldMetricLabel = "with_old_metric"
 	trackableLabel     = "trackable"
 )
 
@@ -47,15 +45,6 @@ var (
 			Subsystem: subsystem,
 			Name:      "sub_account_processed_timestamp_seconds",
 			Help:      "Unix timestamp (in seconds) of last successful processing of subaccount.",
-		},
-		[]string{shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
-	)
-	oldMetricsPublishedGauge = promauto.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: namespace,
-			Subsystem: subsystem,
-			Name:      "old_metric_published",
-			Help:      "Number of consecutive re-sends of old metrics to EDP per cluster. It will reset to 0 when new metric data is published.",
 		},
 		[]string{shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
 	)
@@ -100,10 +89,8 @@ func deleteMetrics(shootInfo kmccache.Record) bool {
 	count := 0 // total numbers of metrics deleted
 	count += subAccountProcessed.DeletePartialMatch(matchLabels)
 	count += subAccountProcessedTimeStamp.DeletePartialMatch(matchLabels)
-	count += oldMetricsPublishedGauge.DeletePartialMatch(matchLabels)
 
-	// delete metrics for SKR queries.
-	return skrcommons.DeleteMetrics(shootInfo) && count > 0
+	return count > 0
 }
 
 func recordSubAccountProcessed(success bool, shootInfo kmccache.Record) {
@@ -127,26 +114,4 @@ func recordSubAccountProcessedTimeStamp(shootInfo kmccache.Record) {
 		shootInfo.SubAccountID,
 		shootInfo.GlobalAccountID,
 	).SetToCurrentTime()
-}
-
-func recordOldMetricsPublishedGauge(shootInfo kmccache.Record) {
-	// the order of the values should be the same as defined in the metric declaration.
-	oldMetricsPublishedGauge.WithLabelValues(
-		shootInfo.ShootName,
-		shootInfo.InstanceID,
-		shootInfo.RuntimeID,
-		shootInfo.SubAccountID,
-		shootInfo.GlobalAccountID,
-	).Inc()
-}
-
-func resetOldMetricsPublishedGauge(shootInfo kmccache.Record) {
-	// the order of the values should be the same as defined in the metric declaration.
-	oldMetricsPublishedGauge.WithLabelValues(
-		shootInfo.ShootName,
-		shootInfo.InstanceID,
-		shootInfo.RuntimeID,
-		shootInfo.SubAccountID,
-		shootInfo.GlobalAccountID,
-	).Set(0.0)
 }

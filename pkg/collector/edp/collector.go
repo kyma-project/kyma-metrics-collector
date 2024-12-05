@@ -36,7 +36,7 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 	childCtx, span := otel.Tracer("").Start(ctx, "collect",
 		trace.WithAttributes(
 			attribute.String("provider", runtime.ProviderType),
-			attribute.String("shoot_id", runtime.ShootInfo.ShootName),
+			attribute.String("shoot_id", runtime.ShootName),
 		),
 	)
 	defer span.End()
@@ -54,13 +54,13 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 	}
 
 	payload := NewPayload(
-		runtime.ShootInfo.RuntimeID,
-		runtime.ShootInfo.SubAccountID,
-		runtime.ShootInfo.ShootName,
+		runtime.RuntimeID,
+		runtime.SubAccountID,
+		runtime.ShootName,
 		currentTimestamp,
 		EDPMeasurements,
 	)
-	err = c.sendPayload(payload, runtime.ShootInfo.SubAccountID)
+	err = c.sendPayload(payload, runtime.SubAccountID)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("failed to send payload to EDP: %w", err))
 	}

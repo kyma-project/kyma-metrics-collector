@@ -1,8 +1,6 @@
 package cache
 
-import (
-	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
-)
+import "github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 
 type Record struct {
 	InstanceID      string
