@@ -86,12 +86,12 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 		SubAccountID: record.SubAccountID,
 		ShootName:    record.ShootName,
 	}
-	newScans, err := p.EDPCollector.CollectAndSend(ctx, &runtimeInfo, *record.Metric)
+	newScans, err := p.EDPCollector.CollectAndSend(ctx, &runtimeInfo, record.Metric)
 	if err != nil {
 		p.handleError(&record, subAccountID, identifier, fmt.Sprintf("failed to collect and send measurements to EDP backend: %w", err))
 		return
 	}
-	record.Metric = &newScans
+	record.Metric = newScans
 	p.namedLoggerWithRecord(&record).
 		With(log.KeyWorkerID, identifier).
 		With(log.KeySubAccountID, subAccountID).

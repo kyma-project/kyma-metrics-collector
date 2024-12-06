@@ -10,5 +10,5 @@ type Record struct {
 	ShootName       string
 	ProviderType    string
 	KubeConfig      string
-	Metric          *collector.ScanMap
+	Metric          collector.ScanMap
 }
