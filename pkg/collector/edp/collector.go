@@ -12,6 +12,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"net/http"
 )
@@ -36,7 +37,9 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 	childCtx, span := otel.Tracer("").Start(ctx, "collect",
 		trace.WithAttributes(
 			attribute.String("provider", runtime.ProviderType),
-			attribute.String("shoot_id", runtime.ShootName),
+			attribute.String("runtime_id", runtime.RuntimeID),
+			attribute.String("subaccount_id", runtime.SubAccountID),
+			attribute.String("shoot_name", runtime.ShootName),
 		),
 	)
 	defer span.End()
@@ -46,11 +49,15 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 	scans, err := c.executeScans(childCtx, runtime)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("failed to execute all scans: %w", err))
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 	}
 
 	EDPMeasurements, err := c.convertScansToEDPMeasurements(scans, previousScans)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("failed to convert all scans to EDP measurements: %w", err))
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 	}
 
 	payload := NewPayload(
@@ -63,6 +70,8 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 	err = c.sendPayload(payload, runtime.SubAccountID)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("failed to send payload to EDP: %w", err))
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 	}
 
 	return scans, errors.Join(errs...)
