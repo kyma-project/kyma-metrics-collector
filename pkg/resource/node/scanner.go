@@ -66,6 +66,7 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 
 	return &Scan{
 		providerType: runtime.ProviderType,
+		specs:        s.specs,
 		nodes:        *nodes,
 	}, nil
 }
