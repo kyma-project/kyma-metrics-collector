@@ -33,6 +33,10 @@ See the following example payload:
 
 ```json
 {
+  "timestamp": "2020-03-25T09:16:41+00:00",
+  "runtime_id": "52e31334-4819-4f36-9651-8ccd2a29b880",
+  "sub_account_id": "52e31334-4819-4f36-9651-8ccd2a29b881",
+  "shoot_name": "c-7ea3c81",
   "compute": {
     "vm_types": [
       {
