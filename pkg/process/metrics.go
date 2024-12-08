@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 )
 
 const (
@@ -87,7 +88,7 @@ func recordSubAccountProcessedTimeStamp(shootInfo kmccache.Record) {
 }
 
 func recordKEBFetchedClusters(trackable bool, shootName, instanceID, runtimeID, subAccountID, globalAccountID string) {
-	// the order if the values should be same as defined in the metric declaration.
+	// the order of the values should be same as defined in the metric declaration.
 	kebFetchedClusters.WithLabelValues(
 		strconv.FormatBool(trackable),
 		shootName,
@@ -112,6 +113,8 @@ func deleteMetrics(shootInfo kmccache.Record) bool {
 	count := 0 // total numbers of metrics deleted
 	count += subAccountProcessed.DeletePartialMatch(matchLabels)
 	count += subAccountProcessedTimeStamp.DeletePartialMatch(matchLabels)
+	count += collector.TotalScans.DeletePartialMatch(matchLabels)
+	count += collector.TotalScansConversionsToEDP.DeletePartialMatch(matchLabels)
 
 	return count > 0
 }

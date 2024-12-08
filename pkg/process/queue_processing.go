@@ -80,11 +80,13 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	// Collect and send measurements to EDP backend
 	ctx := context.Background()
 	runtimeInfo := runtime.Info{
-		Kubeconfig:   *restClientConfig,
-		ProviderType: record.ProviderType,
-		RuntimeID:    record.RuntimeID,
-		SubAccountID: record.SubAccountID,
-		ShootName:    record.ShootName,
+		InstanceID:      record.InstanceID,
+		RuntimeID:       record.RuntimeID,
+		SubAccountID:    record.SubAccountID,
+		GlobalAccountID: record.GlobalAccountID,
+		ShootName:       record.ShootName,
+		ProviderType:    record.ProviderType,
+		Kubeconfig:      *restClientConfig,
 	}
 	newScans, err := p.EDPCollector.CollectAndSend(ctx, &runtimeInfo, record.Metric)
 	if err != nil {

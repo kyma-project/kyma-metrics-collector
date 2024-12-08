@@ -53,7 +53,7 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 		span.SetStatus(codes.Error, err.Error())
 	}
 
-	EDPMeasurements, err := c.convertScansToEDPMeasurements(scans, previousScans)
+	EDPMeasurements, err := c.convertScansToEDPMeasurements(scans, previousScans, runtime)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("failed to convert all scans to EDP measurements: %w", err))
 		span.RecordError(err)
@@ -84,9 +84,12 @@ func (c *Collector) executeScans(ctx context.Context, runtime *runtime.Info) (co
 	for _, s := range c.scanners {
 		scan, err := s.Scan(ctx, runtime)
 		if err != nil {
+			collector.RecordScan(false, string(s.ID()), *runtime)
 			errs = append(errs, fmt.Errorf("scanner with ID(%s) failed during scanning: %w", s.ID(), err))
 			continue
 		}
+
+		collector.RecordScan(true, string(s.ID()), *runtime)
 		// store only successful scans in the scan map
 		scans[s.ID()] = scan
 	}
@@ -94,7 +97,7 @@ func (c *Collector) executeScans(ctx context.Context, runtime *runtime.Info) (co
 	return scans, errors.Join(errs...)
 }
 
-func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap, previousScans collector.ScanMap) ([]resource.EDPMeasurement, error) {
+func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap, previousScans collector.ScanMap, runtime *runtime.Info) ([]resource.EDPMeasurement, error) {
 	var errs []error
 	EDPMeasurements := []resource.EDPMeasurement{}
 
@@ -115,6 +118,7 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 		EDPMeasurement, err := scan.EDP()
 		// if conversion to an EDP measurement fails, attempt to get the previous scan and convert it to EDP measurement
 		if err != nil {
+			collector.RecordScanConversionToEDP(false, string(s.ID()), *runtime)
 			errs = append(errs, fmt.Errorf("failed to convert scan to an EDP measurement for scanner with ID(%s): %w", s.ID(), err))
 			previousScan, previousScanExists := previousScans[s.ID()]
 			// if the previous scan doesn't exist, nothing else we can do here
@@ -131,6 +135,7 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 			currentScans[s.ID()] = previousScan
 		}
 
+		collector.RecordScanConversionToEDP(true, string(s.ID()), *runtime)
 		EDPMeasurements = append(EDPMeasurements, EDPMeasurement)
 	}
 
