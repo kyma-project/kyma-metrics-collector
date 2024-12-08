@@ -38,7 +38,7 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 		trace.WithAttributes(
 			attribute.String("provider", runtime.ProviderType),
 			attribute.String("runtime_id", runtime.RuntimeID),
-			attribute.String("subaccount_id", runtime.SubAccountID),
+			attribute.String("sub_account_id", runtime.SubAccountID),
 			attribute.String("shoot_name", runtime.ShootName),
 		),
 	)
