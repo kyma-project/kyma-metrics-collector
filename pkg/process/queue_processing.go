@@ -65,7 +65,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	// Get kubeConfig from cache
 	kubeConfig, err := kmccache.GetKubeConfigFromCache(p.Logger, p.SecretCacheClient, record.RuntimeID)
 	if err != nil {
-		p.handleError(&record, subAccountID, identifier, fmt.Sprintf("failed to load kubeconfig from cache: %w", err))
+		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to load kubeconfig from cache: %w", err))
 		return
 	}
 	record.KubeConfig = kubeConfig
@@ -73,7 +73,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	// Create REST client config from kubeConfig
 	restClientConfig, err := clientcmd.RESTConfigFromKubeConfig([]byte(record.KubeConfig))
 	if err != nil {
-		p.handleError(&record, subAccountID, identifier, fmt.Sprintf("failed to create REST config from kubeconfig: %w", err))
+		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to create REST config from kubeconfig: %w", err))
 		return
 	}
 
@@ -90,7 +90,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	}
 	newScans, err := p.EDPCollector.CollectAndSend(ctx, &runtimeInfo, record.Metric)
 	if err != nil {
-		p.handleError(&record, subAccountID, identifier, fmt.Sprintf("failed to collect and send measurements to EDP backend: %w", err))
+		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to collect and send measurements to EDP backend: %w", err))
 		return
 	}
 	record.Metric = newScans
@@ -119,11 +119,11 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 		Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
 }
 
-func (p *Process) handleError(record *kmccache.Record, subAccountID string, identifier int, errMsg string) {
+func (p *Process) handleError(record *kmccache.Record, subAccountID string, identifier int, err error) {
 	p.namedLoggerWithRecord(record).
 		With(log.KeyWorkerID, identifier).
 		With(log.KeySubAccountID, subAccountID).
-		Errorf(errMsg)
+		Errorf(err.Error())
 
 	p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
 
