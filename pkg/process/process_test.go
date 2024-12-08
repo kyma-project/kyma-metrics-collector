@@ -21,8 +21,8 @@ import (
 
 	"github.com/kyma-project/kyma-metrics-collector/env"
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
+	edp "github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	kmckeb "github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"

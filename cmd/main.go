@@ -18,18 +18,17 @@ import (
 
 	"github.com/kyma-project/kyma-metrics-collector/env"
 	"github.com/kyma-project/kyma-metrics-collector/options"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/otel"
 	kmcprocess "github.com/kyma-project/kyma-metrics-collector/pkg/process"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/queue"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/node"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/pvc"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/redis"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/service"
-	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
-	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
-	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
-	skrsvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/svc"
 )
 
 const (
@@ -106,20 +105,27 @@ func main() {
 
 	edpClient := edp.NewClient(edpConfig, logger)
 
+	nodeScanner := node.NewScanner(publicCloudSpecs)
+	pvcScanner := pvc.NewScanner()
+	redisScanner := redis.NewScanner(publicCloudSpecs)
+	edpCollector := edp.NewCollector(
+		edpClient,
+		nodeScanner,
+		pvcScanner,
+		redisScanner,
+	)
+
 	kmcProcess := kmcprocess.Process{
 		KEBClient:         kebClient,
 		SecretCacheClient: secretCacheClient.CoreV1(),
 		EDPClient:         edpClient,
+		EDPCollector:      edpCollector,
 		Logger:            logger,
 		PublicCloudSpecs:  publicCloudSpecs,
 		Cache:             cache,
 		ScrapeInterval:    opts.ScrapeInterval,
 		Queue:             queue.NewQueue("trackable-skrs"),
 		WorkersPoolSize:   opts.WorkerPoolSize,
-		NodeConfig:        skrnode.Config{},
-		PVCConfig:         skrpvc.Config{},
-		SvcConfig:         skrsvc.Config{},
-		RedisConfig:       skrredis.Config{},
 	}
 
 	// Start execution
