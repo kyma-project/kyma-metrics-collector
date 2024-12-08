@@ -63,6 +63,29 @@ func recordItemsInCache(count float64) {
 	itemsInCache.WithLabelValues().Set(count)
 }
 
+func recordSubAccountProcessed(success bool, shootInfo kmccache.Record) {
+	// the order of the values should be the same as defined in the metric declaration.
+	subAccountProcessed.WithLabelValues(
+		strconv.FormatBool(success),
+		shootInfo.ShootName,
+		shootInfo.InstanceID,
+		shootInfo.RuntimeID,
+		shootInfo.SubAccountID,
+		shootInfo.GlobalAccountID,
+	).Inc()
+}
+
+func recordSubAccountProcessedTimeStamp(shootInfo kmccache.Record) {
+	// the order of the values should be the same as defined in the metric declaration.
+	subAccountProcessedTimeStamp.WithLabelValues(
+		shootInfo.ShootName,
+		shootInfo.InstanceID,
+		shootInfo.RuntimeID,
+		shootInfo.SubAccountID,
+		shootInfo.GlobalAccountID,
+	).SetToCurrentTime()
+}
+
 func recordKEBFetchedClusters(trackable bool, shootName, instanceID, runtimeID, subAccountID, globalAccountID string) {
 	// the order if the values should be same as defined in the metric declaration.
 	kebFetchedClusters.WithLabelValues(
@@ -91,27 +114,4 @@ func deleteMetrics(shootInfo kmccache.Record) bool {
 	count += subAccountProcessedTimeStamp.DeletePartialMatch(matchLabels)
 
 	return count > 0
-}
-
-func recordSubAccountProcessed(success bool, shootInfo kmccache.Record) {
-	// the order of the values should be the same as defined in the metric declaration.
-	subAccountProcessed.WithLabelValues(
-		strconv.FormatBool(success),
-		shootInfo.ShootName,
-		shootInfo.InstanceID,
-		shootInfo.RuntimeID,
-		shootInfo.SubAccountID,
-		shootInfo.GlobalAccountID,
-	).Inc()
-}
-
-func recordSubAccountProcessedTimeStamp(shootInfo kmccache.Record) {
-	// the order of the values should be the same as defined in the metric declaration.
-	subAccountProcessedTimeStamp.WithLabelValues(
-		shootInfo.ShootName,
-		shootInfo.InstanceID,
-		shootInfo.RuntimeID,
-		shootInfo.SubAccountID,
-		shootInfo.GlobalAccountID,
-	).SetToCurrentTime()
 }
