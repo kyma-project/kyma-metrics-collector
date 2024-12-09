@@ -17,6 +17,8 @@ const (
 	globalAccountLabel = "global_account_id"
 	successLabel       = "success"
 	resourceNameLabel  = "resource_name"
+	backendNameLabel   = "backend_name"
+	EDPBackendName     = "edp"
 )
 
 var (
@@ -25,19 +27,19 @@ var (
 			Namespace: namespace,
 			Subsystem: subsystem,
 			Name:      "scans_total",
-			Help:      "Total number of scans for resources in SKR.",
+			Help:      "Total number of scans for each billable resource in SKR.",
 		},
 		[]string{successLabel, resourceNameLabel, shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
 	)
 
-	TotalScansConversionsToEDP = promauto.NewCounterVec(
+	TotalScansConverted = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: namespace,
 			Subsystem: subsystem,
-			Name:      "scans_converted_to_edp_total",
-			Help:      "Total number of scans converted to EDP measurements.",
+			Name:      "scans_converted_total",
+			Help:      "Total number of scans converted to the measurement required by the backend.",
 		},
-		[]string{successLabel, resourceNameLabel, shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
+		[]string{successLabel, resourceNameLabel, backendNameLabel, shootNameLabel, instanceIdLabel, runtimeIdLabel, subAccountLabel, globalAccountLabel},
 	)
 )
 
@@ -54,11 +56,12 @@ func RecordScan(success bool, resourceName string, runtimeInfo runtime.Info) {
 	).Inc()
 }
 
-func RecordScanConversionToEDP(success bool, resourceName string, runtimeInfo runtime.Info) {
+func RecordScanConversion(success bool, resourceName string, backendName string, runtimeInfo runtime.Info) {
 	// the order of the values should be same as defined in the metric declaration.
-	TotalScansConversionsToEDP.WithLabelValues(
+	TotalScansConverted.WithLabelValues(
 		strconv.FormatBool(success),
 		resourceName,
+		backendName,
 		runtimeInfo.ShootName,
 		runtimeInfo.InstanceID,
 		runtimeInfo.RuntimeID,
