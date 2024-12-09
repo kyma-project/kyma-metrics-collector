@@ -16,22 +16,15 @@ const (
 )
 
 func (p *Process) processSubAccountID(subAccountID string, identifier int) {
-	p.namedLogger().
-		With(log.KeyWorkerID, identifier).
-		With(log.KeySubAccountID, subAccountID).
+	p.queueProcessingLogger(nil, subAccountID, identifier).
 		Debug("fetched subAccountID from queue")
 
 	// Get the cache item for the subAccountID
 	cacheItem, exists := p.Cache.Get(subAccountID)
 	if !exists {
-		p.namedLogger().
-			With(log.KeyWorkerID, identifier).
-			With(log.KeySubAccountID, subAccountID).
-			With(log.KeyRequeue, log.ValueFalse).
+		p.queueProcessingLogger(nil, subAccountID, identifier).With(log.KeyRequeue, log.ValueFalse).
 			Info("subAccountID is not found in cache which means it is not trackable anymore")
-
 		recordSubAccountProcessed(false, kmccache.Record{SubAccountID: subAccountID})
-
 		return
 	}
 
@@ -40,26 +33,15 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	var ok bool
 	record, ok = cacheItem.(kmccache.Record)
 	if !ok {
-		p.namedLogger().
-			With(log.KeyWorkerID, identifier).
-			With(log.KeySubAccountID, subAccountID).
+		p.queueProcessingLogger(nil, subAccountID, identifier).
 			Error("bad item from cache, could not cast it to a record obj")
-
 		p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
-
-		p.namedLogger().
-			With(log.KeyWorkerID, identifier).
-			With(log.KeySubAccountID, subAccountID).
-			With(log.KeyRequeue, log.ValueTrue).
+		p.queueProcessingLogger(nil, subAccountID, identifier).With(log.KeyRequeue, log.ValueTrue).
 			Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
-
 		recordSubAccountProcessed(false, record)
-
 		return
 	}
-	p.namedLogger().
-		With(log.KeyWorkerID, identifier).
-		With(log.KeySubAccountID, subAccountID).
+	p.queueProcessingLogger(&record, subAccountID, identifier).
 		Debugf("record found from cache: %+v", record)
 
 	// Get kubeConfig from cache
@@ -94,9 +76,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 		return
 	}
 	record.Metric = newScans
-	p.namedLoggerWithRecord(&record).
-		With(log.KeyWorkerID, identifier).
-		With(log.KeySubAccountID, subAccountID).
+	p.queueProcessingLogger(&record, subAccountID, identifier).
 		Info("successfully collected and sent measurements to EDP backend")
 
 	// Record metrics
@@ -105,45 +85,28 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 
 	// Update cache
 	p.Cache.Set(record.SubAccountID, record, cache.NoExpiration)
-	p.namedLoggerWithRecord(&record).
-		With(log.KeyWorkerID, identifier).
-		With(log.KeySubAccountID, subAccountID).
+	p.queueProcessingLogger(&record, subAccountID, identifier).
 		Debug("updated cache with new record")
 
 	// Requeue the subAccountID anyway
 	p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
-	p.namedLoggerWithRecord(&record).
-		With(log.KeyWorkerID, identifier).
-		With(log.KeySubAccountID, subAccountID).
-		With(log.KeyRequeue, log.ValueTrue).
+	p.queueProcessingLogger(&record, subAccountID, identifier).With(log.KeyRequeue, log.ValueTrue).
 		Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
 }
 
 func (p *Process) handleError(record *kmccache.Record, subAccountID string, identifier int, err error) {
-	p.namedLoggerWithRecord(record).
-		With(log.KeyWorkerID, identifier).
-		With(log.KeySubAccountID, subAccountID).
+	p.queueProcessingLogger(record, subAccountID, identifier).
 		Errorf(err.Error())
-
 	p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
-
-	p.namedLogger().
-		With(log.KeyWorkerID, identifier).
-		With(log.KeySubAccountID, subAccountID).
-		With(log.KeyRequeue, log.ValueTrue).
+	p.queueProcessingLogger(record, subAccountID, identifier).With(log.KeyRequeue, log.ValueTrue).
 		Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
-
 	recordSubAccountProcessed(false, *record)
 }
 
-func (p *Process) namedLogger() *zap.SugaredLogger {
-	return p.Logger.With("component", "kmc")
-}
-
-func (p *Process) namedLoggerWithRecord(record *kmccache.Record) *zap.SugaredLogger {
+func (p *Process) queueProcessingLogger(record *kmccache.Record, subAccountID string, identifier int) *zap.SugaredLogger {
+	logger := p.Logger.With("component", "kmc").With(log.KeyWorkerID, identifier).With(log.KeySubAccountID, subAccountID)
 	if record == nil {
-		return p.Logger.With("component", "kmc")
+		return logger
 	}
-
-	return p.Logger.With("component", "kmc").With(log.KeyRuntimeID, record.RuntimeID).With(log.KeyShoot, record.ShootName).With(log.KeySubAccountID, record.SubAccountID).With(log.KeyGlobalAccountID, record.GlobalAccountID)
+	return logger.With(log.KeyRuntimeID, record.RuntimeID).With(log.KeyShoot, record.ShootName).With(log.KeyGlobalAccountID, record.GlobalAccountID)
 }
