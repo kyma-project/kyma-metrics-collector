@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/rest"
 	k8stesting "k8s.io/client-go/testing"
 
+	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
@@ -37,6 +38,7 @@ func TestScanner_Scan_Successful(t *testing.T) {
 
 	scanner := Scanner{
 		clientFactory: clientFactory,
+		specs:         &config.PublicCloudSpecs{},
 	}
 
 	provider := "test-provider"
@@ -51,6 +53,7 @@ func TestScanner_Scan_Successful(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, provider, nodeScan.providerType)
 	require.Equal(t, nodes.Items, nodeScan.nodes.Items)
+	require.Equal(t, scanner.specs, nodeScan.specs)
 }
 
 func TestScanner_Scan_Error(t *testing.T) {
