@@ -59,7 +59,7 @@ const (
 	// ValueTrue is used as a value for a message with true status.
 	ValueTrue = "true"
 
-	// ValueFalse is used as a value for a message with true status.
+	// ValueFalse is used as a value for a message with false status.
 	ValueFalse = "false"
 )
 
