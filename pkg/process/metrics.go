@@ -114,7 +114,7 @@ func deleteMetrics(shootInfo kmccache.Record) bool {
 	count += subAccountProcessed.DeletePartialMatch(matchLabels)
 	count += subAccountProcessedTimeStamp.DeletePartialMatch(matchLabels)
 	count += collector.TotalScans.DeletePartialMatch(matchLabels)
-	count += collector.TotalScansConversionsToEDP.DeletePartialMatch(matchLabels)
+	count += collector.TotalScansConverted.DeletePartialMatch(matchLabels)
 
 	return count > 0
 }
