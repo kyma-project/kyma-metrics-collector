@@ -73,6 +73,52 @@ func TestScan_EDP(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "multiple vscs with different sizes",
+			vscs: v1.VolumeSnapshotContentList{
+				Items: []v1.VolumeSnapshotContent{
+					{
+						Status: &v1.VolumeSnapshotContentStatus{
+							ReadyToUse:  ptr.To(true),
+							RestoreSize: ptr.To(int64(5 * 1073741824)), // 5GB
+						},
+					},
+					{
+						Status: &v1.VolumeSnapshotContentStatus{
+							ReadyToUse:  ptr.To(true),
+							RestoreSize: ptr.To(int64(15 * 1073741824)), // 15GB
+						},
+					},
+				},
+			},
+			expected: resource.EDPMeasurement{
+				ProvisionedVolumes: resource.ProvisionedVolumes{
+					SizeGbTotal:   20, // 5 + 15
+					SizeGbRounded: 64, // 32 (rounded 5) + 32 (rounded 15)
+					Count:         2,
+				},
+			},
+		},
+		{
+			name: "vscs with not ready status",
+			vscs: v1.VolumeSnapshotContentList{
+				Items: []v1.VolumeSnapshotContent{
+					{
+						Status: &v1.VolumeSnapshotContentStatus{
+							ReadyToUse:  ptr.To(false),
+							RestoreSize: ptr.To(int64(10737418240)), // 10GB
+						},
+					},
+				},
+			},
+			expected: resource.EDPMeasurement{
+				ProvisionedVolumes: resource.ProvisionedVolumes{
+					SizeGbTotal:   0,
+					SizeGbRounded: 0,
+					Count:         0,
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
