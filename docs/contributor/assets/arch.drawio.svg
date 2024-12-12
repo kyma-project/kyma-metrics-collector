@@ -576,7 +576,7 @@
                             <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
                                 &lt;&lt;Redis&gt;&gt;
                                 <br/>
-                                Redis instances
+                                redis storages
                             </div>
                         </div>
                     </div>
