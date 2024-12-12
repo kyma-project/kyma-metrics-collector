@@ -42,7 +42,7 @@ func TestScan_EDP(t *testing.T) {
 			expected: resource.EDPMeasurement{
 				ProvisionedVolumes: resource.ProvisionedVolumes{
 					SizeGbTotal:   10,
-					SizeGbRounded: 32, // Rounded to 32 GiB
+					SizeGbRounded: 32, // Rounded to 32 GB
 					Count:         1,
 				},
 			},
@@ -68,7 +68,7 @@ func TestScan_EDP(t *testing.T) {
 			expected: resource.EDPMeasurement{
 				ProvisionedVolumes: resource.ProvisionedVolumes{
 					SizeGbTotal:   30, // 10 + 20
-					SizeGbRounded: 64, // 32 (rounded 10) + 64 (rounded 60)
+					SizeGbRounded: 64, // 32 (rounded 10) + 32 (rounded 20)
 					Count:         2,
 				},
 			},
