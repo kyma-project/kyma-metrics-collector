@@ -159,7 +159,7 @@ func TestPollKEBForRuntimes(t *testing.T) {
 			Config:     config,
 		}
 
-		queue := workqueue.TypedNewDelayingQueue[string]()
+		queue := workqueue.NewTypedDelayingQueue[string]()
 		cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 		newProcess = &Process{
 			KEBClient:      kebClient,
@@ -366,7 +366,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		provisionedSuccessfullySubAccIDs := []string{uuid.New().String(), uuid.New().String()}
 		provisionedFailedSubAccIDs := []string{uuid.New().String(), uuid.New().String()}
 		cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
-		queue := workqueue.TypedNewDelayingQueue[string]()
+		queue := workqueue.NewTypedDelayingQueue[string]()
 		p := Process{
 			Queue:  queue,
 			Cache:  cache,
@@ -374,7 +374,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		}
 		runtimesPage := new(kebruntime.RuntimesPage)
 
-		expectedQueue := workqueue.TypedNewDelayingQueue[string]()
+		expectedQueue := workqueue.NewTypedDelayingQueue[string]()
 		expectedCache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
 		runtimesPage, expectedCache, expectedQueue, err := AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage, provisionedSuccessfullySubAccIDs, expectedCache, expectedQueue)
@@ -409,7 +409,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		provisionedSuccessfullySubAccIDs := []string{uuid.New().String(), uuid.New().String()}
 		provisionedAndDeprovisionedSubAccIDs := []string{uuid.New().String(), uuid.New().String()}
 		cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
-		queue := workqueue.TypedNewDelayingQueue[string]()
+		queue := workqueue.NewTypedDelayingQueue[string]()
 		p := Process{
 			Queue:  queue,
 			Cache:  cache,
@@ -417,7 +417,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		}
 		runtimesPage := new(kebruntime.RuntimesPage)
 
-		expectedQueue := workqueue.TypedNewDelayingQueue[string]()
+		expectedQueue := workqueue.NewTypedDelayingQueue[string]()
 		expectedCache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
 		runtimesPage, expectedCache, expectedQueue, err := AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage, provisionedSuccessfullySubAccIDs, expectedCache, expectedQueue)
@@ -450,7 +450,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 
 		subAccID := uuid.New().String()
 		cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
-		queue := workqueue.TypedNewDelayingQueue[string]()
+		queue := workqueue.NewTypedDelayingQueue[string]()
 		oldShootName := fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5))
 
 		p := Process{
@@ -464,7 +464,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(err).Should(gomega.BeNil())
 
 		runtimesPageWithNoRuntimes := new(kebruntime.RuntimesPage)
-		expectedEmptyQueue := workqueue.TypedNewDelayingQueue[string]()
+		expectedEmptyQueue := workqueue.NewTypedDelayingQueue[string]()
 		expectedEmptyCache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
 		runtimesPageWithNoRuntimes.Data = []kebruntime.RuntimeDTO{}
@@ -491,7 +491,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 
 		subAccID := uuid.New().String()
 		cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
-		queue := workqueue.TypedNewDelayingQueue[string]()
+		queue := workqueue.NewTypedDelayingQueue[string]()
 		oldShootName := fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5))
 		newShootName := fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5))
 
@@ -506,7 +506,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		g.Expect(err).Should(gomega.BeNil())
 
 		runtimesPage := new(kebruntime.RuntimesPage)
-		expectedQueue := workqueue.TypedNewDelayingQueue[string]()
+		expectedQueue := workqueue.NewTypedDelayingQueue[string]()
 		expectedCache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
 		rntme := kmctesting.NewRuntimesDTO(subAccID, oldShootName, kmctesting.WithProvisionedAndDeprovisionedStatus(kebruntime.StateDeprovisioned))
@@ -662,7 +662,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 			g.Expect(err).Should(gomega.BeNil())
 
 			// init queue.
-			queue := workqueue.TypedNewDelayingQueue[string]()
+			queue := workqueue.NewTypedDelayingQueue[string]()
 			expectedCache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 			err = expectedCache.Add(tc.givenShoot1.SubAccountID, tc.givenShoot1, gocache.NoExpiration)
 			g.Expect(err).Should(gomega.BeNil())
@@ -880,7 +880,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 			// initiate process instance.
 			givenProcess := &Process{
 				EDPClient:         edpClient,
-				Queue:             workqueue.TypedNewDelayingQueue[string](),
+				Queue:             workqueue.NewTypedDelayingQueue[string](),
 				SecretCacheClient: secretCacheClient.CoreV1(),
 				Cache:             cache,
 				PublicCloudSpecs:  givenProviders,
@@ -1003,7 +1003,7 @@ func TestExecute(t *testing.T) {
 	g.Expect(err).Should(gomega.BeNil())
 
 	// Populate queue
-	queue := workqueue.TypedNewDelayingQueue[string]()
+	queue := workqueue.NewTypedDelayingQueue[string]()
 	queue.Add(subAccID)
 
 	g.Expect(err).Should(gomega.BeNil())
