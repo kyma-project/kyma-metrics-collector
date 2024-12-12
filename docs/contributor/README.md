@@ -20,10 +20,7 @@ The following steps happen periodically:
 3. KMC fetches the kubeconfig for every SKR cluster from the control plane resources.
 4. KMC fetches specific Kubernetes resources from the APIServer of every SKR cluster using the related kubeconfig. Hereby, the following resources are collected:
    - node type - using the labeled machine type, KMC maps how much memory and CPU the node provides and maps it to an amount of CPU.
-   - storage - for every storage, KMC determines the provisioned GB value. The storage values are retrieved from the following resources
-     - Redis
-     - PersistenceVolumeClaim
-     - VolumeSnapshotContent
+   - storage - for every storage (PersistenceVolumeClaim, VolumeSnapshotContent, and Redis), KMC determines the provisioned GB value.
 5. KMC maps the retrieved Kubernetes resources to a memory/CPU/storage value and sends the value to EDP as event stream.
 6. EDP calculates the consumed CUs based on the consumed CPU or storage with a fixed formula and sends the consumed CUs to Unified Metering.
 
