@@ -41,7 +41,7 @@ func (s *Scan) EDP() (resource.EDPMeasurement, error) {
 		}
 	}
 
-	return edp, errors.Join(errs...)
+	return edp, nil
 }
 
 func getSizeInGB(value int64) int64 {
