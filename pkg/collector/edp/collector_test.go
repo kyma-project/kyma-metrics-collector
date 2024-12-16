@@ -1,26 +1,27 @@
 package edp
 
 import (
-	"fmt"
-	"github.com/google/uuid"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
-	"net/http"
-	"testing"
-
 	"context"
 	"encoding/json"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp/stubs"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
-	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
+	"fmt"
+	"io"
+	"net/http"
+	"strconv"
+	"testing"
+
+	"github.com/google/uuid"
 	"github.com/onsi/gomega"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zapcore"
-	"io"
 	"k8s.io/utils/ptr"
-	"strconv"
+
+	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp/stubs"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
 
 const (
@@ -337,11 +338,13 @@ func TestCollector_CollectAndSend(t *testing.T) {
 
 				// Parse the JSON body into the Payload struct
 				var payload Payload
+
 				err = json.Unmarshal(body, &payload)
 				if err != nil {
 					http.Error(rw, "Failed to parse JSON", http.StatusBadRequest)
 					return
 				}
+
 				require.Equal(t, tc.expectedAggregatedEDPMeasurement, payload.Compute)
 
 				rw.WriteHeader(http.StatusCreated)
@@ -369,6 +372,7 @@ func TestCollector_CollectAndSend(t *testing.T) {
 			} else {
 				require.Nil(t, err)
 			}
+
 			require.True(t, edpPayloadSent)
 			require.Equal(t, expectedNewScanMap, scanMap)
 

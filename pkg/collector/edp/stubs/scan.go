@@ -1,8 +1,9 @@
 package stubs
 
 import (
-	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"time"
+
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 )
 
 type Scan struct {
