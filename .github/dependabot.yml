@@ -17,6 +17,7 @@ updates:
       k8s:
         patterns:
           - "k8s.io/*"
+          - "go.opentelemetry.io/*"
 
   - package-ecosystem: "gomod" # See documentation for possible values
     directory: "/internal/tools" # Location of package manifests
@@ -27,7 +28,6 @@ updates:
     labels:
       - "kind/chore"
       - "area/ci"
-
 
   - package-ecosystem: "docker" # See documentation for possible values
     directory: "/" # Location of package manifests
