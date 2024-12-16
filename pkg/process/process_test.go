@@ -21,7 +21,6 @@ import (
 
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
-	edp "github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	kmckeb "github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
@@ -38,15 +37,6 @@ const (
 	// KEB related variables.
 	kebRuntimeResponseFilePath = "../testing/fixtures/runtimes_response_process.json"
 	expectedPathPrefix         = "/runtimes"
-
-	// EDP related variables.
-
-	testDataStream        = "dataStream"
-	testNamespace         = "namespace"
-	testDataStreamVersion = "v1"
-	testToken             = "token"
-	testEnv               = "env"
-	retryCount            = 1
 
 	fecthedClustersMetricName = "kmc_process_fetched_clusters_total"
 )
@@ -996,28 +986,6 @@ func AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage *kebruntime.RuntimesPa
 	}
 
 	return runtimesPage, expectedCache, expectedQueue, nil
-}
-
-func newEDPConfig(url string) *edp.Config {
-	return &edp.Config{
-		URL:               url,
-		Token:             testToken,
-		Namespace:         testNamespace,
-		DataStreamName:    testDataStream,
-		DataStreamVersion: testDataStreamVersion,
-		DataStreamEnv:     testEnv,
-		Timeout:           timeout,
-		EventRetry:        retryCount,
-	}
-}
-
-func expectedHeadersInEDPReq() http.Header {
-	return http.Header{
-		"Authorization":   []string{fmt.Sprintf("Bearer %s", testToken)},
-		"Accept-Encoding": []string{"gzip"},
-		"User-Agent":      []string{"kyma-metrics-collector"},
-		"Content-Type":    []string{"application/json;charset=utf-8"},
-	}
 }
 
 func NewScanMap() collector.ScanMap {

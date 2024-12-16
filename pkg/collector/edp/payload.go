@@ -32,9 +32,7 @@ func aggregateEDPMeasurements(EDPMeasurements []resource.EDPMeasurement) resourc
 	aggregatedEDPMeasurement := resource.EDPMeasurement{}
 
 	for _, m := range EDPMeasurements {
-		for _, vmType := range m.VMTypes {
-			aggregatedEDPMeasurement.VMTypes = append(aggregatedEDPMeasurement.VMTypes, vmType)
-		}
+		aggregatedEDPMeasurement.VMTypes = append(aggregatedEDPMeasurement.VMTypes, m.VMTypes...)
 
 		aggregatedEDPMeasurement.ProvisionedCPUs += m.ProvisionedCPUs
 		aggregatedEDPMeasurement.ProvisionedRAMGb += m.ProvisionedRAMGb
