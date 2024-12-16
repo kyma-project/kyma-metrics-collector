@@ -17,13 +17,12 @@ The following step happens once for every SKR registration and deregistration:
 The following steps happen periodically:
 
 2. KMC workers fetch the list of billable SKR clusters from [Kyma Environment Broker (KEB)](https://github.com/kyma-project/kyma-environment-broker/tree/main) and add them to a queue to work through them. If an error occurs, KMC re-queues the affected SKR cluster. For every process step, internal metrics are exposed with the [Prometheus client library](https://github.com/prometheus/client_golang). For details about the exposed metrics, see the [metrics.md](./metrics.md) file.
-2. KMC fetches the kubeconfig for every SKR cluster from the control plane resources.
-2. KMC fetches specific Kubernetes resources from the APIServer of every SKR cluster using the related kubeconfig. Hereby, the following resources are collected:
+3. KMC fetches the kubeconfig for every SKR cluster from the control plane resources.
+4. KMC fetches specific Kubernetes resources from the APIServer of every SKR cluster using the related kubeconfig. Hereby, the following resources are collected:
    - node type - using the labeled machine type, KMC maps how much memory and CPU the node provides and maps it to an amount of CPU.
-   - storage - for every storage, KMC determines the provisioned GB value.
-   - services - this resource type is not used currently, it's dropped after fetching
-2. KMC maps the retrieved Kubernetes resources to a memory/CPU/storage value and sends the value to EDP as event stream.
-2. EDP calculates the consumed CUs based on the consumed CPU or storage with a fixed formula and sends the consumed CUs to Unified Metering.
+   - storage - for every storage (PersistenceVolumeClaim, VolumeSnapshotContent, and Redis), KMC determines the provisioned GB value.
+5. KMC maps the retrieved Kubernetes resources to a memory/CPU/storage value and sends the value to EDP as event stream.
+6. EDP calculates the consumed CUs based on the consumed CPU or storage with a fixed formula and sends the consumed CUs to Unified Metering.
 
 ## EDP interface
 
