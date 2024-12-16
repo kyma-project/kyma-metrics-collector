@@ -3,16 +3,14 @@ package process
 import (
 	"context"
 	"fmt"
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
-	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+
 	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 	"k8s.io/client-go/tools/clientcmd"
-)
 
-const (
-	testPublicCloudSpecsPath = "../testing/fixtures/public_cloud_specs.json"
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
+	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
 func (p *Process) processSubAccountID(subAccountID string, identifier int) {
@@ -25,12 +23,15 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 		p.queueProcessingLogger(nil, subAccountID, identifier).With(log.KeyRequeue, log.ValueFalse).
 			Info("subAccountID is not found in cache which means it is not trackable anymore")
 		recordSubAccountProcessed(false, kmccache.Record{SubAccountID: subAccountID})
+
 		return
 	}
 
 	// Cast the cache item to a Record object
 	var record kmccache.Record
+
 	var ok bool
+
 	record, ok = cacheItem.(kmccache.Record)
 	if !ok {
 		p.queueProcessingLogger(nil, subAccountID, identifier).
@@ -39,8 +40,10 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 		p.queueProcessingLogger(nil, subAccountID, identifier).With(log.KeyRequeue, log.ValueTrue).
 			Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
 		recordSubAccountProcessed(false, record)
+
 		return
 	}
+
 	p.queueProcessingLogger(&record, subAccountID, identifier).
 		Debugf("record found from cache: %+v", record)
 
@@ -50,6 +53,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to load kubeconfig from cache: %w", err))
 		return
 	}
+
 	record.KubeConfig = kubeConfig
 
 	// Create REST client config from kubeConfig
@@ -70,11 +74,13 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 		ProviderType:    record.ProviderType,
 		Kubeconfig:      *restClientConfig,
 	}
+
 	newScans, err := p.EDPCollector.CollectAndSend(ctx, &runtimeInfo, record.Metric)
 	if err != nil {
 		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to collect and send measurements to EDP backend: %w", err))
 		return
 	}
+
 	record.Metric = newScans
 	p.queueProcessingLogger(&record, subAccountID, identifier).
 		Info("successfully collected and sent measurements to EDP backend")
@@ -108,5 +114,6 @@ func (p *Process) queueProcessingLogger(record *kmccache.Record, subAccountID st
 	if record == nil {
 		return logger
 	}
+
 	return logger.With(log.KeyRuntimeID, record.RuntimeID).With(log.KeyShoot, record.ShootName).With(log.KeyGlobalAccountID, record.GlobalAccountID)
 }

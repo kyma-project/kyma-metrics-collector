@@ -7,7 +7,9 @@ import (
 	"fmt"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,8 +21,6 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 const (

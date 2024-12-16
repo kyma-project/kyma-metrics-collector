@@ -6,10 +6,10 @@ import (
 
 	kebruntime "github.com/kyma-project/kyma-environment-broker/common/runtime"
 	"github.com/patrickmn/go-cache"
+	"go.uber.org/zap"
 
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
-	"go.uber.org/zap"
 )
 
 // pollKEBForRuntimes polls KEB for runtimes information.

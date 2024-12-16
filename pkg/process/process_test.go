@@ -1,9 +1,11 @@
 package process
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -17,7 +19,6 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/util/workqueue"
 
-	"encoding/base64"
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 	edp "github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
@@ -27,7 +28,6 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/process/stubs"
 	runtime2 "github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
-	"reflect"
 )
 
 const (
@@ -611,6 +611,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				GlobalAccountID: tc.givenShoot2.GlobalAccountID,
 				ShootName:       tc.givenShoot2.ShootName,
 			}
+
 			collector.RecordScan(false, resourceName, shoot1RuntimeInfo)
 			collector.RecordScan(false, resourceName, shoot2RuntimeInfo)
 
@@ -765,7 +766,9 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 
 	// given (common for all test cases).
 	logger := logger.NewLogger(zapcore.DebugLevel)
+
 	const givenMethodRecalls = 3
+
 	givenKubeConfig := generateFakeKubeConfig()
 	subAccountID := uuid.New().String()
 
@@ -1045,7 +1048,7 @@ func verifyKEBAllClustersCountMetricValue(expectedValue int, g *gomega.WithT, ru
 	}).Should(gomega.Equal(expectedValue))
 }
 
-// generateFakeKubeConfig generates a fake kubeconfig content as a string
+// generateFakeKubeConfig generates a fake kubeconfig content as a string.
 func generateFakeKubeConfig() string {
 	return `
 apiVersion: v1

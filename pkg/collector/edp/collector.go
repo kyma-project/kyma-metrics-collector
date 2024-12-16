@@ -3,18 +3,19 @@ package edp
 import (
 	"context"
 	"encoding/json"
-	"time"
-
 	"errors"
 	"fmt"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	"net/http"
+	"time"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
-	"net/http"
+
+	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
 type Collector struct {
@@ -67,6 +68,7 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 		currentTimestamp,
 		EDPMeasurements,
 	)
+
 	err = c.sendPayload(payload, runtime.SubAccountID)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("failed to send payload to EDP: %w", err))
@@ -79,6 +81,7 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 
 func (c *Collector) executeScans(ctx context.Context, runtime *runtime.Info) (collector.ScanMap, error) {
 	var errs []error
+
 	scans := make(collector.ScanMap)
 
 	for _, s := range c.scanners {
@@ -86,6 +89,7 @@ func (c *Collector) executeScans(ctx context.Context, runtime *runtime.Info) (co
 		if err != nil {
 			collector.RecordScan(false, string(s.ID()), *runtime)
 			errs = append(errs, fmt.Errorf("scanner with ID(%s) failed during scanning: %w", s.ID(), err))
+
 			continue
 		}
 
@@ -99,6 +103,7 @@ func (c *Collector) executeScans(ctx context.Context, runtime *runtime.Info) (co
 
 func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap, previousScans collector.ScanMap, runtime *runtime.Info) ([]resource.EDPMeasurement, error) {
 	var errs []error
+
 	EDPMeasurements := []resource.EDPMeasurement{}
 
 	for _, s := range c.scanners {
@@ -111,6 +116,7 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 				errs = append(errs, fmt.Errorf("no previous scan found for scanner with ID(%s)", s.ID()))
 				continue
 			}
+
 			currentScans[s.ID()] = previousScan
 			scan = previousScan
 		}
@@ -126,16 +132,19 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 				errs = append(errs, fmt.Errorf("no previous scan found for scanner with ID(%s)", s.ID()))
 				continue
 			}
+
 			EDPMeasurement, err = previousScan.EDP()
 			// if conversion of previous scan to an EDP measurement also fails, nothing else we can do here
 			if err != nil {
 				errs = append(errs, fmt.Errorf("failed to convert previous scan to an EDP measurement for scanner with ID(%s): %w", s.ID(), err))
 				continue
 			}
+
 			currentScans[s.ID()] = previousScan
 		}
 
 		collector.RecordScanConversion(true, collector.EDPBackendName, string(s.ID()), *runtime)
+
 		EDPMeasurements = append(EDPMeasurements, EDPMeasurement)
 	}
 

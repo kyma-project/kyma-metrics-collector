@@ -1,10 +1,12 @@
 package collector
 
 import (
-	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	"strconv"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"strconv"
+
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
 const (
