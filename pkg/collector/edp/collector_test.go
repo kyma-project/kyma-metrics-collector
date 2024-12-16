@@ -278,6 +278,8 @@ func TestCollector_CollectAndSend(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			g := gomega.NewGomegaWithT(t)
+
 			collector.TotalScans.Reset()
 			collector.TotalScansConverted.Reset()
 
@@ -324,9 +326,9 @@ func TestCollector_CollectAndSend(t *testing.T) {
 			edpTestHandler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 				edpPayloadSent = true
 
-				require.Equal(t, expectedHeaders, req.Header)
-				require.Equal(t, expectedPath, req.URL.Path)
-				require.Equal(t, http.MethodPost, req.Method)
+				g.Expect(req.Header).To(gomega.Equal(expectedHeaders))
+				g.Expect(req.URL.Path).To(gomega.Equal(expectedPath))
+				g.Expect(req.Method).To(gomega.Equal(http.MethodPost))
 
 				// Read the request body
 				body, err := io.ReadAll(req.Body)
@@ -345,12 +347,12 @@ func TestCollector_CollectAndSend(t *testing.T) {
 					return
 				}
 
-				require.Equal(t, tc.expectedAggregatedEDPMeasurement, payload.Compute)
+				g.Expect(payload.Compute).To(gomega.Equal(tc.expectedAggregatedEDPMeasurement))
 
 				rw.WriteHeader(http.StatusCreated)
 			})
 
-			srv := kmctesting.StartTestServer(expectedPath, edpTestHandler, gomega.NewGomegaWithT(t))
+			srv := kmctesting.StartTestServer(expectedPath, edpTestHandler, g)
 			defer srv.Close()
 
 			edpConfig := newEDPConfig(srv.URL)
@@ -368,9 +370,9 @@ func TestCollector_CollectAndSend(t *testing.T) {
 
 			scanMap, err := EDPCollector.CollectAndSend(context.Background(), &runtimeInfo, tc.previousScanMap)
 			if tc.expectedErrInCollectAndSend {
-				require.NotNil(t, err)
+				require.Error(t, err)
 			} else {
-				require.Nil(t, err)
+				require.NoError(t, err)
 			}
 
 			require.True(t, edpPayloadSent)
@@ -387,8 +389,8 @@ func TestCollector_CollectAndSend(t *testing.T) {
 				runtimeInfo.SubAccountID,
 				runtimeInfo.GlobalAccountID,
 			)
-			require.Nil(t, err)
-			require.Equal(t, float64(1), testutil.ToFloat64(gotMetrics))
+			require.NoError(t, err)
+			require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
 
 			// metrics: totalScans for scanner2
 			gotMetrics, err = collector.TotalScans.GetMetricWithLabelValues(
@@ -400,8 +402,8 @@ func TestCollector_CollectAndSend(t *testing.T) {
 				runtimeInfo.SubAccountID,
 				runtimeInfo.GlobalAccountID,
 			)
-			require.Nil(t, err)
-			require.Equal(t, float64(1), testutil.ToFloat64(gotMetrics))
+			require.NoError(t, err)
+			require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
 
 			// metrics: TotalScansConverted for scanner1
 			gotMetrics, err = collector.TotalScansConverted.GetMetricWithLabelValues(
@@ -414,8 +416,8 @@ func TestCollector_CollectAndSend(t *testing.T) {
 				runtimeInfo.SubAccountID,
 				runtimeInfo.GlobalAccountID,
 			)
-			require.Nil(t, err)
-			require.Equal(t, float64(1), testutil.ToFloat64(gotMetrics))
+			require.NoError(t, err)
+			require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
 
 			// metrics: TotalScansConverted for scanner2
 			gotMetrics, err = collector.TotalScansConverted.GetMetricWithLabelValues(
@@ -428,8 +430,8 @@ func TestCollector_CollectAndSend(t *testing.T) {
 				runtimeInfo.SubAccountID,
 				runtimeInfo.GlobalAccountID,
 			)
-			require.Nil(t, err)
-			require.Equal(t, float64(1), testutil.ToFloat64(gotMetrics))
+			require.NoError(t, err)
+			require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
 		})
 	}
 }
