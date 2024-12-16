@@ -16,7 +16,7 @@ type Networking struct {
 	ProvisionedIPs   int `json:"provisioned_ips"   validate:"numeric"`
 }
 
-func NewPayload(runtimeID, subAccountID, shootName, timeStamp string, EDPMeasuremnets []resource.EDPMeasurement) Payload {
+func newPayload(runtimeID, subAccountID, shootName, timeStamp string, EDPMeasuremnets []resource.EDPMeasurement) Payload {
 	aggregatedEDPMeasurement := aggregateEDPMeasurements(EDPMeasuremnets)
 
 	return Payload{
