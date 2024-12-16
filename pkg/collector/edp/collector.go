@@ -61,7 +61,7 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 		span.SetStatus(codes.Error, err.Error())
 	}
 
-	payload := NewPayload(
+	payload := newPayload(
 		runtime.RuntimeID,
 		runtime.SubAccountID,
 		runtime.ShootName,
@@ -124,7 +124,7 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 		EDPMeasurement, err := scan.EDP()
 		// if conversion to an EDP measurement fails, attempt to get the previous scan and convert it to EDP measurement
 		if err != nil {
-			collector.RecordScanConversion(false, collector.EDPBackendName, string(s.ID()), *runtime)
+			collector.RecordScanConversion(false, string(s.ID()), collector.EDPBackendName, *runtime)
 			errs = append(errs, fmt.Errorf("failed to convert scan to an EDP measurement for scanner with ID(%s): %w", s.ID(), err))
 			previousScan, previousScanExists := previousScans[s.ID()]
 			// if the previous scan doesn't exist, nothing else we can do here
@@ -143,7 +143,7 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 			currentScans[s.ID()] = previousScan
 		}
 
-		collector.RecordScanConversion(true, collector.EDPBackendName, string(s.ID()), *runtime)
+		collector.RecordScanConversion(true, string(s.ID()), collector.EDPBackendName, *runtime)
 
 		EDPMeasurements = append(EDPMeasurements, EDPMeasurement)
 	}
