@@ -386,12 +386,13 @@ func TestCollector_CollectAndSend(t *testing.T) {
 
 			// check prometheus metrics.
 			checkPrometheusMetrics(t, scannerID1, scannerID2, runtimeInfo, tc.scanError2, tc.expectedScanConversionToSucceed2)
-
 		})
 	}
 }
 
 func checkPrometheusMetrics(t *testing.T, scannerID1, scannerID2 resource.ScannerID, runtimeInfo runtime.Info, scanError2 error, expectedScanConversionToSucceed2 bool) {
+	t.Helper()
+
 	// metrics: totalScans for scanner1
 	gotMetrics, err := collector.TotalScans.GetMetricWithLabelValues(
 		strconv.FormatBool(true),
