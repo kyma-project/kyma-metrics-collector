@@ -37,10 +37,12 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 
 	childCtx, span := otel.Tracer("").Start(ctx, "kmc.collect_scans_and_send_measurements",
 		trace.WithAttributes(
-			attribute.String("provider", runtime.ProviderType),
+			attribute.String("instance_id", runtime.InstanceID),
 			attribute.String("runtime_id", runtime.RuntimeID),
 			attribute.String("sub_account_id", runtime.SubAccountID),
+			attribute.String("global_account_id", runtime.GlobalAccountID),
 			attribute.String("shoot_name", runtime.ShootName),
+			attribute.String("provider", runtime.ProviderType),
 		),
 	)
 	defer span.End()

@@ -12,6 +12,8 @@ import (
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var _ resource.Scanner = &Scanner{}
@@ -29,7 +31,16 @@ func (s *Scanner) ID() resource.ScannerID {
 }
 
 func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
-	ctx, span := otel.Tracer("").Start(ctx, "kmc.vsc_scan")
+	ctx, span := otel.Tracer("").Start(ctx, "kmc.vsc_scan",
+		trace.WithAttributes(
+			attribute.String("instance_id", runtime.InstanceID),
+			attribute.String("runtime_id", runtime.RuntimeID),
+			attribute.String("sub_account_id", runtime.SubAccountID),
+			attribute.String("global_account_id", runtime.GlobalAccountID),
+			attribute.String("shoot_name", runtime.ShootName),
+			attribute.String("provider", runtime.ProviderType),
+		),
+	)
 	defer span.End()
 
 	clientset, err := s.createClientSet(&runtime.Kubeconfig)
