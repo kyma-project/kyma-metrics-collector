@@ -136,9 +136,9 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 		}
 
 		EDPMeasurement, err := scan.EDP()
+		success := err == nil
+		collector.RecordScanConversion(success, string(s.ID()), collector.EDPBackendName, *runtime)
 		// if conversion to an EDP measurement fails, attempt to get the previous scan and convert it to EDP measurement
-                success := err == nil
-                collector.RecordScanConversion(success, string(s.ID()), collector.EDPBackendName, *runtime)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to convert scan to an EDP measurement for scanner with ID(%s): %w", s.ID(), err))
 			previousScan, previousScanExists := previousScans[s.ID()]
@@ -158,7 +158,7 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 			}
 
 			currentScans[s.ID()] = previousScan
-		} 
+		}
 
 		EDPMeasurements = append(EDPMeasurements, EDPMeasurement)
 	}
