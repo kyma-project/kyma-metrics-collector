@@ -117,6 +117,7 @@ func (c *Collector) executeScans(ctx context.Context, previousScans collector.Sc
 func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap, previousScans collector.ScanMap, runtime *runtime.Info) (collector.ScanMap, []resource.EDPMeasurement, error) {
 	var errs []error
 
+	// we need to return convertableScans which are the scans that can be converted successfully to EDP measurements
 	convertableScans := make(collector.ScanMap)
 	EDPMeasurements := []resource.EDPMeasurement{}
 
