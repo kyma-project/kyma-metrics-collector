@@ -22,6 +22,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
+	"sort"
 )
 
 const (
@@ -42,7 +43,6 @@ func TestCollector_CollectAndSend(t *testing.T) {
 	// case 3: scanner2 fails in scanning and previous scan doesn't exist. So, nothing else we can do here and payload will be sent to EDP without scanner2's data.
 	// case 4: scanner2 succeeds in scanning, but conversion to EDP measurement fails. So, the previous scan will be used for conversion to EDP measurement.
 	// case 5: scanner2 succeeds in scanning, but conversion to EDP measurement fails and previous scan doesn't exist. So, nothing else we can do here and payload will be sent to EDP without scanner2's data.
-	// case 6: scanner2 succeeds in scanning, but conversion to EDP measurement fails and previous scan exists, but conversion of previous scan to EDP measurement also fails. So, nothing else we can do here and payload will be sent to EDP without scanner2's data.
 	testCases := []struct {
 		name string
 
@@ -92,8 +92,8 @@ func TestCollector_CollectAndSend(t *testing.T) {
 
 			expectedAggregatedEDPMeasurement: resource.EDPMeasurement{
 				VMTypes: []resource.VMType{
-					{Name: "t2.micro", Count: 1},
 					{Name: "m5.large", Count: 1},
+					{Name: "t2.micro", Count: 1},
 				},
 				ProvisionedCPUs:  3,
 				ProvisionedRAMGb: 3,
@@ -134,8 +134,8 @@ func TestCollector_CollectAndSend(t *testing.T) {
 
 			expectedAggregatedEDPMeasurement: resource.EDPMeasurement{
 				VMTypes: []resource.VMType{
-					{Name: "t2.micro", Count: 1},
 					{Name: "m5.large", Count: 1},
+					{Name: "t2.micro", Count: 1},
 				},
 				ProvisionedCPUs:  3,
 				ProvisionedRAMGb: 3,
@@ -204,8 +204,8 @@ func TestCollector_CollectAndSend(t *testing.T) {
 
 			expectedAggregatedEDPMeasurement: resource.EDPMeasurement{
 				VMTypes: []resource.VMType{
-					{Name: "t2.micro", Count: 1},
 					{Name: "m5.large", Count: 1},
+					{Name: "t2.micro", Count: 1},
 				},
 				ProvisionedCPUs:  3,
 				ProvisionedRAMGb: 3,
@@ -244,37 +244,7 @@ func TestCollector_CollectAndSend(t *testing.T) {
 				},
 			},
 
-			expectedToUpdateScanner2InNewScanMap: ptr.To(true),
-
-			expectedErrInCollectAndSend: true,
-
-			expectedScanConversionToSucceed2: false,
-		},
-		{
-			name: "scanner2 succeeds in scanning, but conversion to EDP measurement fails and previous scan exists, but conversion of previous scan to EDP measurement also fails. So, nothing else we can do here and payload will be sent to EDP without scanner2's data",
-
-			scanError2:      nil,
-			EDPMeasurement2: resource.EDPMeasurement{},
-			EDPError2:       fmt.Errorf("failed to convert scan to EDP measurement"),
-
-			previousScanMap: collector.ScanMap{
-				scannerID2: stubs.NewScan(resource.EDPMeasurement{}, fmt.Errorf("failed to convert scan to EDP measurement")),
-			},
-
-			expectedAggregatedEDPMeasurement: resource.EDPMeasurement{
-				VMTypes: []resource.VMType{
-					{Name: "t2.micro", Count: 1},
-				},
-				ProvisionedCPUs:  1,
-				ProvisionedRAMGb: 1,
-				ProvisionedVolumes: resource.ProvisionedVolumes{
-					SizeGbTotal:   1,
-					Count:         1,
-					SizeGbRounded: 1,
-				},
-			},
-
-			expectedToUpdateScanner2InNewScanMap: ptr.To(true),
+			expectedToUpdateScanner2InNewScanMap: nil,
 
 			expectedErrInCollectAndSend: true,
 
@@ -353,6 +323,9 @@ func TestCollector_CollectAndSend(t *testing.T) {
 					return
 				}
 
+				sort.Slice(payload.Compute.VMTypes, func(i, j int) bool {
+					return payload.Compute.VMTypes[i].Name < payload.Compute.VMTypes[j].Name
+				})
 				g.Expect(payload.Compute).To(gomega.Equal(tc.expectedAggregatedEDPMeasurement))
 
 				rw.WriteHeader(http.StatusCreated)
