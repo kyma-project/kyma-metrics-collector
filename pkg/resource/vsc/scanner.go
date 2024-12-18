@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	volumesnapshotclientset "github.com/kubernetes-csi/external-snapshotter/client/v6/clientset/versioned"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
@@ -12,7 +13,6 @@ import (
 	kmcotel "github.com/kyma-project/kyma-metrics-collector/pkg/otel"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
-	"go.opentelemetry.io/otel"
 )
 
 var _ resource.Scanner = &Scanner{}
