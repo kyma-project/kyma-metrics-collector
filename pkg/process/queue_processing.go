@@ -22,6 +22,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	if !exists {
 		p.queueProcessingLogger(nil, subAccountID, identifier).With(log.KeyRequeue, log.ValueFalse).
 			Info("subAccountID is not found in cache which means it is not trackable anymore")
+
 		recordSubAccountProcessed(false, kmccache.Record{SubAccountID: subAccountID})
 
 		return
@@ -36,9 +37,12 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	if !ok {
 		p.queueProcessingLogger(nil, subAccountID, identifier).
 			Error("bad item from cache, could not cast it to a record obj")
+
 		p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
+
 		p.queueProcessingLogger(nil, subAccountID, identifier).With(log.KeyRequeue, log.ValueTrue).
 			Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
+
 		recordSubAccountProcessed(false, record)
 
 		return
@@ -51,6 +55,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	kubeConfig, err := kmccache.GetKubeConfigFromCache(p.Logger, p.SecretCacheClient, record.RuntimeID)
 	if err != nil {
 		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to load kubeconfig from cache: %w", err))
+
 		return
 	}
 
@@ -60,6 +65,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	restClientConfig, err := clientcmd.RESTConfigFromKubeConfig([]byte(record.KubeConfig))
 	if err != nil {
 		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to create REST config from kubeconfig: %w", err))
+
 		return
 	}
 
@@ -78,6 +84,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	newScans, err := p.EDPCollector.CollectAndSend(ctx, &runtimeInfo, record.Metric)
 	if err != nil {
 		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to collect and send measurements to EDP backend: %w", err))
+
 		return
 	}
 
@@ -103,9 +110,12 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 func (p *Process) handleError(record *kmccache.Record, subAccountID string, identifier int, err error) {
 	p.queueProcessingLogger(record, subAccountID, identifier).
 		Errorf(err.Error())
+
 	p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
+
 	p.queueProcessingLogger(record, subAccountID, identifier).With(log.KeyRequeue, log.ValueTrue).
 		Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
+
 	recordSubAccountProcessed(false, *record)
 }
 
