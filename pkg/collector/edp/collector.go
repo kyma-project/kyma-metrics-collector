@@ -8,11 +8,12 @@ import (
 	"net/http"
 	"time"
 
+	"go.opentelemetry.io/otel/codes"
+
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 	kmcotel "github.com/kyma-project/kyma-metrics-collector/pkg/otel"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
-	"go.opentelemetry.io/otel/codes"
 )
 
 type Collector struct {

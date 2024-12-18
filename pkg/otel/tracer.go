@@ -2,10 +2,12 @@ package otel
 
 import (
 	"context"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
 const (
