@@ -73,7 +73,7 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 				ShootName:       runtime.ShootName,
 				ProviderType:    strings.ToLower(runtime.Provider),
 				KubeConfig:      "",
-				Metric:          nil,
+				ScanMap:         nil,
 			}
 
 			// record kebFetchedClusters metric for trackable cluster

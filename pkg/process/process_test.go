@@ -884,7 +884,7 @@ func TestExecute(t *testing.T) {
 		SubAccountID: subAccID,
 		RuntimeID:    runtimeID,
 		KubeConfig:   "",
-		Metric:       nil,
+		ScanMap:      nil,
 	}
 	err := cache.Add(subAccID, newRecord, gocache.NoExpiration)
 	g.Expect(err).Should(gomega.BeNil())
@@ -922,8 +922,8 @@ func TestExecute(t *testing.T) {
 			return fmt.Errorf("record kubeconfig mismatch, got: %s, expected: %s", record.KubeConfig, expectedKubeconfig)
 		}
 
-		if !reflect.DeepEqual(record.Metric, expectedScanMap) {
-			return fmt.Errorf("record scan map mismatch, got: %v, expected: %v", record.Metric, expectedScanMap)
+		if !reflect.DeepEqual(record.ScanMap, expectedScanMap) {
+			return fmt.Errorf("record scan map mismatch, got: %v, expected: %v", record.ScanMap, expectedScanMap)
 		}
 
 		return nil
@@ -946,7 +946,7 @@ func NewRecord(subAccId, shootName, kubeconfig string) kmccache.Record {
 		SubAccountID: subAccId,
 		ShootName:    shootName,
 		KubeConfig:   kubeconfig,
-		Metric:       nil,
+		ScanMap:      nil,
 	}
 }
 

@@ -81,14 +81,14 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 		Kubeconfig:      *restClientConfig,
 	}
 
-	newScans, err := p.EDPCollector.CollectAndSend(ctx, &runtimeInfo, record.Metric)
+	newScans, err := p.EDPCollector.CollectAndSend(ctx, &runtimeInfo, record.ScanMap)
 	if err != nil {
 		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to collect and send measurements to EDP backend: %w", err))
 
 		return
 	}
 
-	record.Metric = newScans
+	record.ScanMap = newScans
 	p.queueProcessingLogger(&record, subAccountID, identifier).
 		Info("successfully collected and sent measurements to EDP backend")
 
