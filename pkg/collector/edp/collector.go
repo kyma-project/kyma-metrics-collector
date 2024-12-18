@@ -23,6 +23,8 @@ type Collector struct {
 	scanners  []resource.Scanner
 }
 
+var errNoMeasurementsSent = errors.New("no measurements sent to EDP")
+
 var _ collector.CollectorSender = &Collector{}
 
 func NewCollector(EDPClient *Client, scanner ...resource.Scanner) collector.CollectorSender {
@@ -64,11 +66,9 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 	}
 
 	if len(EDPMeasurements) == 0 {
-		errMsg := "no EDP measurements to send to EDP"
-		errs = append(errs, fmt.Errorf("%s", errMsg))
-
+		errs = append(errs, errNoMeasurementsSent)
 		span.RecordError(err)
-		span.SetStatus(codes.Error, errMsg)
+		span.SetStatus(codes.Error, errNoMeasurementsSent.Error())
 
 		return scans, errors.Join(errs...)
 	}
