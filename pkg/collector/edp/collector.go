@@ -173,12 +173,12 @@ func (c *Collector) sendPayload(payload Payload, subAccountID string) error {
 		return fmt.Errorf("failed to marshal payload for subAccountID (%s): %w", subAccountID, err)
 	}
 
-	edpRequest, err := c.EDPClient.NewRequest(subAccountID)
+	req, err := c.EDPClient.NewRequest(subAccountID)
 	if err != nil {
 		return fmt.Errorf("failed to create a new request for EDP for subAccountID (%s): %w", subAccountID, err)
 	}
 
-	resp, err := c.EDPClient.Send(edpRequest, payloadJSON)
+	resp, err := c.EDPClient.Send(req, payloadJSON)
 	if err != nil {
 		return fmt.Errorf("failed to send payload to EDP for subAccountID (%s): %w", subAccountID, err)
 	}
