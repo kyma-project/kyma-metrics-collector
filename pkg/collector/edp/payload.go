@@ -8,10 +8,10 @@ type payload struct {
 	ShootName    string                  `json:"shoot_name"           validate:"required"`
 	Timestamp    string                  `json:"timestamp"            validate:"required"`
 	Compute      resource.EDPMeasurement `json:"compute"              validate:"required"`
-	Networking   *Networking             `json:"networking,omitempty"`
+	Networking   *networking             `json:"networking,omitempty"`
 }
 
-type Networking struct {
+type networking struct {
 	ProvisionedVnets int `json:"provisioned_vnets" validate:"numeric"`
 	ProvisionedIPs   int `json:"provisioned_ips"   validate:"numeric"`
 }
