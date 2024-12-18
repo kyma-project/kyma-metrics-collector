@@ -35,15 +35,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 
 	record, ok = cacheItem.(kmccache.Record)
 	if !ok {
-		p.queueProcessingLogger(nil, subAccountID, identifier).
-			Error("bad item from cache, could not cast it to a record obj")
-
-		p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
-
-		p.queueProcessingLogger(nil, subAccountID, identifier).With(log.KeyRequeue, log.ValueTrue).
-			Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
-
-		recordSubAccountProcessed(false, record)
+		p.handleError(nil, subAccountID, identifier, fmt.Errorf("bad item from cache, could not cast it to a record obj"))
 
 		return
 	}
