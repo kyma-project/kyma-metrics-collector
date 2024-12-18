@@ -214,7 +214,7 @@ func TestCollector_CollectAndSend(t *testing.T) {
 
 			expectedErrInCollectAndSend: true,
 
-			expectedScanConversionToSucceed2: true,
+			expectedScanConversionToSucceed2: false,
 		},
 		{
 			name: "scanner2 succeeds in scanning, but conversion to EDP measurement fails and previous scan doesn't exist. So, nothing else we can do here and payload will be sent to EDP without scanner2's data",
