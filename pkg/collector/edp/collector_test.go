@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strconv"
 	"testing"
 
@@ -22,7 +23,6 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
-	"sort"
 )
 
 const (
