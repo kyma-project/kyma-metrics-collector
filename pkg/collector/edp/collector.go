@@ -167,7 +167,7 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 }
 
 // sendPayload sends the payload to the EDP backend.
-func (c *Collector) sendPayload(payload Payload, subAccountID string) error {
+func (c *Collector) sendPayload(payload payload, subAccountID string) error {
 	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("failed to marshal payload for subAccountID (%s): %w", subAccountID, err)

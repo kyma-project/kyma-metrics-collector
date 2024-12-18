@@ -344,8 +344,8 @@ func TestCollector_CollectAndSend(t *testing.T) {
 				}
 				defer req.Body.Close()
 
-				// Parse the JSON body into the Payload struct
-				var payload Payload
+				// Parse the JSON body into the payload struct
+				var payload payload
 
 				err = json.Unmarshal(body, &payload)
 				if err != nil {

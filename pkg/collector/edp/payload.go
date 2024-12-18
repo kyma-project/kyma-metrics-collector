@@ -2,7 +2,7 @@ package edp
 
 import "github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 
-type Payload struct {
+type payload struct {
 	RuntimeID    string                  `json:"runtime_id"           validate:"required"`
 	SubAccountID string                  `json:"sub_account_id"       validate:"required"`
 	ShootName    string                  `json:"shoot_name"           validate:"required"`
@@ -16,10 +16,10 @@ type Networking struct {
 	ProvisionedIPs   int `json:"provisioned_ips"   validate:"numeric"`
 }
 
-func newPayload(runtimeID, subAccountID, shootName, timeStamp string, EDPMeasuremnets []resource.EDPMeasurement) Payload {
+func newPayload(runtimeID, subAccountID, shootName, timeStamp string, EDPMeasuremnets []resource.EDPMeasurement) payload {
 	aggregatedEDPMeasurement := aggregateEDPMeasurements(EDPMeasuremnets)
 
-	return Payload{
+	return payload{
 		RuntimeID:    runtimeID,
 		SubAccountID: subAccountID,
 		ShootName:    shootName,
