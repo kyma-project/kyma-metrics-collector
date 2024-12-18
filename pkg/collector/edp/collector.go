@@ -53,14 +53,14 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 
 	scans, err := c.executeScans(childCtx, runtime)
 	if err != nil {
-		errs = append(errs, fmt.Errorf("failed to execute all scans: %w", err))
+		errs = append(errs, fmt.Errorf("failed to successfully execute one or more scans : %w", err))
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 	}
 
 	EDPMeasurements, err := c.convertScansToEDPMeasurements(scans, previousScans, runtime)
 	if err != nil {
-		errs = append(errs, fmt.Errorf("failed to convert all scans to EDP measurements: %w", err))
+		errs = append(errs, fmt.Errorf("failed to convert one or more scans to EDP measurements: %w", err))
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 	}
