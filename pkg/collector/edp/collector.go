@@ -14,6 +14,7 @@ import (
 	kmcotel "github.com/kyma-project/kyma-metrics-collector/pkg/otel"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	"go.opentelemetry.io/otel"
 )
 
 type Collector struct {
@@ -35,7 +36,7 @@ func NewCollector(EDPClient *Client, scanner ...resource.Scanner) collector.Coll
 func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, previousScans collector.ScanMap) (collector.ScanMap, error) {
 	var errs []error
 
-	childCtx, span := kmcotel.StartTracer(ctx, *runtime, "kmc.collect_scans_and_send_measurements")
+	childCtx, span := otel.Tracer("").Start(ctx, "kmc.collect_scans_and_send_measurements", kmcotel.SpanAttributes(runtime))
 	defer span.End()
 
 	currentTimestamp := getTimestampNow()

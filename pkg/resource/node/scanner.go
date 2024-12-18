@@ -13,6 +13,7 @@ import (
 	kmcotel "github.com/kyma-project/kyma-metrics-collector/pkg/otel"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	"go.opentelemetry.io/otel"
 )
 
 var _ resource.Scanner = &Scanner{}
@@ -34,7 +35,7 @@ func (s *Scanner) ID() resource.ScannerID {
 }
 
 func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
-	ctx, span := kmcotel.StartTracer(ctx, *runtime, "kmc.node_scan")
+	ctx, span := otel.Tracer("").Start(ctx, "kmc.node_scan", kmcotel.SpanAttributes(runtime))
 	defer span.End()
 
 	clientset, err := s.createClientset(&runtime.Kubeconfig)
