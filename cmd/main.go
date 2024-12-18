@@ -28,6 +28,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/node"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/pvc"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/redis"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/vsc"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/service"
 )
 
@@ -109,11 +110,13 @@ func main() {
 	nodeScanner := node.NewScanner(publicCloudSpecs)
 	pvcScanner := pvc.NewScanner()
 	redisScanner := redis.NewScanner(publicCloudSpecs)
+	vscScanner := vsc.NewScanner()
 	edpCollector := edp.NewCollector(
 		edpClient,
 		nodeScanner,
 		pvcScanner,
 		redisScanner,
+		vscScanner,
 	)
 
 	kmcProcess := kmcprocess.Process{
