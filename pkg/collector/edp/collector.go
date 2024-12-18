@@ -61,6 +61,15 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 		span.SetStatus(codes.Error, err.Error())
 	}
 
+	if len(EDPMeasurements) == 0 {
+		errMsg := "no EDP measurements to send to EDP"
+		errs = append(errs, fmt.Errorf(errMsg))
+		span.RecordError(err)
+		span.SetStatus(codes.Error, errMsg)
+
+		return scans, errors.Join(errs...)
+	}
+
 	payload := newPayload(
 		runtime.RuntimeID,
 		runtime.SubAccountID,
