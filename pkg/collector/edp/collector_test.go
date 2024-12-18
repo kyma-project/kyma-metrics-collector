@@ -37,7 +37,7 @@ func TestCollector_CollectAndSend(t *testing.T) {
 	// In order to test the aggregation of EDP measurements, we are going to executes the tests with two scanners: scanner1 and scanner2.
 	// scanner1 will behave the same in all test cases: successful scan and successful conversion to EDP measurement.
 	// scanner2 will behave differently in each test case:
-	// case 1: scanner2 succeeds in scanning and conversion to EDP measurement is successful.
+	// case 1: scanner2 succeeds in scanning and conversion to EDP measurement succeeds.
 	// case 2: scanner2 fails in scanning, but previous scan exists. So, the previous scan will be used for conversion to EDP measurement.
 	// case 3: scanner2 fails in scanning and previous scan doesn't exist. So, nothing else we can do here and payload will be sent to EDP without scanner2's data.
 	// case 4: scanner2 succeeds in scanning, but conversion to EDP measurement fails. So, the previous scan will be used for conversion to EDP measurement.
@@ -46,12 +46,16 @@ func TestCollector_CollectAndSend(t *testing.T) {
 	testCases := []struct {
 		name string
 
-		scanError2      error
+		// error returned when scanner2 executes the scan
+		scanError2 error
+		// EDP measurement for scanner2
 		EDPMeasurement2 resource.EDPMeasurement
-		EDPError2       error
+		// error returned when the scan of scanner2 is converted to EDP measurement
+		EDPError2 error
 
 		previousScanMap collector.ScanMap
 
+		// expected aggregated EDP measurement that should be sent to EDP backend
 		expectedAggregatedEDPMeasurement resource.EDPMeasurement
 
 		// expectedToUpdateScanner2InNewScanMap determines what should be the expected value of the scanner2 in the new scan map.
@@ -60,8 +64,10 @@ func TestCollector_CollectAndSend(t *testing.T) {
 		// If it is false, scanner2 should have the previous scan in the new scan map.
 		expectedToUpdateScanner2InNewScanMap *bool
 
+		// expected error returned by CollectAndSend func
 		expectedErrInCollectAndSend bool
 
+		// expected "success" label value in totalScansConverted prometheus metric for scanner2
 		expectedScanConversionToSucceed2 bool
 	}{
 		{
@@ -379,61 +385,66 @@ func TestCollector_CollectAndSend(t *testing.T) {
 			require.Equal(t, expectedNewScanMap, scanMap)
 
 			// check prometheus metrics.
-			// metrics: totalScans for scanner1
-			gotMetrics, err := collector.TotalScans.GetMetricWithLabelValues(
-				strconv.FormatBool(true),
-				string(scannerID1),
-				runtimeInfo.ShootName,
-				runtimeInfo.InstanceID,
-				runtimeInfo.RuntimeID,
-				runtimeInfo.SubAccountID,
-				runtimeInfo.GlobalAccountID,
-			)
-			require.NoError(t, err)
-			require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
+			checkPrometheusMetrics(t, scannerID1, scannerID2, runtimeInfo, tc.scanError2, tc.expectedScanConversionToSucceed2)
 
-			// metrics: totalScans for scanner2
-			gotMetrics, err = collector.TotalScans.GetMetricWithLabelValues(
-				strconv.FormatBool(tc.scanError2 == nil),
-				string(scannerID2),
-				runtimeInfo.ShootName,
-				runtimeInfo.InstanceID,
-				runtimeInfo.RuntimeID,
-				runtimeInfo.SubAccountID,
-				runtimeInfo.GlobalAccountID,
-			)
-			require.NoError(t, err)
-			require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
-
-			// metrics: TotalScansConverted for scanner1
-			gotMetrics, err = collector.TotalScansConverted.GetMetricWithLabelValues(
-				strconv.FormatBool(true),
-				string(scannerID1),
-				backendName,
-				runtimeInfo.ShootName,
-				runtimeInfo.InstanceID,
-				runtimeInfo.RuntimeID,
-				runtimeInfo.SubAccountID,
-				runtimeInfo.GlobalAccountID,
-			)
-			require.NoError(t, err)
-			require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
-
-			// metrics: TotalScansConverted for scanner2
-			gotMetrics, err = collector.TotalScansConverted.GetMetricWithLabelValues(
-				strconv.FormatBool(tc.expectedScanConversionToSucceed2),
-				string(scannerID2),
-				backendName,
-				runtimeInfo.ShootName,
-				runtimeInfo.InstanceID,
-				runtimeInfo.RuntimeID,
-				runtimeInfo.SubAccountID,
-				runtimeInfo.GlobalAccountID,
-			)
-			require.NoError(t, err)
-			require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
 		})
 	}
+}
+
+func checkPrometheusMetrics(t *testing.T, scannerID1, scannerID2 resource.ScannerID, runtimeInfo runtime.Info, scanError2 error, expectedScanConversionToSucceed2 bool) {
+	// metrics: totalScans for scanner1
+	gotMetrics, err := collector.TotalScans.GetMetricWithLabelValues(
+		strconv.FormatBool(true),
+		string(scannerID1),
+		runtimeInfo.ShootName,
+		runtimeInfo.InstanceID,
+		runtimeInfo.RuntimeID,
+		runtimeInfo.SubAccountID,
+		runtimeInfo.GlobalAccountID,
+	)
+	require.NoError(t, err)
+	require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
+
+	// metrics: totalScans for scanner2
+	gotMetrics, err = collector.TotalScans.GetMetricWithLabelValues(
+		strconv.FormatBool(scanError2 == nil),
+		string(scannerID2),
+		runtimeInfo.ShootName,
+		runtimeInfo.InstanceID,
+		runtimeInfo.RuntimeID,
+		runtimeInfo.SubAccountID,
+		runtimeInfo.GlobalAccountID,
+	)
+	require.NoError(t, err)
+	require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
+
+	// metrics: totalScansConverted for scanner1
+	gotMetrics, err = collector.TotalScansConverted.GetMetricWithLabelValues(
+		strconv.FormatBool(true),
+		string(scannerID1),
+		backendName,
+		runtimeInfo.ShootName,
+		runtimeInfo.InstanceID,
+		runtimeInfo.RuntimeID,
+		runtimeInfo.SubAccountID,
+		runtimeInfo.GlobalAccountID,
+	)
+	require.NoError(t, err)
+	require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
+
+	// metrics: totalScansConverted for scanner2
+	gotMetrics, err = collector.TotalScansConverted.GetMetricWithLabelValues(
+		strconv.FormatBool(expectedScanConversionToSucceed2),
+		string(scannerID2),
+		backendName,
+		runtimeInfo.ShootName,
+		runtimeInfo.InstanceID,
+		runtimeInfo.RuntimeID,
+		runtimeInfo.SubAccountID,
+		runtimeInfo.GlobalAccountID,
+	)
+	require.NoError(t, err)
+	require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
 }
 
 func expectedHeadersInEDPReq() http.Header {
