@@ -90,25 +90,23 @@ func (c *Collector) executeScans(ctx context.Context, previousScans collector.Sc
 		scan, err := s.Scan(ctx, runtime)
 		success := err == nil
 		collector.RecordScan(success, string(s.ID()), *runtime)
-		// if the scanner fails during execution, attempt to get the previous scan
-		if err != nil {
-			errs = append(errs, fmt.Errorf("scanner with ID(%s) failed during scanning: %w", s.ID(), err))
-
-			previousScan, previousScanExists := previousScans[s.ID()]
-			// if the previous scan also doesn't exist, nothing else we can do here
-			if !previousScanExists {
-				// since even a previous scan doesn't exist, we won't be able to convert any scan to an EDP measurement, so conversion is recorded as unsuccessful
-				collector.RecordScanConversion(false, string(s.ID()), collector.EDPBackendName, *runtime)
-				errs = append(errs, fmt.Errorf("no previous scan found for scanner with ID(%s)", s.ID()))
-
-				continue
-			}
-
-			scan = previousScan
+		if success {
+			currentScans[s.ID()] = scan
+			continue
 		}
 
-		// store only successful scans in the scan map
-		currentScans[s.ID()] = scan
+		errs = append(errs, fmt.Errorf("scanner with ID(%s) failed during scanning: %w", s.ID(), err))
+		// we encountered an error during scanning, so we need to attempt to get the previous scan
+		previousScan, exists := previousScans[s.ID()]
+		if exists {
+			currentScans[s.ID()] = previousScan
+			continue
+		}
+
+		// if the previous scan also doesn't exist, nothing else we can do here
+		// since even a previous scan doesn't exist, we won't be able to convert any scan to an EDP measurement, so conversion is recorded as unsuccessful
+		collector.RecordScanConversion(false, string(s.ID()), collector.EDPBackendName, *runtime)
+		errs = append(errs, fmt.Errorf("no previous scan found for scanner with ID(%s)", s.ID()))
 	}
 
 	return currentScans, errors.Join(errs...)
@@ -125,30 +123,31 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 		EDPMeasurement, err := scan.EDP()
 		success := err == nil
 		collector.RecordScanConversion(success, string(id), collector.EDPBackendName, *runtime)
-		// if conversion to an EDP measurement fails, attempt to get the previous scan and convert it to EDP measurement
-		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to convert scan to an EDP measurement for scanner with ID(%s): %w", string(id), err))
-
-			previousScan, previousScanExists := previousScans[id]
-			// if the previous scan doesn't exist, nothing else we can do here
-			if !previousScanExists {
-				errs = append(errs, fmt.Errorf("no previous scan found for scanner with ID(%s)", string(id)))
-
-				continue
-			}
-
-			EDPMeasurement, err = previousScan.EDP()
-			// if conversion of previous scan to an EDP measurement also fails, nothing else we can do here
-			if err != nil {
-				errs = append(errs, fmt.Errorf("failed to convert previous scan to an EDP measurement for scanner with ID(%s): %w", string(id), err))
-
-				continue
-			}
-
-			scan = previousScan
+		// if the scan can be converted to an EDP measurement, we add it to the convertableScans and EDPMeasurements
+		if success {
+			convertableScans[id] = scan
+			EDPMeasurements = append(EDPMeasurements, EDPMeasurement)
+			continue
 		}
 
-		convertableScans[id] = scan
+		errs = append(errs, fmt.Errorf("failed to convert scan to an EDP measurement for scanner with ID(%s): %w", string(id), err))
+		// if the scan fails to convert to an EDP measurement, we attempt to get the previous scan
+		previousScan, exists := previousScans[id]
+		// if the previous scan doesn't exist, nothing else we can do here
+		if !exists {
+			errs = append(errs, fmt.Errorf("no previous scan found for scanner with ID(%s)", string(id)))
+			continue
+		}
+
+		EDPMeasurement, err = previousScan.EDP()
+		// if conversion of previous scan to an EDP measurement also fails, nothing else we can do here
+		if err != nil {
+			errs = append(errs, fmt.Errorf("failed to convert previous scan to an EDP measurement for scanner with ID(%s): %w", string(id), err))
+			continue
+		}
+
+		// if the previous scan can be converted to an EDP measurement, we add it to convertableScans and its measurement is added to EDPMeasurements
+		convertableScans[id] = previousScan
 		EDPMeasurements = append(EDPMeasurements, EDPMeasurement)
 	}
 
