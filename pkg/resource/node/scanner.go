@@ -35,7 +35,7 @@ func (s *Scanner) ID() resource.ScannerID {
 }
 
 func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
-	ctx, span := otel.Tracer("").Start(ctx, "kmc.node_scan", kmcotel.SpanAttributes(runtime))
+	ctx, span := otel.Tracer("").Start(ctx, "node_scan", kmcotel.SpanAttributes(runtime))
 	defer span.End()
 
 	clientset, err := s.createClientset(&runtime.Kubeconfig)

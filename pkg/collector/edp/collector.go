@@ -36,7 +36,7 @@ func NewCollector(EDPClient *Client, scanner ...resource.Scanner) collector.Coll
 func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, previousScans collector.ScanMap) (collector.ScanMap, error) {
 	var errs []error
 
-	childCtx, span := otel.Tracer("").Start(ctx, "kmc.collect_scans_and_send_measurements", kmcotel.SpanAttributes(runtime))
+	childCtx, span := otel.Tracer("").Start(ctx, "collect_scans_and_send_measurements", kmcotel.SpanAttributes(runtime))
 	defer span.End()
 
 	currentTimestamp := getTimestampNow()
