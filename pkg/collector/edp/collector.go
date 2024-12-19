@@ -131,7 +131,7 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 		}
 
 		errs = append(errs, fmt.Errorf("failed to convert scan to an EDP measurement for scanner with ID(%s): %w", string(id), err))
-		// if the scan fails to convert to an EDP measurement, we attempt to get the previous scan
+		// we encountered an error during conversion of scan to an EDP measurement, so we need to attempt to get the previous scan
 		previousScan, exists := previousScans[id]
 		// if the previous scan doesn't exist, nothing else we can do here
 		if !exists {
