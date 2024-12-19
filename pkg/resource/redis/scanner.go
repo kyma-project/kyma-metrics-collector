@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
+	kmcotel "github.com/kyma-project/kyma-metrics-collector/pkg/otel"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
@@ -51,7 +52,7 @@ func (s *Scanner) ID() resource.ScannerID {
 }
 
 func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
-	ctx, span := otel.Tracer("").Start(ctx, "kmc.redis_scan")
+	ctx, span := otel.Tracer("").Start(ctx, "redis_scan", kmcotel.SpanAttributes(runtime))
 	defer span.End()
 
 	dynamicClient, err := s.createClientFactory(&runtime.Kubeconfig)

@@ -6,6 +6,7 @@ import (
 
 	kebruntime "github.com/kyma-project/kyma-environment-broker/common/runtime"
 	"github.com/patrickmn/go-cache"
+	"go.uber.org/zap"
 
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
@@ -72,7 +73,7 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 				ShootName:       runtime.ShootName,
 				ProviderType:    strings.ToLower(runtime.Provider),
 				KubeConfig:      "",
-				Metric:          nil,
+				ScanMap:         nil,
 			}
 
 			// record kebFetchedClusters metric for trackable cluster
@@ -206,4 +207,22 @@ func isTrackableState(state kebruntime.State) bool {
 	}
 
 	return false
+}
+
+func (p *Process) namedLogger() *zap.SugaredLogger {
+	return p.Logger.With("component", "kmc")
+}
+
+func (p *Process) namedLoggerWithRecord(record *kmccache.Record) *zap.SugaredLogger {
+	logger := p.Logger.With("component", "kmc")
+
+	if record == nil {
+		return logger
+	}
+
+	return logger.With(log.KeyRuntimeID, record.RuntimeID).With(log.KeyShoot, record.ShootName).With(log.KeySubAccountID, record.SubAccountID).With(log.KeyGlobalAccountID, record.GlobalAccountID)
+}
+
+func (p *Process) namedLoggerWithRuntime(runtime kebruntime.RuntimeDTO) *zap.SugaredLogger {
+	return p.Logger.With("component", "kmc").With(log.KeyRuntimeID, runtime.RuntimeID).With(log.KeyShoot, runtime.ShootName).With(log.KeySubAccountID, runtime.SubAccountID).With(log.KeyGlobalAccountID, runtime.GlobalAccountID)
 }

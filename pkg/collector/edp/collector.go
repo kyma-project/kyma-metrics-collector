@@ -2,69 +2,191 @@ package edp
 
 import (
 	"context"
-	"maps"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
 	"time"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
+	"go.opentelemetry.io/otel/codes"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
+	kmcotel "github.com/kyma-project/kyma-metrics-collector/pkg/otel"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
-	skrcommons "github.com/kyma-project/kyma-metrics-collector/pkg/skr/commons"
 )
 
 type Collector struct {
-	scanners []resource.Scanner
-	logger   *zap.Logger
+	EDPClient *Client
+	scanners  []resource.Scanner
 }
+
+var errNoMeasurementsSent = errors.New("no measurements sent to EDP")
 
 var _ collector.CollectorSender = &Collector{}
 
-func NewCollector(scanner ...resource.Scanner) collector.CollectorSender {
+func NewCollector(EDPClient *Client, scanner ...resource.Scanner) collector.CollectorSender {
 	return &Collector{
-		scanners: scanner,
+		EDPClient: EDPClient,
+		scanners:  scanner,
 	}
 }
 
 func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, previousScans collector.ScanMap) (collector.ScanMap, error) {
-	childCtx, span := otel.Tracer("").Start(ctx, "collect",
-		trace.WithAttributes(
-			attribute.String("provider", runtime.ProviderType),
-			attribute.String("shoot_id", runtime.ShootInfo.ShootName),
-		),
-	)
+	var errs []error
+
+	childCtx, span := otel.Tracer("").Start(ctx, "collect_scans_and_send_measurements", kmcotel.SpanAttributes(runtime))
 	defer span.End()
 
-	scans := make(collector.ScanMap)
+	currentTimestamp := getTimestampNow()
 
-	for _, s := range c.scanners {
-		// record metrics about success/failure
-		// record spans for timing
-		scan, err := s.Scan(childCtx, runtime)
-		if err != nil {
-			// log errors here, but continue with other measures
-			c.logger.Error("error measuring", zap.Error(err))
-			// use previous measure
-			scan = previousScans[s.ID()]
-		}
-		// use new or old measure
-		scans[s.ID()] = scan
-
-		// Use scanner ID as the label temporarily, the metric has to be reconsidered when we migrate to OTel
-		skrcommons.RecordSKRQuery(err != nil, string(s.ID()), runtime.ShootInfo)
+	scans, err := c.executeScans(childCtx, previousScans, runtime)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to successfully execute one or more scans : %w", err))
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 	}
 
-	record := NewRecord(time.Now(), time.Now(), maps.Values(scans))
-	err := c.sendRecord(record)
+	scans, EDPMeasurements, err := c.convertScansToEDPMeasurements(scans, previousScans, runtime)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to convert one or more scans to EDP measurements: %w", err))
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	}
 
-	return scans, err
-	// use new or old measure
+	if len(EDPMeasurements) == 0 {
+		errs = append(errs, errNoMeasurementsSent)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, errNoMeasurementsSent.Error())
+
+		return scans, errors.Join(errs...)
+	}
+
+	payload := newPayload(
+		runtime.RuntimeID,
+		runtime.SubAccountID,
+		runtime.ShootName,
+		currentTimestamp,
+		EDPMeasurements,
+	)
+
+	err = c.sendPayload(payload, runtime.SubAccountID)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to send payload to EDP: %w", err))
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	}
+
+	return scans, errors.Join(errs...)
 }
 
-// sendRecord sends the record to the UM backend.
-func (c *Collector) sendRecord(record *Record) error {
+func (c *Collector) executeScans(ctx context.Context, previousScans collector.ScanMap, runtime *runtime.Info) (collector.ScanMap, error) {
+	var errs []error
+
+	currentScans := make(collector.ScanMap)
+
+	for _, s := range c.scanners {
+		scan, err := s.Scan(ctx, runtime)
+		success := err == nil
+		collector.RecordScan(success, string(s.ID()), *runtime)
+		if success {
+			currentScans[s.ID()] = scan
+			continue
+		}
+
+		errs = append(errs, fmt.Errorf("scanner with ID(%s) failed during scanning: %w", s.ID(), err))
+		// we encountered an error during scanning, so we need to attempt to get the previous scan
+		previousScan, exists := previousScans[s.ID()]
+		if exists {
+			currentScans[s.ID()] = previousScan
+			continue
+		}
+
+		// if the previous scan also doesn't exist, nothing else we can do here
+		// since even a previous scan doesn't exist, we won't be able to convert any scan to an EDP measurement, so conversion is recorded as unsuccessful
+		collector.RecordScanConversion(false, string(s.ID()), collector.EDPBackendName, *runtime)
+		errs = append(errs, fmt.Errorf("no previous scan found for scanner with ID(%s)", s.ID()))
+	}
+
+	return currentScans, errors.Join(errs...)
+}
+
+func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap, previousScans collector.ScanMap, runtime *runtime.Info) (collector.ScanMap, []resource.EDPMeasurement, error) {
+	var errs []error
+
+	// we need to return convertableScans which are the scans that can be converted successfully to EDP measurements
+	convertableScans := make(collector.ScanMap)
+	EDPMeasurements := []resource.EDPMeasurement{}
+
+	for id, scan := range currentScans {
+		EDPMeasurement, err := scan.EDP()
+		success := err == nil
+		collector.RecordScanConversion(success, string(id), collector.EDPBackendName, *runtime)
+		// if the scan can be converted to an EDP measurement, we add it to the convertableScans and EDPMeasurements
+		if success {
+			convertableScans[id] = scan
+			EDPMeasurements = append(EDPMeasurements, EDPMeasurement)
+			continue
+		}
+
+		errs = append(errs, fmt.Errorf("failed to convert scan to an EDP measurement for scanner with ID(%s): %w", string(id), err))
+		// we encountered an error during conversion of scan to an EDP measurement, so we need to attempt to get the previous scan
+		previousScan, exists := previousScans[id]
+		// if the previous scan doesn't exist, nothing else we can do here
+		if !exists {
+			errs = append(errs, fmt.Errorf("no previous scan found for scanner with ID(%s)", string(id)))
+			continue
+		}
+
+		EDPMeasurement, err = previousScan.EDP()
+		// if conversion of previous scan to an EDP measurement also fails, nothing else we can do here
+		if err != nil {
+			errs = append(errs, fmt.Errorf("failed to convert previous scan to an EDP measurement for scanner with ID(%s): %w", string(id), err))
+			continue
+		}
+
+		// if the previous scan can be converted to an EDP measurement, we add it to convertableScans and its measurement is added to EDPMeasurements
+		convertableScans[id] = previousScan
+		EDPMeasurements = append(EDPMeasurements, EDPMeasurement)
+	}
+
+	return convertableScans, EDPMeasurements, errors.Join(errs...)
+}
+
+// sendPayload sends the payload to the EDP backend.
+func (c *Collector) sendPayload(payload payload, subAccountID string) error {
+	payloadJSON, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal payload for subAccountID (%s): %w", subAccountID, err)
+	}
+
+	req, err := c.EDPClient.NewRequest(subAccountID)
+	if err != nil {
+		return fmt.Errorf("failed to create a new request for EDP for subAccountID (%s): %w", subAccountID, err)
+	}
+
+	resp, err := c.EDPClient.Send(req, payloadJSON)
+	if err != nil {
+		return fmt.Errorf("failed to send payload to EDP for subAccountID (%s): %w", subAccountID, err)
+	}
+
+	if !isSuccess(resp.StatusCode) {
+		return fmt.Errorf("failed to send payload to EDP for subAccountID (%s) as it returned HTTP status code %d", subAccountID, resp.StatusCode)
+	}
+
 	return nil
+}
+
+// getTimestampNow returns the time now in the format of RFC3339.
+func getTimestampNow() string {
+	return time.Now().Format(time.RFC3339)
+}
+
+func isSuccess(status int) bool {
+	if status >= http.StatusOK && status < http.StatusMultipleChoices {
+		return true
+	}
+
+	return false
 }

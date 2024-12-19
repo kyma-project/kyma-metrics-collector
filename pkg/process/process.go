@@ -6,41 +6,28 @@ import (
 	"time"
 
 	"github.com/patrickmn/go-cache"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/util/workqueue"
 
+	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
-	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
-	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
-	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
-	skrsvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/svc"
 )
 
 type Process struct {
 	KEBClient         *keb.Client
 	EDPClient         *edp.Client
+	EDPCollector      collector.CollectorSender
 	Queue             workqueue.TypedDelayingInterface[string]
 	SecretCacheClient v1.CoreV1Interface
 	Cache             *cache.Cache
 	PublicCloudSpecs  *config.PublicCloudSpecs
 	ScrapeInterval    time.Duration
 	WorkersPoolSize   int
-	NodeConfig        skrnode.ConfigInf
-	PVCConfig         skrpvc.ConfigInf
-	SvcConfig         skrsvc.ConfigInf
-	RedisConfig       skrredis.ConfigInf
 	Logger            *zap.SugaredLogger
 }
-
-var (
-	errSubAccountIDNotTrackable = errors.New("subAccountID is not trackable")
-	ErrLoadingFailed            = errors.New("could not load resource")
-	errBadItemFromCache         = errors.New("bad item from cache, could not cast to a record obj")
-)
 
 const (
 	trackableTrue  = true

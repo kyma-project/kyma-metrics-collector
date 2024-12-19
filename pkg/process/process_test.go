@@ -1,6 +1,7 @@
 package process
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	kebruntime "github.com/kyma-project/kyma-environment-broker/common/runtime"
 	"github.com/onsi/gomega"
 	gocache "github.com/patrickmn/go-cache"
@@ -19,16 +19,13 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/util/workqueue"
 
-	"github.com/kyma-project/kyma-metrics-collector/env"
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/edp"
 	kmckeb "github.com/kyma-project/kyma-metrics-collector/pkg/keb"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
-	skrnode "github.com/kyma-project/kyma-metrics-collector/pkg/skr/node"
-	skrpvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/pvc"
-	skrredis "github.com/kyma-project/kyma-metrics-collector/pkg/skr/redis"
-	skrsvc "github.com/kyma-project/kyma-metrics-collector/pkg/skr/svc"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/process/stubs"
+	runtime2 "github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
 
@@ -41,72 +38,8 @@ const (
 	kebRuntimeResponseFilePath = "../testing/fixtures/runtimes_response_process.json"
 	expectedPathPrefix         = "/runtimes"
 
-	// EDP related variables.
-
-	testDataStream        = "dataStream"
-	testNamespace         = "namespace"
-	testDataStreamVersion = "v1"
-	testToken             = "token"
-	testEnv               = "env"
-	retryCount            = 1
-
 	fecthedClustersMetricName = "kmc_process_fetched_clusters_total"
 )
-
-func TestGetOldRecordIfMetricExists(t *testing.T) {
-	g := gomega.NewGomegaWithT(t)
-	cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
-	expectedSubAccIDToExist := uuid.New().String()
-	expectedRecord := kmccache.Record{
-		SubAccountID: expectedSubAccIDToExist,
-		ShootName:    fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-		KubeConfig:   "foo",
-		Metric:       NewMetric(),
-	}
-	expectedSubAccIDWithNoMetrics := uuid.New().String()
-
-	recordsToBeAdded := []kmccache.Record{
-		expectedRecord,
-		{
-			SubAccountID: uuid.New().String(),
-			ShootName:    fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-			KubeConfig:   "foo",
-		},
-		{
-			SubAccountID: expectedSubAccIDWithNoMetrics,
-			ShootName:    "",
-			KubeConfig:   "",
-		},
-	}
-	for _, record := range recordsToBeAdded {
-		err := cache.Add(record.SubAccountID, record, gocache.NoExpiration)
-		g.Expect(err).Should(gomega.BeNil())
-	}
-
-	p := Process{
-		Cache:  cache,
-		Logger: logger.NewLogger(zapcore.InfoLevel),
-	}
-
-	t.Run("old metric found for a subAccountID", func(t *testing.T) {
-		gotRecord, err := p.getOldRecordIfMetricExists(expectedSubAccIDToExist)
-		g.Expect(err).Should(gomega.BeNil())
-		g.Expect(*gotRecord).To(gomega.Equal(expectedRecord))
-	})
-
-	t.Run("old metric not found for a subAccountID", func(t *testing.T) {
-		subAccIDWhichDoesNotExist := uuid.New().String()
-		_, err := p.getOldRecordIfMetricExists(subAccIDWhichDoesNotExist)
-		g.Expect(err).ShouldNot(gomega.BeNil())
-		g.Expect(err.Error()).To(gomega.Equal(fmt.Sprintf("subAccountID: %s not found", subAccIDWhichDoesNotExist)))
-	})
-
-	t.Run("old metric found for a subAccountID but does not have metric", func(t *testing.T) {
-		_, err := p.getOldRecordIfMetricExists(expectedSubAccIDWithNoMetrics)
-		g.Expect(err).ShouldNot(gomega.BeNil())
-		g.Expect(err.Error()).To(gomega.Equal(fmt.Sprintf("old metrics for subAccountID: %s not found", expectedSubAccIDWithNoMetrics)))
-	})
-}
 
 func TestPollKEBForRuntimes(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
@@ -642,22 +575,46 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 			// reset metrics.
 			subAccountProcessed.Reset()
 			subAccountProcessedTimeStamp.Reset()
-			oldMetricsPublishedGauge.Reset()
+			collector.TotalScans.Reset()
+			collector.TotalScansConverted.Reset()
 
 			// add metrics for both shoots.
 			recordSubAccountProcessed(false, tc.givenShoot1)
 			recordSubAccountProcessed(false, tc.givenShoot2)
-			recordOldMetricsPublishedGauge(tc.givenShoot1)
-			recordOldMetricsPublishedGauge(tc.givenShoot2)
-			recordSubAccountProcessedTimeStamp(false, tc.givenShoot1)
-			recordSubAccountProcessedTimeStamp(false, tc.givenShoot2)
+
+			recordSubAccountProcessedTimeStamp(tc.givenShoot1)
+			recordSubAccountProcessedTimeStamp(tc.givenShoot2)
+
+			resourceName := "node"
+			backendName := "edp"
+			shoot1RuntimeInfo := runtime2.Info{
+				InstanceID:      tc.givenShoot1.InstanceID,
+				RuntimeID:       tc.givenShoot1.RuntimeID,
+				SubAccountID:    tc.givenShoot1.SubAccountID,
+				GlobalAccountID: tc.givenShoot1.GlobalAccountID,
+				ShootName:       tc.givenShoot1.ShootName,
+			}
+			shoot2RuntimeInfo := runtime2.Info{
+				InstanceID:      tc.givenShoot2.InstanceID,
+				RuntimeID:       tc.givenShoot2.RuntimeID,
+				SubAccountID:    tc.givenShoot2.SubAccountID,
+				GlobalAccountID: tc.givenShoot2.GlobalAccountID,
+				ShootName:       tc.givenShoot2.ShootName,
+			}
+
+			collector.RecordScan(false, resourceName, shoot1RuntimeInfo)
+			collector.RecordScan(false, resourceName, shoot2RuntimeInfo)
+
+			collector.RecordScanConversion(false, resourceName, backendName, shoot1RuntimeInfo)
+			collector.RecordScanConversion(false, resourceName, backendName, shoot2RuntimeInfo)
 
 			// setup cache
 			cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
+
 			// add both shoots to cache
 			err := cache.Add(tc.givenShoot1.SubAccountID, tc.givenShoot1, gocache.NoExpiration)
 			g.Expect(err).Should(gomega.BeNil())
-			// define target shoot to test.
+
 			err = cache.Add(tc.givenShoot2.SubAccountID, tc.givenShoot2, gocache.NoExpiration)
 			g.Expect(err).Should(gomega.BeNil())
 
@@ -694,7 +651,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 			p.populateCacheAndQueue(runtimesPage)
 
 			// then
-			// check if metrics for existingShoot still exists or not.
+			// check if metrics still exists or not for shoot1 (existing shoot)
 			// metric: subAccountProcessed
 			gotMetrics, err := subAccountProcessed.GetMetricWithLabelValues(
 				strconv.FormatBool(false),
@@ -706,9 +663,33 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 			)
 			g.Expect(err).Should(gomega.BeNil())
 			g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(1)))
-
-			// metric: oldMetricsPublishedGauge
-			gotMetrics, err = oldMetricsPublishedGauge.GetMetricWithLabelValues(
+			// metric: subAccountProcessedTimeStamp
+			gotMetrics, err = subAccountProcessedTimeStamp.GetMetricWithLabelValues(
+				tc.givenShoot1.ShootName,
+				tc.givenShoot1.InstanceID,
+				tc.givenShoot1.RuntimeID,
+				tc.givenShoot1.SubAccountID,
+				tc.givenShoot1.GlobalAccountID,
+			)
+			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(testutil.ToFloat64(gotMetrics)).ShouldNot(gomega.Equal(float64(0)))
+			// metric: TotalScans
+			gotMetrics, err = collector.TotalScans.GetMetricWithLabelValues(
+				strconv.FormatBool(false),
+				resourceName,
+				tc.givenShoot1.ShootName,
+				tc.givenShoot1.InstanceID,
+				tc.givenShoot1.RuntimeID,
+				tc.givenShoot1.SubAccountID,
+				tc.givenShoot1.GlobalAccountID,
+			)
+			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(1)))
+			// metric: TotalScansConverted
+			gotMetrics, err = collector.TotalScansConverted.GetMetricWithLabelValues(
+				strconv.FormatBool(false),
+				resourceName,
+				backendName,
 				tc.givenShoot1.ShootName,
 				tc.givenShoot1.InstanceID,
 				tc.givenShoot1.RuntimeID,
@@ -718,7 +699,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 			g.Expect(err).Should(gomega.BeNil())
 			g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(1)))
 
-			// check if metrics for de-provisioned shoot were deleted or not.
+			// check if metrics were deleted or not for shoot2 which is not returned by KEB anymore OR returned with de-provisioned status OR returned with different shoot name
 			// metric: subAccountProcessed
 			gotMetrics, err = subAccountProcessed.GetMetricWithLabelValues(
 				strconv.FormatBool(false),
@@ -730,9 +711,33 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 			)
 			g.Expect(err).Should(gomega.BeNil())
 			g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(0)))
-
-			// metric: oldMetricsPublishedGauge
-			gotMetrics, err = oldMetricsPublishedGauge.GetMetricWithLabelValues(
+			// metric: subAccountProcessedTimeStamp
+			gotMetrics, err = subAccountProcessedTimeStamp.GetMetricWithLabelValues(
+				tc.givenShoot2.ShootName,
+				tc.givenShoot2.InstanceID,
+				tc.givenShoot2.RuntimeID,
+				tc.givenShoot2.SubAccountID,
+				tc.givenShoot2.GlobalAccountID,
+			)
+			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(0)))
+			// metric: TotalScans
+			gotMetrics, err = collector.TotalScans.GetMetricWithLabelValues(
+				strconv.FormatBool(false),
+				resourceName,
+				tc.givenShoot2.ShootName,
+				tc.givenShoot2.InstanceID,
+				tc.givenShoot2.RuntimeID,
+				tc.givenShoot2.SubAccountID,
+				tc.givenShoot2.GlobalAccountID,
+			)
+			g.Expect(err).Should(gomega.BeNil())
+			g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(0)))
+			// metric: TotalScansConverted
+			gotMetrics, err = collector.TotalScansConverted.GetMetricWithLabelValues(
+				strconv.FormatBool(false),
+				resourceName,
+				backendName,
 				tc.givenShoot2.ShootName,
 				tc.givenShoot2.InstanceID,
 				tc.givenShoot2.RuntimeID,
@@ -748,148 +753,73 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 // TestPrometheusMetricsProcessSubAccountID tests the prometheus metrics maintained by `processSubAccountID` method.
 func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
+
 	// given (common for all test cases).
 	logger := logger.NewLogger(zapcore.DebugLevel)
 
 	const givenMethodRecalls = 3
 
-	givenKubeConfig := "eyJmb28iOiAiYmFyIn0="
-
-	// cloud providers.
-	cfg := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
-	givenProviders, err := config.LoadPublicCloudSpecs(cfg)
-	g.Expect(err).Should(gomega.BeNil())
-
-	// setup EDP server.
-	edpAllowedSubAccountID := uuid.New().String()
-	edpTestHandler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		params := mux.Vars(req)
-		if params["tenantID"] == edpAllowedSubAccountID {
-			rw.WriteHeader(http.StatusCreated)
-			return
-		}
-
-		rw.WriteHeader(http.StatusBadRequest)
-	})
-	edpPath := fmt.Sprintf("/namespaces/%s/dataStreams/%s/%s/dataTenants/{tenantID}/%s/events", testNamespace,
-		testDataStream, testDataStreamVersion, testEnv)
-
-	srv := kmctesting.StartTestServer(edpPath, edpTestHandler, g)
-	defer srv.Close()
-
-	// EDP client.
-	edpConfig := newEDPConfig(srv.URL)
-	edpClient := edp.NewClient(edpConfig, logger)
+	givenKubeConfig := generateFakeKubeConfig()
+	subAccountID := uuid.New().String()
 
 	// test cases. These cases are not safe to be run in parallel.
 	testCases := []struct {
-		name                string
-		givenShoot          kmccache.Record
-		wantSuccess         bool
-		wantOldMetricReused bool
+		name              string
+		givenShoot        kmccache.Record
+		EDPCollector      collector.CollectorSender
+		expectedToSucceed bool
 	}{
 		{
-			name: "should have correct metrics when it successfully processes subAccount with new data",
+			name: "should have correct metrics when it successfully processes subAccount",
 			givenShoot: kmccache.Record{
-				SubAccountID:    edpAllowedSubAccountID,
+				SubAccountID:    subAccountID,
 				InstanceID:      uuid.New().String(),
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    config.Azure,
 				KubeConfig:      givenKubeConfig,
 			},
-			wantSuccess:         true,
-			wantOldMetricReused: false,
-		},
-		{
-			name: "should have correct metrics when it processes subAccount with old data",
-			// the method (which is being tested) will use old data,
-			// when it fails to query to k8s cluster for information.
-			givenShoot: kmccache.Record{
-				SubAccountID:    edpAllowedSubAccountID,
-				InstanceID:      uuid.New().String(),
-				RuntimeID:       uuid.New().String(),
-				GlobalAccountID: uuid.New().String(),
-				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    config.Azure,
-				Metric:          NewMetric(),
-				KubeConfig:      "invalid",
-			},
-			wantSuccess:         true,
-			wantOldMetricReused: true,
-		},
-		{
-			name: "should have correct metrics when it fails to publish data to EDP",
-			givenShoot: kmccache.Record{
-				SubAccountID:    uuid.New().String(), // not allowed subAccountID in mocked EDP server.
-				InstanceID:      uuid.New().String(),
-				RuntimeID:       uuid.New().String(),
-				GlobalAccountID: uuid.New().String(),
-				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    config.Azure,
-				KubeConfig:      givenKubeConfig,
-			},
-			wantSuccess:         false,
-			wantOldMetricReused: false,
+			EDPCollector:      stubs.NewCollector(nil, nil),
+			expectedToSucceed: true,
 		},
 		{
 			name: "should have correct metrics when it fails to process subAccount",
-			// the method (which is being tested) will use old data,
-			// when it fails to query to k8s cluster for information and
-			// the old data in cache is invalid (e.g. `Metric: nil`).
 			givenShoot: kmccache.Record{
-				SubAccountID:    edpAllowedSubAccountID,
+				SubAccountID:    subAccountID,
 				InstanceID:      uuid.New().String(),
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				ProviderType:    config.Azure,
-				KubeConfig:      "invalid",
-				Metric:          nil,
+				KubeConfig:      givenKubeConfig,
 			},
-			wantSuccess:         false,
-			wantOldMetricReused: false,
+			EDPCollector:      stubs.NewCollector(nil, fmt.Errorf("fake error")),
+			expectedToSucceed: false,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// given
 			testStartTimeUnix := time.Now().Unix()
 
 			subAccountProcessed.Reset()
 			subAccountProcessedTimeStamp.Reset()
-			oldMetricsPublishedGauge.Reset()
 
 			// populate cache.
 			cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
-			err = cache.Add(tc.givenShoot.SubAccountID, tc.givenShoot, gocache.NoExpiration)
-			g.Expect(err).Should(gomega.BeNil())
-
-			// k8s fake clients.
+			err := cache.Add(tc.givenShoot.SubAccountID, tc.givenShoot, gocache.NoExpiration)
 			g.Expect(err).Should(gomega.BeNil())
 
 			secretKCPStored := kmctesting.NewKCPStoredSecret(tc.givenShoot.RuntimeID, tc.givenShoot.KubeConfig)
 			secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
-			fakeNodeClient := skrnode.FakeNodeClient{}
-			fakePVCClient := skrpvc.FakePVCClient{}
-			fakeSvcClient := skrsvc.FakeSvcClient{}
-			fakeRedisClient := skrredis.FakeRedisClient{}
 
 			// initiate process instance.
 			givenProcess := &Process{
-				EDPClient:         edpClient,
+				EDPCollector:      tc.EDPCollector,
 				Queue:             workqueue.NewTypedDelayingQueue[string](),
 				SecretCacheClient: secretCacheClient.CoreV1(),
 				Cache:             cache,
-				PublicCloudSpecs:  givenProviders,
 				ScrapeInterval:    3 * time.Second,
 				Logger:            logger,
-				NodeConfig:        fakeNodeClient,
-				PVCConfig:         fakePVCClient,
-				SvcConfig:         fakeSvcClient,
-				RedisConfig:       fakeRedisClient,
 			}
 
 			// when
@@ -902,7 +832,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 			// check prometheus metrics.
 			// metric: subAccountProcessed
 			gotMetrics, err := subAccountProcessed.GetMetricWithLabelValues(
-				strconv.FormatBool(tc.wantSuccess),
+				strconv.FormatBool(tc.expectedToSucceed),
 				tc.givenShoot.ShootName,
 				tc.givenShoot.InstanceID,
 				tc.givenShoot.RuntimeID,
@@ -914,27 +844,8 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 			// it should be equal to the number of time the `processSubAccountID` is called.
 			g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(givenMethodRecalls)))
 
-			// metric: oldMetricsPublishedGauge
-			gotMetrics, err = oldMetricsPublishedGauge.GetMetricWithLabelValues(
-				tc.givenShoot.ShootName,
-				tc.givenShoot.InstanceID,
-				tc.givenShoot.RuntimeID,
-				tc.givenShoot.SubAccountID,
-				tc.givenShoot.GlobalAccountID,
-			)
-			g.Expect(err).Should(gomega.BeNil())
-
-			if tc.wantOldMetricReused {
-				// it should have kept increasing to track consecutive number of re-use.
-				g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(givenMethodRecalls)))
-			} else {
-				// the metric will be reset to zero when a subAccount is successfully processed.
-				g.Expect(testutil.ToFloat64(gotMetrics)).Should(gomega.Equal(float64(0)))
-			}
-
 			// metric: subAccountProcessedTimeStamp
 			gotMetrics, err = subAccountProcessedTimeStamp.GetMetricWithLabelValues(
-				strconv.FormatBool(tc.wantOldMetricReused),
 				tc.givenShoot.ShootName,
 				tc.givenShoot.InstanceID,
 				tc.givenShoot.RuntimeID,
@@ -947,7 +858,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 			utcTime := testutil.ToFloat64(gotMetrics)
 			isPublishedAfterTestStartTime := int64(utcTime) >= testStartTimeUnix
 			g.Expect(isPublishedAfterTestStartTime).Should(
-				gomega.Equal(tc.wantSuccess),
+				gomega.Equal(tc.expectedToSucceed),
 				"the last published time should be updated only when a new event is published to EDP.")
 		})
 	}
@@ -955,50 +866,26 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 
 func TestExecute(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
+
 	subAccID := uuid.New().String()
 	runtimeID := uuid.New().String()
-	tenant := subAccID
-	expectedKubeconfig := "eyJmb28iOiAiYmFyIn0="
-	expectedPath := fmt.Sprintf("/namespaces/%s/dataStreams/%s/%s/dataTenants/%s/%s/events", testNamespace, testDataStream, testDataStreamVersion, tenant, testEnv)
+	expectedKubeconfig := generateFakeKubeConfig()
 	log := logger.NewLogger(zapcore.DebugLevel)
 
-	timesVisited := 0
-	// Set up EDP Test Server handler
-	expectedHeaders := expectedHeadersInEDPReq()
-	edpTestHandler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		timesVisited += 1
-
-		g.Expect(req.Header).To(gomega.Equal(expectedHeaders))
-		g.Expect(req.URL.Path).To(gomega.Equal(expectedPath))
-		g.Expect(req.Method).To(gomega.Equal(http.MethodPost))
-		rw.WriteHeader(http.StatusCreated)
-	})
-
-	srv := kmctesting.StartTestServer(expectedPath, edpTestHandler, g)
-	defer srv.Close()
-
-	edpConfig := newEDPConfig(srv.URL)
-	edpClient := edp.NewClient(edpConfig, log)
-	shootName := fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5))
 	secretKCPStored := kmctesting.NewKCPStoredSecret(runtimeID, expectedKubeconfig)
+	secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
+
+	expectedScanMap := NewScanMap()
+	collector := stubs.NewCollector(expectedScanMap, nil)
 
 	// Populate cache
 	cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 	newRecord := kmccache.Record{
 		SubAccountID: subAccID,
 		RuntimeID:    runtimeID,
-		ShootName:    shootName,
 		KubeConfig:   "",
-		ProviderType: config.Azure,
-		Metric:       nil,
+		ScanMap:      nil,
 	}
-	expectedRecord := newRecord
-	expectedRecord.KubeConfig = expectedKubeconfig
-	expectedRecord.Metric = NewMetric()
-	expectedRecord.Metric.RuntimeId = runtimeID
-	expectedRecord.Metric.SubAccountId = subAccID
-	expectedRecord.Metric.ShootName = shootName
-
 	err := cache.Add(subAccID, newRecord, gocache.NoExpiration)
 	g.Expect(err).Should(gomega.BeNil())
 
@@ -1006,80 +893,41 @@ func TestExecute(t *testing.T) {
 	queue := workqueue.NewTypedDelayingQueue[string]()
 	queue.Add(subAccID)
 
-	g.Expect(err).Should(gomega.BeNil())
-
-	secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
-
-	cfg := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
-	providers, err := config.LoadPublicCloudSpecs(cfg)
-	g.Expect(err).Should(gomega.BeNil())
-
-	fakeNodeClient := skrnode.FakeNodeClient{}
-	fakePVCClient := skrpvc.FakePVCClient{}
-	fakeSvcClient := skrsvc.FakeSvcClient{}
-	fakeRedisClient := skrredis.FakeRedisClient{}
-
 	newProcess := &Process{
-		EDPClient:         edpClient,
+		EDPCollector:      collector,
 		Queue:             queue,
 		SecretCacheClient: secretCacheClient.CoreV1(),
 		Cache:             cache,
-		PublicCloudSpecs:  providers,
 		ScrapeInterval:    3 * time.Second,
 		Logger:            log,
-		NodeConfig:        fakeNodeClient,
-		PVCConfig:         fakePVCClient,
-		SvcConfig:         fakeSvcClient,
-		RedisConfig:       fakeRedisClient,
 	}
 
 	go func() {
 		newProcess.execute(1)
 	}()
 
-	// Test scrape interval
-	g.Eventually(func() bool {
-		// With a ScrapeInterval of 3 secs in an interval of 10 seconds, expected timesVisited is atleast 2.
-		return timesVisited >= 2
-	}, bigTimeout).Should(gomega.BeTrue())
-
 	// Test cache state
-	g.Eventually(newProcess.Cache.ItemCount(), timeout).Should(gomega.Equal(len(cache.Items())))
 	g.Eventually(func() error {
-		gotItemFromCache, found := newProcess.Cache.Get(subAccID)
+		itemFromCache, found := newProcess.Cache.Get(subAccID)
 		if !found {
 			return fmt.Errorf("subAccID not found in cache")
 		}
-		record, ok := gotItemFromCache.(kmccache.Record)
-		g.Expect(ok).To(gomega.BeTrue())
-		if record.KubeConfig != expectedRecord.KubeConfig {
-			return fmt.Errorf("kubeconfigs mismatch, got: %s,expected: %s", record.KubeConfig, expectedRecord.KubeConfig)
-		}
-		if !reflect.DeepEqual(record.Metric.Networking, expectedRecord.Metric.Networking) {
-			g.Expect(record.Metric.Networking).To(gomega.Equal(expectedRecord.Metric.Networking))
-			return fmt.Errorf("networking data mismatch, got: %v, expected: %v", record.Metric.Networking, expectedRecord.Metric.Networking)
-		}
-		if !reflect.DeepEqual(record.Metric.Compute, expectedRecord.Metric.Compute) {
-			g.Expect(record.Metric.Compute).To(gomega.Equal(expectedRecord.Metric.Compute))
-			return fmt.Errorf("compute data mismatch, got: %v, expected: %v", record.Metric.Compute, expectedRecord.Metric.Compute)
+
+		record, ok := itemFromCache.(kmccache.Record)
+		if !ok {
+			return fmt.Errorf("failed to cast item from cache to type kmccache.Record")
 		}
 
-		// check if IDs are correct.
-		g.Expect(record.Metric.RuntimeId).To(gomega.Equal(expectedRecord.Metric.RuntimeId))
-		g.Expect(record.Metric.SubAccountId).To(gomega.Equal(expectedRecord.Metric.SubAccountId))
-		g.Expect(record.Metric.ShootName).To(gomega.Equal(expectedRecord.Metric.ShootName))
+		if record.KubeConfig != expectedKubeconfig {
+			return fmt.Errorf("record kubeconfig mismatch, got: %s, expected: %s", record.KubeConfig, expectedKubeconfig)
+		}
+
+		if !reflect.DeepEqual(record.ScanMap, expectedScanMap) {
+			return fmt.Errorf("record scan map mismatch, got: %v, expected: %v", record.ScanMap, expectedScanMap)
+		}
+
 		return nil
 	}, bigTimeout).Should(gomega.BeNil())
-
-	// The process should keep on publishing events for this subaccount to EDP.
-	// We confirm this by check if the count of published events is getting increased.
-	oldEventsSentCount := timesVisited
-
-	g.Eventually(func() bool {
-		// With a ScrapeInterval of 3 secs in an interval of 10 seconds, expected timesVisited should have at least
-		// increased by 2.
-		return timesVisited >= oldEventsSentCount+2
-	}, bigTimeout).Should(gomega.BeTrue())
 
 	// Clean it from the cache once SKR is deprovisioned
 	newProcess.Cache.Delete(subAccID)
@@ -1087,12 +935,8 @@ func TestExecute(t *testing.T) {
 	go func() {
 		newProcess.execute(1)
 	}()
-	// The process should not publish more events for this subaccount to EDP.
-	// We confirm this by check if the count of published events remains the same after some time.
-	oldEventsSentCount = timesVisited
 
 	time.Sleep(timeout)
-	g.Expect(timesVisited).To(gomega.Equal(oldEventsSentCount))
 	// the queue should be empty.
 	g.Eventually(newProcess.Queue.Len()).Should(gomega.Equal(0))
 }
@@ -1102,7 +946,7 @@ func NewRecord(subAccId, shootName, kubeconfig string) kmccache.Record {
 		SubAccountID: subAccId,
 		ShootName:    shootName,
 		KubeConfig:   kubeconfig,
-		Metric:       nil,
+		ScanMap:      nil,
 	}
 }
 
@@ -1144,47 +988,13 @@ func AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage *kebruntime.RuntimesPa
 	return runtimesPage, expectedCache, expectedQueue, nil
 }
 
-func newEDPConfig(url string) *edp.Config {
-	return &edp.Config{
-		URL:               url,
-		Token:             testToken,
-		Namespace:         testNamespace,
-		DataStreamName:    testDataStream,
-		DataStreamVersion: testDataStreamVersion,
-		DataStreamEnv:     testEnv,
-		Timeout:           timeout,
-		EventRetry:        retryCount,
-	}
-}
+func NewScanMap() collector.ScanMap {
+	scans := make(collector.ScanMap)
 
-func expectedHeadersInEDPReq() http.Header {
-	return http.Header{
-		"Authorization":   []string{fmt.Sprintf("Bearer %s", testToken)},
-		"Accept-Encoding": []string{"gzip"},
-		"User-Agent":      []string{"kyma-metrics-collector"},
-		"Content-Type":    []string{"application/json;charset=utf-8"},
-	}
-}
+	scans["node"] = stubs.NewScan([]string{"node1", "node2"})
+	scans["redis"] = stubs.NewScan([]string{"redis1", "redis2"})
 
-func NewMetric() *edp.ConsumptionMetrics {
-	return &edp.ConsumptionMetrics{
-		Timestamp: "",
-		Compute: edp.Compute{
-			VMTypes: []edp.VMType{
-				{
-					Name:  "standard_d8_v3",
-					Count: 3,
-				},
-			},
-			ProvisionedCpus:  24,
-			ProvisionedRAMGb: 96,
-			ProvisionedVolumes: edp.ProvisionedVolumes{
-				SizeGbTotal:   30,
-				Count:         2,
-				SizeGbRounded: 64,
-			},
-		},
-	}
+	return scans
 }
 
 // Helper function to check the value of the `kmc_process_fetched_clusters` metric using `ToFloat64`.
@@ -1204,4 +1014,29 @@ func verifyKEBAllClustersCountMetricValue(expectedValue int, g *gomega.WithT, ru
 		// check the value of the metric
 		return int(testutil.ToFloat64(counter))
 	}).Should(gomega.Equal(expectedValue))
+}
+
+// generateFakeKubeConfig generates a fake kubeconfig content as a string.
+func generateFakeKubeConfig() string {
+	return `
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: ` + base64.StdEncoding.EncodeToString([]byte("fake-ca-data")) + `
+    server: https://fake-server:6443
+  name: fake-cluster
+contexts:
+- context:
+    cluster: fake-cluster
+    user: fake-user
+  name: fake-context
+current-context: fake-context
+kind: Config
+preferences: {}
+users:
+- name: fake-user
+  user:
+    client-certificate-data: ` + base64.StdEncoding.EncodeToString([]byte("fake-client-cert-data")) + `
+    client-key-data: ` + base64.StdEncoding.EncodeToString([]byte("fake-client-key-data")) + `
+`
 }
