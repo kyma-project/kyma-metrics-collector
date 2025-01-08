@@ -1,6 +1,7 @@
 package vsc
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 
 	v1 "github.com/kubernetes-csi/external-snapshotter/client/v6/apis/volumesnapshot/v1"
@@ -12,9 +13,10 @@ import (
 
 func TestScan_EDP(t *testing.T) {
 	tests := []struct {
-		name     string
-		vscs     v1.VolumeSnapshotContentList
-		expected resource.EDPMeasurement
+		name          string
+		vscs          v1.VolumeSnapshotContentList
+		expected      resource.EDPMeasurement
+		expextedError error
 	}{
 		{
 			name: "no vscs",
@@ -119,6 +121,22 @@ func TestScan_EDP(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "vscs with no status",
+			vscs: v1.VolumeSnapshotContentList{
+				Items: []v1.VolumeSnapshotContent{
+					{ObjectMeta: metav1.ObjectMeta{Name: "vsc1"}},
+				},
+			},
+			expected: resource.EDPMeasurement{
+				ProvisionedVolumes: resource.ProvisionedVolumes{
+					SizeGbTotal:   0,
+					SizeGbRounded: 0,
+					Count:         0,
+				},
+			},
+			expextedError: ErrStatusNotSet,
+		},
 	}
 
 	for _, test := range tests {
@@ -127,7 +145,9 @@ func TestScan_EDP(t *testing.T) {
 				vscs: test.vscs,
 			}
 			actual, err := scan.EDP()
-			require.NoError(t, err)
+			if test.expextedError != nil {
+				require.ErrorIs(t, err, test.expextedError)
+			}
 			require.Equal(t, test.expected, actual)
 		})
 	}
