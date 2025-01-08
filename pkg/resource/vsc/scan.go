@@ -37,10 +37,10 @@ func (s *Scan) EDP() (resource.EDPMeasurement, error) {
 
 	for _, vsc := range s.vscs.Items {
 		if vsc.Status == nil {
-
 			errs = append(errs, fmt.Errorf("%w: %s", ErrStatusNotSet, vsc.Name))
 			continue
 		}
+
 		if vsc.Status.ReadyToUse != nil && *vsc.Status.ReadyToUse {
 			currVSC := getSizeInGB(*vsc.Status.RestoreSize)
 			edp.ProvisionedVolumes.SizeGbTotal += currVSC

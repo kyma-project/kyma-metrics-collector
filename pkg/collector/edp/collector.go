@@ -57,6 +57,7 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 
 	if len(EDPMeasurements) == 0 {
 		errs = append(errs, errNoMeasurementsSent)
+
 		span.RecordError(err)
 		span.SetStatus(codes.Error, errNoMeasurementsSent.Error())
 
@@ -90,6 +91,7 @@ func (c *Collector) executeScans(ctx context.Context, previousScans collector.Sc
 		scan, err := s.Scan(ctx, runtime)
 		success := err == nil
 		collector.RecordScan(success, string(s.ID()), *runtime)
+
 		if success {
 			currentScans[s.ID()] = scan
 			continue
@@ -126,7 +128,9 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 		// if the scan can be converted to an EDP measurement, we add it to the convertableScans and EDPMeasurements
 		if success {
 			convertableScans[id] = scan
+
 			EDPMeasurements = append(EDPMeasurements, EDPMeasurement)
+
 			continue
 		}
 
@@ -148,6 +152,7 @@ func (c *Collector) convertScansToEDPMeasurements(currentScans collector.ScanMap
 
 		// if the previous scan can be converted to an EDP measurement, we add it to convertableScans and its measurement is added to EDPMeasurements
 		convertableScans[id] = previousScan
+
 		EDPMeasurements = append(EDPMeasurements, EDPMeasurement)
 	}
 

@@ -1,11 +1,14 @@
 package vsc
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
+
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "github.com/kubernetes-csi/external-snapshotter/client/v6/apis/volumesnapshot/v1"
 	"github.com/stretchr/testify/require"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
@@ -144,10 +147,12 @@ func TestScan_EDP(t *testing.T) {
 			scan := &Scan{
 				vscs: test.vscs,
 			}
+
 			actual, err := scan.EDP()
 			if test.expextedError != nil {
 				require.ErrorIs(t, err, test.expextedError)
 			}
+
 			require.Equal(t, test.expected, actual)
 		})
 	}
