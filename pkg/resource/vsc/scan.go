@@ -19,8 +19,9 @@ const (
 )
 
 var (
-	_               resource.ScanConverter = &Scan{}
-	ErrStatusNotSet                        = fmt.Errorf("VolumeSnapshotContent: Status not set")
+	_                    resource.ScanConverter = &Scan{}
+	ErrStatusNotSet                             = fmt.Errorf("VolumeSnapshotContent: Status not set")
+	ErrRestoreSizeNotSet                        = fmt.Errorf("VolumeSnapshotContent: RestoreSize not set")
 )
 
 type Scan struct {
@@ -42,6 +43,10 @@ func (s *Scan) EDP() (resource.EDPMeasurement, error) {
 		}
 
 		if vsc.Status.ReadyToUse != nil && *vsc.Status.ReadyToUse {
+			if vsc.Status.RestoreSize == nil {
+				errs = append(errs, fmt.Errorf("%w: %s", ErrRestoreSizeNotSet, vsc.Name))
+				continue
+			}
 			currVSC := getSizeInGB(*vsc.Status.RestoreSize)
 			edp.ProvisionedVolumes.SizeGbTotal += currVSC
 			edp.ProvisionedVolumes.SizeGbRounded += getVolumeRoundedToFactor(currVSC)

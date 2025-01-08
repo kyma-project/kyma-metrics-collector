@@ -137,6 +137,27 @@ func TestScan_EDP(t *testing.T) {
 			},
 			expextedError: ErrStatusNotSet,
 		},
+		{
+			name: "vscs no restore size",
+			vscs: v1.VolumeSnapshotContentList{
+				Items: []v1.VolumeSnapshotContent{
+					{ObjectMeta: metav1.ObjectMeta{Name: "vsc1"},
+						Status: &v1.VolumeSnapshotContentStatus{
+							ReadyToUse:  ptr.To(true),
+							RestoreSize: nil,
+						},
+					},
+				},
+			},
+			expected: resource.EDPMeasurement{
+				ProvisionedVolumes: resource.ProvisionedVolumes{
+					SizeGbTotal:   0,
+					SizeGbRounded: 0,
+					Count:         0,
+				},
+			},
+			expextedError: ErrRestoreSizeNotSet,
+		},
 	}
 
 	for _, test := range tests {
