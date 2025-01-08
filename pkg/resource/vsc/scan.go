@@ -47,6 +47,7 @@ func (s *Scan) EDP() (resource.EDPMeasurement, error) {
 				errs = append(errs, fmt.Errorf("%w: %s", ErrRestoreSizeNotSet, vsc.Name))
 				continue
 			}
+
 			currVSC := getSizeInGB(*vsc.Status.RestoreSize)
 			edp.ProvisionedVolumes.SizeGbTotal += currVSC
 			edp.ProvisionedVolumes.SizeGbRounded += getVolumeRoundedToFactor(currVSC)

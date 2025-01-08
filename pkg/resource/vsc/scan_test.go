@@ -141,7 +141,8 @@ func TestScan_EDP(t *testing.T) {
 			name: "vscs no restore size",
 			vscs: v1.VolumeSnapshotContentList{
 				Items: []v1.VolumeSnapshotContent{
-					{ObjectMeta: metav1.ObjectMeta{Name: "vsc1"},
+					{
+						ObjectMeta: metav1.ObjectMeta{Name: "vsc1"},
 						Status: &v1.VolumeSnapshotContentStatus{
 							ReadyToUse:  ptr.To(true),
 							RestoreSize: nil,
