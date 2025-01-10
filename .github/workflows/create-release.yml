@@ -16,10 +16,6 @@ on:
         description: "Release tag (i.e. x.y.z)"
         default: ""
         required: true
-      sec-scanners-config:
-        type: boolean
-        description: "Create PR with sec-scanners-config bump"
-        default: true
       dry-run:
         type: boolean
         description: "Do not publish"
