@@ -48,7 +48,7 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 		return nil, retErr
 	}
 
-	list, err := cl.Resource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "list"}).List(ctx, metav1.ListOptions{})
+	list, err := cl.Resource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "nodes"}).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		retErr := fmt.Errorf("failed to list list: %w", err)
 		span.RecordError(err)
