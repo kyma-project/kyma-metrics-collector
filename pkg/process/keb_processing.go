@@ -111,7 +111,7 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 
 				// delete metrics for old shoot name.
 				if success := deleteMetrics(record); !success {
-					p.namedLoggerWithRecord(&record).Info("prometheus metrics were not successfully removed for subAccount")
+					p.namedLoggerWithRecord(&record).Warn("prometheus metrics were not successfully removed for subAccount")
 				}
 			}
 
