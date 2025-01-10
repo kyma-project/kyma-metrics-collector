@@ -26,7 +26,7 @@ var errNoMeasurementsSent = errors.New("no measurements sent to EDP")
 
 var _ collector.CollectorSender = &Collector{}
 
-func NewCollector(EDPClient *Client, scanner ...resource.Scanner) collector.CollectorSender {
+func NewCollector(EDPClient *Client, scanner ...resource.Scanner) *Collector {
 	return &Collector{
 		EDPClient: EDPClient,
 		scanners:  scanner,
