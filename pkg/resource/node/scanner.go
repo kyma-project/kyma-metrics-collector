@@ -2,6 +2,7 @@ package node
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"go.opentelemetry.io/otel"
@@ -18,6 +19,8 @@ import (
 )
 
 var _ resource.Scanner = &Scanner{}
+
+var ErrNoNodesFound = errors.New("no nodes found")
 
 type Scanner struct {
 	clientFactory func(config *rest.Config) (metadata.Interface, error)
@@ -55,6 +58,11 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 		span.SetStatus(codes.Error, err.Error())
 
 		return nil, retErr
+	}
+
+	// a cluster with no nodes is not a valid cluster
+	if len(list.Items) == 0 {
+		return nil, ErrNoNodesFound
 	}
 
 	return &Scan{
