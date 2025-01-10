@@ -22,7 +22,7 @@ type Scan struct {
 	providerType string
 	specs        *config.PublicCloudSpecs
 
-	nodes v1.PartialObjectMetadataList
+	list v1.PartialObjectMetadataList
 }
 
 func (s *Scan) UM(duration time.Duration) (resource.UMMeasurement, error) {
@@ -36,7 +36,7 @@ func (s *Scan) EDP() (resource.EDPMeasurement, error) {
 
 	vmTypes := make(map[string]int)
 
-	for _, node := range s.nodes.Items {
+	for _, node := range s.list.Items {
 		nodeType := node.Labels[nodeInstanceTypeLabel]
 		nodeType = strings.ToLower(nodeType)
 

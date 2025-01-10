@@ -30,14 +30,14 @@ func TestScan_EDP(t *testing.T) {
 	tests := []struct {
 		name          string
 		provider      string
-		nodes         metav1.PartialObjectMetadataList
+		list          metav1.PartialObjectMetadataList
 		expectedEDP   resource.EDPMeasurement
 		expectedError error
 	}{
 		{
-			name:     "no nodes",
+			name:     "no list",
 			provider: config.AWS,
-			nodes:    metav1.PartialObjectMetadataList{},
+			list:     metav1.PartialObjectMetadataList{},
 			expectedEDP: resource.EDPMeasurement{
 				ProvisionedCPUs:  0,
 				ProvisionedRAMGb: 0,
@@ -48,7 +48,7 @@ func TestScan_EDP(t *testing.T) {
 		{
 			name:     "single valid aws node",
 			provider: config.AWS,
-			nodes: metav1.PartialObjectMetadataList{
+			list: metav1.PartialObjectMetadataList{
 				Items: []metav1.PartialObjectMetadata{
 					{
 						ObjectMeta: metav1.ObjectMeta{
@@ -69,7 +69,7 @@ func TestScan_EDP(t *testing.T) {
 		{
 			name:     "unknown node type",
 			provider: config.AWS,
-			nodes: metav1.PartialObjectMetadataList{
+			list: metav1.PartialObjectMetadataList{
 				Items: []metav1.PartialObjectMetadata{
 					{
 						ObjectMeta: metav1.ObjectMeta{
@@ -86,9 +86,9 @@ func TestScan_EDP(t *testing.T) {
 			expectedError: ErrUnknownVM,
 		},
 		{
-			name:     "mixed valid and unknown nodes",
+			name:     "mixed valid and unknown list",
 			provider: config.AWS,
-			nodes: metav1.PartialObjectMetadataList{
+			list: metav1.PartialObjectMetadataList{
 				Items: []metav1.PartialObjectMetadata{
 					{
 						ObjectMeta: metav1.ObjectMeta{
@@ -112,9 +112,9 @@ func TestScan_EDP(t *testing.T) {
 			expectedError: ErrUnknownVM,
 		},
 		{
-			name:     "multiple valid nodes",
+			name:     "multiple valid list",
 			provider: config.AWS,
-			nodes: metav1.PartialObjectMetadataList{
+			list: metav1.PartialObjectMetadataList{
 				Items: []metav1.PartialObjectMetadata{
 					{
 						ObjectMeta: metav1.ObjectMeta{
@@ -145,7 +145,7 @@ func TestScan_EDP(t *testing.T) {
 			scan := &Scan{
 				providerType: test.provider,
 				specs:        specs,
-				nodes:        test.nodes,
+				list:         test.list,
 			}
 
 			actualEDP, err := scan.EDP()

@@ -58,7 +58,7 @@ func TestScanner_Scan_Successful(t *testing.T) {
 	nodeScan, ok := result.(*Scan)
 	require.True(t, ok)
 	require.Equal(t, provider, nodeScan.providerType)
-	require.Equal(t, nodes.Items, nodeScan.nodes.Items)
+	require.Equal(t, nodes.Items, nodeScan.list.Items)
 	require.Equal(t, scanner.specs, nodeScan.specs)
 }
 
