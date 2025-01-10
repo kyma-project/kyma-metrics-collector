@@ -9,6 +9,5 @@ type Record struct {
 	GlobalAccountID string
 	ShootName       string
 	ProviderType    string
-	KubeConfig      string
 	ScanMap         collector.ScanMap
 }

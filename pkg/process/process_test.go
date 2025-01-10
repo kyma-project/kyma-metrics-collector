@@ -767,6 +767,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 		name              string
 		givenShoot        kmccache.Record
 		EDPCollector      collector.CollectorSender
+		KubeConfig        string
 		expectedToSucceed bool
 	}{
 		{
@@ -777,8 +778,8 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				KubeConfig:      givenKubeConfig,
 			},
+			KubeConfig:        givenKubeConfig,
 			EDPCollector:      stubs.NewCollector(nil, nil),
 			expectedToSucceed: true,
 		},
@@ -790,8 +791,8 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				RuntimeID:       uuid.New().String(),
 				GlobalAccountID: uuid.New().String(),
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
-				KubeConfig:      givenKubeConfig,
 			},
+			KubeConfig:        givenKubeConfig,
 			EDPCollector:      stubs.NewCollector(nil, fmt.Errorf("fake error")),
 			expectedToSucceed: false,
 		},
@@ -809,7 +810,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 			err := cache.Add(tc.givenShoot.SubAccountID, tc.givenShoot, gocache.NoExpiration)
 			g.Expect(err).Should(gomega.BeNil())
 
-			secretKCPStored := kmctesting.NewKCPStoredSecret(tc.givenShoot.RuntimeID, tc.givenShoot.KubeConfig)
+			secretKCPStored := kmctesting.NewKCPStoredSecret(tc.givenShoot.RuntimeID, tc.KubeConfig)
 			secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
 
 			// initiate process instance.
@@ -883,7 +884,6 @@ func TestExecute(t *testing.T) {
 	newRecord := kmccache.Record{
 		SubAccountID: subAccID,
 		RuntimeID:    runtimeID,
-		KubeConfig:   "",
 		ScanMap:      nil,
 	}
 	err := cache.Add(subAccID, newRecord, gocache.NoExpiration)
@@ -918,10 +918,6 @@ func TestExecute(t *testing.T) {
 			return fmt.Errorf("failed to cast item from cache to type kmccache.Record")
 		}
 
-		if record.KubeConfig != expectedKubeconfig {
-			return fmt.Errorf("record kubeconfig mismatch, got: %s, expected: %s", record.KubeConfig, expectedKubeconfig)
-		}
-
 		if !reflect.DeepEqual(record.ScanMap, expectedScanMap) {
 			return fmt.Errorf("record scan map mismatch, got: %v, expected: %v", record.ScanMap, expectedScanMap)
 		}
@@ -945,7 +941,6 @@ func NewRecord(subAccId, shootName, kubeconfig string) kmccache.Record {
 	return kmccache.Record{
 		SubAccountID: subAccId,
 		ShootName:    shootName,
-		KubeConfig:   kubeconfig,
 		ScanMap:      nil,
 	}
 }

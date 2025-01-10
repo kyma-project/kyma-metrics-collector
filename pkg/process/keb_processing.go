@@ -72,7 +72,6 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 				GlobalAccountID: runtime.GlobalAccountID,
 				ShootName:       runtime.ShootName,
 				ProviderType:    strings.ToLower(runtime.Provider),
-				KubeConfig:      "",
 				ScanMap:         nil,
 			}
 

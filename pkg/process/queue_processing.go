@@ -51,10 +51,8 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 		return
 	}
 
-	record.KubeConfig = kubeConfig
-
 	// Create REST client config from kubeConfig
-	restClientConfig, err := clientcmd.RESTConfigFromKubeConfig([]byte(record.KubeConfig))
+	restClientConfig, err := clientcmd.RESTConfigFromKubeConfig([]byte(kubeConfig))
 	if err != nil {
 		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to create REST config from kubeconfig: %w", err))
 
