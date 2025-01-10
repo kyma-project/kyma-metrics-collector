@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
@@ -22,7 +22,7 @@ type Scan struct {
 	providerType string
 	specs        *config.PublicCloudSpecs
 
-	nodes corev1.NodeList
+	nodes v1.PartialObjectMetadataList
 }
 
 func (s *Scan) UM(duration time.Duration) (resource.UMMeasurement, error) {

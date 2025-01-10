@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
@@ -31,14 +30,14 @@ func TestScan_EDP(t *testing.T) {
 	tests := []struct {
 		name          string
 		provider      string
-		nodes         corev1.NodeList
+		nodes         metav1.PartialObjectMetadataList
 		expectedEDP   resource.EDPMeasurement
 		expectedError error
 	}{
 		{
 			name:     "no nodes",
 			provider: config.AWS,
-			nodes:    corev1.NodeList{},
+			nodes:    metav1.PartialObjectMetadataList{},
 			expectedEDP: resource.EDPMeasurement{
 				ProvisionedCPUs:  0,
 				ProvisionedRAMGb: 0,
@@ -49,8 +48,8 @@ func TestScan_EDP(t *testing.T) {
 		{
 			name:     "single valid aws node",
 			provider: config.AWS,
-			nodes: corev1.NodeList{
-				Items: []corev1.Node{
+			nodes: metav1.PartialObjectMetadataList{
+				Items: []metav1.PartialObjectMetadata{
 					{
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{"node.kubernetes.io/instance-type": "t2.micro"},
@@ -70,8 +69,8 @@ func TestScan_EDP(t *testing.T) {
 		{
 			name:     "unknown node type",
 			provider: config.AWS,
-			nodes: corev1.NodeList{
-				Items: []corev1.Node{
+			nodes: metav1.PartialObjectMetadataList{
+				Items: []metav1.PartialObjectMetadata{
 					{
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{"node.kubernetes.io/instance-type": "unknown-type"},
@@ -89,8 +88,8 @@ func TestScan_EDP(t *testing.T) {
 		{
 			name:     "mixed valid and unknown nodes",
 			provider: config.AWS,
-			nodes: corev1.NodeList{
-				Items: []corev1.Node{
+			nodes: metav1.PartialObjectMetadataList{
+				Items: []metav1.PartialObjectMetadata{
 					{
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{"node.kubernetes.io/instance-type": "t2.micro"},
@@ -115,8 +114,8 @@ func TestScan_EDP(t *testing.T) {
 		{
 			name:     "multiple valid nodes",
 			provider: config.AWS,
-			nodes: corev1.NodeList{
-				Items: []corev1.Node{
+			nodes: metav1.PartialObjectMetadataList{
+				Items: []metav1.PartialObjectMetadata{
 					{
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{"node.kubernetes.io/instance-type": "t2.micro"},
