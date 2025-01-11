@@ -129,7 +129,6 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 		if isFoundInCache {
 			// Cluster is not trackable but is found in cache should be deleted
 			p.Cache.Delete(runtime.SubAccountID)
-			p.Queue.Done(runtime.SubAccountID)
 			p.namedLogger().With(log.KeySubAccountID, runtime.SubAccountID).
 				With(log.KeyRuntimeID, runtime.RuntimeID).Debug("Deleted subAccount from cache")
 			// delete metrics for old shoot name.

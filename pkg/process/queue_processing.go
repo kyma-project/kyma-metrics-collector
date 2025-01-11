@@ -13,7 +13,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
-func (p *Process) processSubAccountID(subAccountID string, identifier int) {
+func (p *Process) processSubAccountID(subAccountID string, identifier int) bool {
 	p.queueProcessingLogger(nil, subAccountID, identifier).
 		Debug("fetched subAccountID from queue")
 
@@ -25,7 +25,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 
 		recordSubAccountProcessed(false, kmccache.Record{SubAccountID: subAccountID})
 
-		return
+		return false
 	}
 
 	// Cast the cache item to a Record object
@@ -37,7 +37,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	if !ok {
 		p.handleError(nil, subAccountID, identifier, fmt.Errorf("bad item from cache, could not cast it to a record obj"))
 
-		return
+		return false
 	}
 
 	p.queueProcessingLogger(&record, subAccountID, identifier).
@@ -48,7 +48,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	if err != nil {
 		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to load kubeconfig from cache: %w", err))
 
-		return
+		return false
 	}
 
 	// Create REST client config from kubeConfig
@@ -56,7 +56,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	if err != nil {
 		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to create REST config from kubeconfig: %w", err))
 
-		return
+		return false
 	}
 
 	// Collect and send measurements to EDP backend
@@ -75,7 +75,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	if err != nil {
 		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to collect and send measurements to EDP backend: %w", err))
 
-		return
+		return false
 	}
 
 	record.ScanMap = newScans
@@ -91,10 +91,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	p.queueProcessingLogger(&record, subAccountID, identifier).
 		Debug("updated cache with new record")
 
-	// Requeue the subAccountID anyway
-	p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
-	p.queueProcessingLogger(&record, subAccountID, identifier).With(log.KeyRequeue, log.ValueTrue).
-		Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
+	return true
 }
 
 func (p *Process) handleError(record *kmccache.Record, subAccountID string, identifier int, err error) {

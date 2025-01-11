@@ -67,6 +67,10 @@ func (p *Process) execute(identifier int) {
 		//	return
 		// }
 
-		p.processSubAccountID(subAccountID, identifier)
+		requeue := p.processSubAccountID(subAccountID, identifier)
+		p.Queue.Done(subAccountID)
+		if requeue {
+			p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
+		}
 	}
 }
