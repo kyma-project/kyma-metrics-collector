@@ -21,15 +21,15 @@ const (
 
 var (
 	ttl             = getTTL()
-	kubeConfigCache = ttlcache.New[string, string](
-		ttlcache.WithTTL[string, string](ttl),
-		ttlcache.WithDisableTouchOnHit[string, string](),
+	kubeConfigCache = ttlcache.New[string, []byte](
+		ttlcache.WithTTL[string, []byte](ttl),
+		ttlcache.WithDisableTouchOnHit[string, []byte](),
 	)
 )
 
 // GetKubeConfigFromCache returns the kubeconfig from the cache if it is not expired.
 // If it is expired, it will get the kubeconfig from the secret and set it in the cache.
-func GetKubeConfigFromCache(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interface, runtimeID string) (string,
+func GetKubeConfigFromCache(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interface, runtimeID string) ([]byte,
 	error,
 ) {
 	kubeConfigCache.DeleteExpired()
@@ -39,8 +39,8 @@ func GetKubeConfigFromCache(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interface
 		logger.Debugf("Kubeconfig cache found kubeconfig for cluster (runtimeID: %s) in cache", runtimeID)
 
 		cacheEntry := kubeConfigCache.Get(runtimeID)
-		if cacheEntry.Value() == "" {
-			return "", fmt.Errorf("kubeconfig cache failed to find valid kubeconfig for cluster (runtimeID: %s), will retry the kubeconfig retrieval after %s",
+		if len(cacheEntry.Value()) == 0 {
+			return nil, fmt.Errorf("kubeconfig cache failed to find valid kubeconfig for cluster (runtimeID: %s), will retry the kubeconfig retrieval after %s",
 				runtimeID, cacheEntry.ExpiresAt())
 		}
 
@@ -56,35 +56,35 @@ func GetKubeConfigFromCache(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interface
 		// HACK: workaround to avoid that too many non-existing clusters lead to peformance issues
 		logger.Debugf("kubeconfig cache failed to get kubeconfig for cluster (runtimeID: %s) from secret - will cache empty string: %s",
 			runtimeID, err)
-		kubeConfigCache.Set(runtimeID, "", getJitterTTL())
+		kubeConfigCache.Set(runtimeID, nil, getJitterTTL())
 	}
 
 	return kubeConfig, err
 }
 
 // getkubeConfigFromSecret gets the kubeconfig from the secret.
-func getKubeConfigFromSecret(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interface, runtimeID string) (string,
+func getKubeConfigFromSecret(logger *zap.SugaredLogger, coreV1 v1.CoreV1Interface, runtimeID string) ([]byte,
 	error,
 ) {
 	secretResourceName := fmt.Sprintf("kubeconfig-%s", runtimeID)
 
 	secret, err := getKubeConfigSecret(logger, coreV1, runtimeID, secretResourceName)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	kubeconfig, found := secret.Data["config"]
 	if !found {
-		return "", fmt.Errorf("kubeconfig cache found kubeconfig-secret '%s' for runtime '%s' which does not include the data-key 'config'",
+		return nil, fmt.Errorf("kubeconfig cache found kubeconfig-secret '%s' for runtime '%s' which does not include the data-key 'config'",
 			secretResourceName, runtimeID)
 	}
 
 	if len(kubeconfig) == 0 {
-		return "", fmt.Errorf("kubeconfig cache found kubeconfig-secret '%s' for runtime '%s' which includes an empty kubeconfig string",
+		return nil, fmt.Errorf("kubeconfig cache found kubeconfig-secret '%s' for runtime '%s' which includes an empty kubeconfig string",
 			secretResourceName, runtimeID)
 	}
 
-	return string(kubeconfig), nil
+	return kubeconfig, nil
 }
 
 // getKubeConfigSecret gets the kubeconfig secret from the cluster.

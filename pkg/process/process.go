@@ -68,6 +68,5 @@ func (p *Process) execute(identifier int) {
 		// }
 
 		p.processSubAccountID(subAccountID, identifier)
-		p.Queue.Done(subAccountIDObj)
 	}
 }
