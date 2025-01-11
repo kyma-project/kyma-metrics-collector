@@ -7,26 +7,26 @@ import (
 
 	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
-	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
 )
 
 type Process struct {
-	KEBClient         *keb.Client
-	EDPClient         *edp.Client
-	EDPCollector      collector.CollectorSender
-	Queue             workqueue.TypedDelayingInterface[string]
-	SecretCacheClient v1.CoreV1Interface
-	Cache             *cache.Cache
-	PublicCloudSpecs  *config.PublicCloudSpecs
-	ScrapeInterval    time.Duration
-	WorkersPoolSize   int
-	Logger            *zap.SugaredLogger
+	KEBClient          *keb.Client
+	EDPClient          *edp.Client
+	EDPCollector       collector.CollectorSender
+	Queue              workqueue.TypedDelayingInterface[string]
+	KubeconfigProvider *kubeconfigprovider.KubeconfigProvider
+	Cache              *cache.Cache
+	PublicCloudSpecs   *config.PublicCloudSpecs
+	ScrapeInterval     time.Duration
+	WorkersPoolSize    int
+	Logger             *zap.SugaredLogger
 }
 
 const (
@@ -69,6 +69,7 @@ func (p *Process) execute(identifier int) {
 
 		requeue := p.processSubAccountID(subAccountID, identifier)
 		p.Queue.Done(subAccountID)
+
 		if requeue {
 			p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
 		}

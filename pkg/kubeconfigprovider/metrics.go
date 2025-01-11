@@ -1,4 +1,4 @@
-package cache
+package kubeconfigprovider
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
@@ -10,9 +10,10 @@ var cacheSizeMetric = promauto.NewGaugeVec(
 		Namespace: "kmc",
 		Subsystem: "kubeconfig_cache",
 		Name:      "size",
-		Help:      "Number of items in the kubeconfig cache.",
+		Help:      "Number of items in the kubeconfig kubeconfigprovider.",
 	}, nil)
 
 func recordMetrics() {
-	cacheSizeMetric.With(prometheus.Labels{}).Set(float64(kubeConfigCache.Len()))
+	// TODO: Implement metrics recording
+	// cacheSizeMetric.With(prometheus.Labels{}).Set(float64(kubeConfigCache.Len()))
 }

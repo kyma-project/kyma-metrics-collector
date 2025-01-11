@@ -1,4 +1,4 @@
-package cache
+package kubeconfigprovider
 
 import "github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 

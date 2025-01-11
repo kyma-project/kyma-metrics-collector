@@ -19,10 +19,10 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/util/workqueue"
 
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	kmckeb "github.com/kyma-project/kyma-metrics-collector/pkg/keb"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/process/stubs"
 	runtime2 "github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
@@ -377,7 +377,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		}
 	})
 
-	t.Run("with loaded cache followed by deprovisioning completely(with empty runtimes in KEB response)", func(t *testing.T) {
+	t.Run("with loaded kubeconfigprovider followed by deprovisioning completely(with empty runtimes in KEB response)", func(t *testing.T) {
 		// Reset the cluster count necessary for clean slate of next tests
 		kebFetchedClusters.Reset()
 
@@ -418,7 +418,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		}
 	})
 
-	t.Run("with loaded cache, then shoot is deprovisioned and provisioned again", func(t *testing.T) {
+	t.Run("with loaded kubeconfigprovider, then shoot is deprovisioned and provisioned again", func(t *testing.T) {
 		// Reset the cluster count necessary for clean slate of next tests
 		kebFetchedClusters.Reset()
 
@@ -445,7 +445,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 		rntme := kmctesting.NewRuntimesDTO(subAccID, oldShootName, kmctesting.WithProvisionedAndDeprovisionedStatus(kebruntime.StateDeprovisioned))
 		runtimesPage.Data = append(runtimesPage.Data, rntme)
 
-		// expected cache changes after deprovisioning
+		// expected kubeconfigprovider changes after deprovisioning
 		p.populateCacheAndQueue(runtimesPage)
 		g.Expect(*p.Cache).To(gomega.Equal(*expectedCache))
 		g.Expect(areQueuesEqual(p.Queue, expectedQueue)).To(gomega.BeTrue())
@@ -456,7 +456,7 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 			kmctesting.NewRuntimesDTO(subAccID, newShootName, kmctesting.WithProvisioningSucceededStatus(kebruntime.StateSucceeded)),
 		}
 
-		// expected cache changes after provisioning
+		// expected kubeconfigprovider changes after provisioning
 		newRecord := NewRecord(subAccID, newShootName, "")
 		err = expectedCache.Add(subAccID, newRecord, gocache.NoExpiration)
 		g.Expect(err).Should(gomega.BeNil())
@@ -494,21 +494,21 @@ func TestPopulateCacheAndQueue(t *testing.T) {
 // are deleted by `populateCacheAndQueue` method. It will test the following cases:
 // case 1: Cache entry exists for a shoot, but it is not returned by KEB anymore.
 // case 2: Shoot with de-provisioned status returned by KEB.
-// case 3: Shoot name of existing subAccount changed and cache entry exists with old shoot name.
+// case 3: Shoot name of existing subAccount changed and kubeconfigprovider entry exists with old shoot name.
 func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 
 	// test cases. These cases are not safe to be run in parallel.
 	testCases := []struct {
 		name                       string
-		givenShoot1                kmccache.Record
-		givenShoot2                kmccache.Record
+		givenShoot1                kubeconfigprovider.Record
+		givenShoot2                kubeconfigprovider.Record
 		givenShoot2NewName         string
 		givenIsShoot2ReturnedByKEB bool
 	}{
 		{
-			name: "should have removed metrics when cache entry exists for a shoot, but it is not returned by KEB anymore",
-			givenShoot1: kmccache.Record{
+			name: "should have removed metrics when kubeconfigprovider entry exists for a shoot, but it is not returned by KEB anymore",
+			givenShoot1: kubeconfigprovider.Record{
 				SubAccountID:    uuid.New().String(),
 				InstanceID:      uuid.New().String(),
 				RuntimeID:       uuid.New().String(),
@@ -516,7 +516,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
 				ProviderType:    config.Azure,
 			},
-			givenShoot2: kmccache.Record{
+			givenShoot2: kubeconfigprovider.Record{
 				SubAccountID:    uuid.New().String(),
 				InstanceID:      uuid.New().String(),
 				RuntimeID:       uuid.New().String(),
@@ -527,8 +527,8 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 			givenIsShoot2ReturnedByKEB: false,
 		},
 		{
-			name: "should have removed metrics when cache entry exists for a shoot, but KEB returns shoot with de-provisioned status",
-			givenShoot1: kmccache.Record{
+			name: "should have removed metrics when kubeconfigprovider entry exists for a shoot, but KEB returns shoot with de-provisioned status",
+			givenShoot1: kubeconfigprovider.Record{
 				SubAccountID:    uuid.New().String(),
 				InstanceID:      uuid.New().String(),
 				RuntimeID:       uuid.New().String(),
@@ -536,7 +536,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
 				ProviderType:    config.Azure,
 			},
-			givenShoot2: kmccache.Record{
+			givenShoot2: kubeconfigprovider.Record{
 				SubAccountID:    uuid.New().String(),
 				InstanceID:      uuid.New().String(),
 				RuntimeID:       uuid.New().String(),
@@ -547,8 +547,8 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 			givenIsShoot2ReturnedByKEB: true,
 		},
 		{
-			name: "should have removed metrics when cache entry exists for a shoot, but KEB returns shoot with different shoot name",
-			givenShoot1: kmccache.Record{
+			name: "should have removed metrics when kubeconfigprovider entry exists for a shoot, but KEB returns shoot with different shoot name",
+			givenShoot1: kubeconfigprovider.Record{
 				SubAccountID:    uuid.New().String(),
 				InstanceID:      uuid.New().String(),
 				RuntimeID:       uuid.New().String(),
@@ -556,7 +556,7 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 				ShootName:       fmt.Sprintf("shoot-%s", kmctesting.GenerateRandomAlphaString(5)),
 				ProviderType:    config.Azure,
 			},
-			givenShoot2: kmccache.Record{
+			givenShoot2: kubeconfigprovider.Record{
 				SubAccountID:    uuid.New().String(),
 				InstanceID:      uuid.New().String(),
 				RuntimeID:       uuid.New().String(),
@@ -608,10 +608,10 @@ func TestPrometheusMetricsRemovedForDeletedSubAccounts(t *testing.T) {
 			collector.RecordScanConversion(false, resourceName, backendName, shoot1RuntimeInfo)
 			collector.RecordScanConversion(false, resourceName, backendName, shoot2RuntimeInfo)
 
-			// setup cache
+			// setup kubeconfigprovider
 			cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
-			// add both shoots to cache
+			// add both shoots to kubeconfigprovider
 			err := cache.Add(tc.givenShoot1.SubAccountID, tc.givenShoot1, gocache.NoExpiration)
 			g.Expect(err).Should(gomega.BeNil())
 
@@ -765,14 +765,14 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 	// test cases. These cases are not safe to be run in parallel.
 	testCases := []struct {
 		name              string
-		givenShoot        kmccache.Record
+		givenShoot        kubeconfigprovider.Record
 		EDPCollector      collector.CollectorSender
 		KubeConfig        string
 		expectedToSucceed bool
 	}{
 		{
 			name: "should have correct metrics when it successfully processes subAccount",
-			givenShoot: kmccache.Record{
+			givenShoot: kubeconfigprovider.Record{
 				SubAccountID:    subAccountID,
 				InstanceID:      uuid.New().String(),
 				RuntimeID:       uuid.New().String(),
@@ -785,7 +785,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 		},
 		{
 			name: "should have correct metrics when it fails to process subAccount",
-			givenShoot: kmccache.Record{
+			givenShoot: kubeconfigprovider.Record{
 				SubAccountID:    subAccountID,
 				InstanceID:      uuid.New().String(),
 				RuntimeID:       uuid.New().String(),
@@ -805,22 +805,23 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 			subAccountProcessed.Reset()
 			subAccountProcessedTimeStamp.Reset()
 
-			// populate cache.
+			// populate kubeconfigprovider.
 			cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 			err := cache.Add(tc.givenShoot.SubAccountID, tc.givenShoot, gocache.NoExpiration)
 			g.Expect(err).Should(gomega.BeNil())
 
 			secretKCPStored := kmctesting.NewKCPStoredSecret(tc.givenShoot.RuntimeID, tc.KubeConfig)
 			secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
+			kubeconfigProvider := kubeconfigprovider.New(secretCacheClient.CoreV1(), logger, 1*time.Minute)
 
 			// initiate process instance.
 			givenProcess := &Process{
-				EDPCollector:      tc.EDPCollector,
-				Queue:             workqueue.NewTypedDelayingQueue[string](),
-				SecretCacheClient: secretCacheClient.CoreV1(),
-				Cache:             cache,
-				ScrapeInterval:    3 * time.Second,
-				Logger:            logger,
+				EDPCollector:       tc.EDPCollector,
+				Queue:              workqueue.NewTypedDelayingQueue[string](),
+				Cache:              cache,
+				ScrapeInterval:     3 * time.Second,
+				Logger:             logger,
+				KubeconfigProvider: kubeconfigProvider,
 			}
 
 			// when
@@ -875,13 +876,14 @@ func TestExecute(t *testing.T) {
 
 	secretKCPStored := kmctesting.NewKCPStoredSecret(runtimeID, expectedKubeconfig)
 	secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
+	kubeconfigProvider := kubeconfigprovider.New(secretCacheClient.CoreV1(), log, 1*time.Minute)
 
 	expectedScanMap := NewScanMap()
 	collector := stubs.NewCollector(expectedScanMap, nil)
 
-	// Populate cache
+	// Populate kubeconfigprovider
 	cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
-	newRecord := kmccache.Record{
+	newRecord := kubeconfigprovider.Record{
 		SubAccountID: subAccID,
 		RuntimeID:    runtimeID,
 		ScanMap:      nil,
@@ -894,28 +896,28 @@ func TestExecute(t *testing.T) {
 	queue.Add(subAccID)
 
 	newProcess := &Process{
-		EDPCollector:      collector,
-		Queue:             queue,
-		SecretCacheClient: secretCacheClient.CoreV1(),
-		Cache:             cache,
-		ScrapeInterval:    3 * time.Second,
-		Logger:            log,
+		EDPCollector:       collector,
+		Queue:              queue,
+		Cache:              cache,
+		ScrapeInterval:     3 * time.Second,
+		Logger:             log,
+		KubeconfigProvider: kubeconfigProvider,
 	}
 
 	go func() {
 		newProcess.execute(1)
 	}()
 
-	// Test cache state
+	// Test kubeconfigprovider state
 	g.Eventually(func() error {
 		itemFromCache, found := newProcess.Cache.Get(subAccID)
 		if !found {
-			return fmt.Errorf("subAccID not found in cache")
+			return fmt.Errorf("subAccID not found in kubeconfigprovider")
 		}
 
-		record, ok := itemFromCache.(kmccache.Record)
+		record, ok := itemFromCache.(kubeconfigprovider.Record)
 		if !ok {
-			return fmt.Errorf("failed to cast item from cache to type kmccache.Record")
+			return fmt.Errorf("failed to cast item from kubeconfigprovider to type kubeconfigprovider.Record")
 		}
 
 		if !reflect.DeepEqual(record.ScanMap, expectedScanMap) {
@@ -925,7 +927,7 @@ func TestExecute(t *testing.T) {
 		return nil
 	}, bigTimeout).Should(gomega.BeNil())
 
-	// Clean it from the cache once SKR is deprovisioned
+	// Clean it from the kubeconfigprovider once SKR is deprovisioned
 	newProcess.Cache.Delete(subAccID)
 
 	go func() {
@@ -937,8 +939,8 @@ func TestExecute(t *testing.T) {
 	g.Eventually(newProcess.Queue.Len()).Should(gomega.Equal(0))
 }
 
-func NewRecord(subAccId, shootName, kubeconfig string) kmccache.Record {
-	return kmccache.Record{
+func NewRecord(subAccId, shootName, kubeconfig string) kubeconfigprovider.Record {
+	return kubeconfigprovider.Record{
 		SubAccountID: subAccId,
 		ShootName:    shootName,
 		ScanMap:      nil,
@@ -969,7 +971,7 @@ func AddSuccessfulIDsToCacheQueueAndRuntimes(runtimesPage *kebruntime.RuntimesPa
 		runtime := kmctesting.NewRuntimesDTO(successfulID, shootName, kmctesting.WithProvisioningSucceededStatus(kebruntime.StateSucceeded))
 		runtimesPage.Data = append(runtimesPage.Data, runtime)
 
-		err := expectedCache.Add(successfulID, kmccache.Record{
+		err := expectedCache.Add(successfulID, kubeconfigprovider.Record{
 			SubAccountID: successfulID,
 			ShootName:    shootName,
 		}, gocache.NoExpiration)
