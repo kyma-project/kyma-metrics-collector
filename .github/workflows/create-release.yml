@@ -144,6 +144,7 @@ jobs:
     name: Publish release
     needs:
       - check-prerequisites
+      - create-draft
     if: ${{ !inputs.dry-run }}
     runs-on: ubuntu-latest
 
