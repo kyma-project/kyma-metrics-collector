@@ -30,8 +30,8 @@ func TestKubeconfigProvider_Get(t *testing.T) {
 		}, nil
 	})
 
-	looger := zap.NewExample().Sugar()
-	provider := New(cs.CoreV1(), looger, 1*time.Second, "test")
+	logger := zap.NewExample().Sugar()
+	provider := New(cs.CoreV1(), logger, 1*time.Second, "test")
 	require.Equal(t, 0, provider.cache.Len())
 
 	// Get the kubeconfig from the kubeconfigprovider. Expect the cache to be missed.
