@@ -21,6 +21,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	kmcotel "github.com/kyma-project/kyma-metrics-collector/pkg/otel"
 	kmcprocess "github.com/kyma-project/kyma-metrics-collector/pkg/process"
@@ -33,9 +34,10 @@ import (
 )
 
 const (
-	metricsPath        = "/metrics"
-	healthzPath        = "/healthz"
-	edpCredentialsFile = "/edp-credentials/token"
+	metricsPath            = "/metrics"
+	healthzPath            = "/healthz"
+	edpCredentialsFile     = "/edp-credentials/token"
+	kubeconfigProviderName = "kubeconfig"
 )
 
 func main() {
@@ -88,7 +90,7 @@ func main() {
 	kebClient := keb.NewClient(kebConfig, logger)
 	logger.Debugf("keb config: %v", kebConfig)
 
-	// Creating cache with no expiration and the data will never be cleaned up
+	// Creating kubeconfigprovider with no expiration and the data will never be cleaned up
 	cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
 	// Creating EDP client
@@ -119,17 +121,19 @@ func main() {
 		vscScanner,
 	)
 
+	kubeconfigProvider := kubeconfigprovider.New(secretCacheClient.CoreV1(), logger, opts.KubeconfigCacheTTL, kubeconfigProviderName)
+
 	kmcProcess := kmcprocess.Process{
-		KEBClient:         kebClient,
-		SecretCacheClient: secretCacheClient.CoreV1(),
-		EDPClient:         edpClient,
-		EDPCollector:      edpCollector,
-		Logger:            logger,
-		PublicCloudSpecs:  publicCloudSpecs,
-		Cache:             cache,
-		ScrapeInterval:    opts.ScrapeInterval,
-		Queue:             queue.NewQueue("trackable-skrs"),
-		WorkersPoolSize:   opts.WorkerPoolSize,
+		KEBClient:          kebClient,
+		EDPClient:          edpClient,
+		EDPCollector:       edpCollector,
+		KubeconfigProvider: kubeconfigProvider,
+		Logger:             logger,
+		PublicCloudSpecs:   publicCloudSpecs,
+		Cache:              cache,
+		ScrapeInterval:     opts.ScrapeInterval,
+		Queue:              queue.NewQueue("trackable-skrs"),
+		WorkersPoolSize:    opts.WorkerPoolSize,
 	}
 
 	// Start execution

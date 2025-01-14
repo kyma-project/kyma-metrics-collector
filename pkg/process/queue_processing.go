@@ -8,57 +8,55 @@ import (
 	"go.uber.org/zap"
 	"k8s.io/client-go/tools/clientcmd"
 
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
-func (p *Process) processSubAccountID(subAccountID string, identifier int) {
+func (p *Process) processSubAccountID(subAccountID string, identifier int) bool {
 	p.queueProcessingLogger(nil, subAccountID, identifier).
 		Debug("fetched subAccountID from queue")
 
-	// Get the cache item for the subAccountID
+	// Get the kubeconfigprovider item for the subAccountID
 	cacheItem, exists := p.Cache.Get(subAccountID)
 	if !exists {
 		p.queueProcessingLogger(nil, subAccountID, identifier).With(log.KeyRequeue, log.ValueFalse).
-			Info("subAccountID is not found in cache which means it is not trackable anymore")
+			Info("subAccountID is not found in kubeconfigprovider which means it is not trackable anymore")
 
 		recordSubAccountProcessed(false, kmccache.Record{SubAccountID: subAccountID})
 
-		return
+		return false
 	}
 
-	// Cast the cache item to a Record object
+	// Cast the kubeconfigprovider item to a Record object
 	var record kmccache.Record
 
 	var ok bool
 
 	record, ok = cacheItem.(kmccache.Record)
 	if !ok {
-		p.handleError(nil, subAccountID, identifier, fmt.Errorf("bad item from cache, could not cast it to a record obj"))
+		p.handleError(nil, subAccountID, identifier, fmt.Errorf("bad item from kubeconfigprovider, could not cast it to a record obj"))
 
-		return
+		return false
 	}
 
 	p.queueProcessingLogger(&record, subAccountID, identifier).
-		Debugf("record found from cache: %+v", record)
+		Debugf("record found from kubeconfigprovider: %+v", record)
 
-	// Get kubeConfig from cache
-	kubeConfig, err := kmccache.GetKubeConfigFromCache(p.Logger, p.SecretCacheClient, record.RuntimeID)
+	// Get kubeConfig from kubeconfigprovider
+	kubeConfig, err := p.KubeconfigProvider.Get(record.RuntimeID)
 	if err != nil {
-		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to load kubeconfig from cache: %w", err))
+		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to load kubeconfig from kubeconfigprovider: %w", err))
 
-		return
+		return false
 	}
 
-	record.KubeConfig = kubeConfig
-
 	// Create REST client config from kubeConfig
-	restClientConfig, err := clientcmd.RESTConfigFromKubeConfig([]byte(record.KubeConfig))
+	restClientConfig, err := clientcmd.RESTConfigFromKubeConfig(kubeConfig)
 	if err != nil {
 		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to create REST config from kubeconfig: %w", err))
 
-		return
+		return false
 	}
 
 	// Collect and send measurements to EDP backend
@@ -77,7 +75,7 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	if err != nil {
 		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to collect and send measurements to EDP backend: %w", err))
 
-		return
+		return false
 	}
 
 	record.ScanMap = newScans
@@ -88,15 +86,12 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) {
 	recordSubAccountProcessed(true, record)
 	recordSubAccountProcessedTimeStamp(record)
 
-	// Update cache
+	// Update kubeconfigprovider
 	p.Cache.Set(record.SubAccountID, record, cache.NoExpiration)
 	p.queueProcessingLogger(&record, subAccountID, identifier).
-		Debug("updated cache with new record")
+		Debug("updated kubeconfigprovider with new record")
 
-	// Requeue the subAccountID anyway
-	p.Queue.AddAfter(subAccountID, p.ScrapeInterval)
-	p.queueProcessingLogger(&record, subAccountID, identifier).With(log.KeyRequeue, log.ValueTrue).
-		Debugf("successfully requeued subAccountID after %v", p.ScrapeInterval)
+	return true
 }
 
 func (p *Process) handleError(record *kmccache.Record, subAccountID string, identifier int, err error) {

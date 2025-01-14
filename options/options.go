@@ -11,11 +11,12 @@ import (
 )
 
 const (
-	DefaultScrapeInterval = 3 * time.Minute
-	DefaultWorkerPoolSize = 5
-	DefaultDebugPort      = 0
-	DefaultListenAddr     = 8080
-	DefaultLogLevel       = zapcore.InfoLevel
+	DefaultScrapeInterval     = 3 * time.Minute
+	DefaultWorkerPoolSize     = 5
+	DefaultDebugPort          = 0
+	DefaultListenAddr         = 8080
+	DefaultLogLevel           = zapcore.InfoLevel
+	DefaultKubeconfigCacheTTL = 30 * time.Minute
 )
 
 type Options struct {
@@ -27,6 +28,7 @@ type Options struct {
 	DebugPort           int
 	ListenAddr          int
 	LogLevel            zapcore.Level
+	KubeconfigCacheTTL  time.Duration
 }
 
 func ParseArgs() *Options {
@@ -37,6 +39,7 @@ func ParseArgs() *Options {
 	logLevelStr := flag.String("log-level", DefaultLogLevel.String(), "The log-level of the application. E.g. fatal, error, info, debug etc")
 	listenAddr := flag.Int("listen-addr", DefaultListenAddr, "The application starts server in this port to serve the metrics and healthz endpoints")
 	debugPort := flag.Int("debug-port", DefaultDebugPort, "The custom port to debug when needed")
+	kubeconfigCacheTTL := flag.Duration("kubeconfig-cache-ttl", DefaultKubeconfigCacheTTL, "The TTL of the kubeconfig cache")
 	flag.Parse()
 
 	err := logLevel.Set(*logLevelStr)
@@ -45,11 +48,12 @@ func ParseArgs() *Options {
 	}
 
 	return &Options{
-		ScrapeInterval: *scrapeInterval,
-		WorkerPoolSize: *workerPoolSize,
-		DebugPort:      *debugPort,
-		LogLevel:       logLevel,
-		ListenAddr:     *listenAddr,
+		ScrapeInterval:     *scrapeInterval,
+		WorkerPoolSize:     *workerPoolSize,
+		DebugPort:          *debugPort,
+		LogLevel:           logLevel,
+		ListenAddr:         *listenAddr,
+		KubeconfigCacheTTL: *kubeconfigCacheTTL,
 	}
 }
 

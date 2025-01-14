@@ -1,4 +1,4 @@
-package cache
+package kubeconfigprovider
 
 import "github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 
@@ -9,6 +9,5 @@ type Record struct {
 	GlobalAccountID string
 	ShootName       string
 	ProviderType    string
-	KubeConfig      string
 	ScanMap         collector.ScanMap
 }
