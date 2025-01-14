@@ -34,9 +34,10 @@ import (
 )
 
 const (
-	metricsPath        = "/metrics"
-	healthzPath        = "/healthz"
-	edpCredentialsFile = "/edp-credentials/token"
+	metricsPath            = "/metrics"
+	healthzPath            = "/healthz"
+	edpCredentialsFile     = "/edp-credentials/token"
+	kubeconfigProviderName = "kubeconfig"
 )
 
 func main() {
@@ -120,7 +121,7 @@ func main() {
 		vscScanner,
 	)
 
-	kubeconfigProvider := kubeconfigprovider.New(secretCacheClient.CoreV1(), logger, opts.KubeconfigCacheTTL)
+	kubeconfigProvider := kubeconfigprovider.New(secretCacheClient.CoreV1(), logger, opts.KubeconfigCacheTTL, kubeconfigProviderName)
 
 	kmcProcess := kmcprocess.Process{
 		KEBClient:          kebClient,

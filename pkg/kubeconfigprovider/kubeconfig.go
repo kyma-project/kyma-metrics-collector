@@ -15,28 +15,31 @@ import (
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
+// ErrNotFound is returned when an item is not found in the cache.
 var ErrNotFound = errors.New("Item not found in cache")
 
+const (
+	// namespace where the kubeconfig secrets are stored.
+	kcpNamespace = "kcp-system"
+	// prefix for the kubeconfig secrets.
+	kubconfigSecretPrefix = "kubeconfig-"
+)
+
+// KubeconfigProvider is a struct that provides methods to interact with a kubeconfig cache.
 type KubeconfigProvider struct {
 	cache  *ttlcache.Cache[string, []byte]
 	client v1.CoreV1Interface
 	ttl    time.Duration
 	logger *zap.SugaredLogger
+	name   string
 }
 
-func New(client v1.CoreV1Interface, logger *zap.SugaredLogger, ttl time.Duration) *KubeconfigProvider {
-	loader := ttlcache.LoaderFunc[string, []byte](
-		func(c *ttlcache.Cache[string, []byte], key string) *ttlcache.Item[string, []byte] {
-			kubeconfig, err := getKubeConfigFromSecret(logger, client, key)
-			if err != nil {
-				logger.Errorf("kubeconfig kubeconfigprovider failed to get kubeconfig for cluster (runtimeID: %s) from secret: %s",
-					key, err)
-				return nil
-			}
-
-			return c.Set(key, kubeconfig, getJitterTTL(ttl))
-		},
-	)
+// New creates a new instance of KubeconfigProvider.
+// It initializes the cache with the given TTL and loader function.
+// The loader function is used to get the kubeconfig from the secret.
+// name is used to identify the cache in the metrics.
+func New(client v1.CoreV1Interface, logger *zap.SugaredLogger, ttl time.Duration, name string) *KubeconfigProvider {
+	loader := loaderFunc(client, logger, ttl)
 
 	return &KubeconfigProvider{
 		client: client,
@@ -47,16 +50,37 @@ func New(client v1.CoreV1Interface, logger *zap.SugaredLogger, ttl time.Duration
 		),
 		ttl:    ttl,
 		logger: logger,
+		name:   name,
 	}
 }
 
-// GetKubeConfigFromCache returns the kubeconfig from the kubeconfigprovider if it is not expired.
-// If it is expired, it will get the kubeconfig from the secret and set it in the kubeconfigprovider.
-func (k *KubeconfigProvider) Get(runtimeID string) ([]byte,
-	error,
-) {
+// loaderFunc returns a ttlcache.LoaderFunc that loads the kubeconfig from a Kubernetes secret.
+// It logs the loading process and stores the kubeconfig in the cache with a TTL that includes jitter.
+func loaderFunc(client v1.CoreV1Interface, logger *zap.SugaredLogger, ttl time.Duration) ttlcache.LoaderFunc[string, []byte] {
+	loader := ttlcache.LoaderFunc[string, []byte](
+		func(c *ttlcache.Cache[string, []byte], key string) *ttlcache.Item[string, []byte] {
+			logger.Infof("loading Kubeconfig for: %v", key)
+
+			kubeconfig, err := getKubeConfigFromSecret(logger, client, key)
+			if err != nil {
+				logger.Errorf("kubeconfig kubeconfigprovider failed to get kubeconfig for cluster (runtimeID: %s) from secret: %s",
+					key, err)
+				return nil
+			}
+
+			logger.Infof("storing Kubeconfig for: %v", key)
+
+			return c.Set(key, kubeconfig, getJitterTTL(ttl))
+		},
+	)
+
+	return loader
+}
+
+// If it is expired, it will get the kubeconfig from the secret and set it in the cache (using the loader function).
+func (k *KubeconfigProvider) Get(runtimeID string) ([]byte, error) {
 	k.cache.DeleteExpired()
-	recordMetrics()
+	k.recordMetrics()
 
 	item := k.cache.Get(runtimeID)
 	if item == nil {
@@ -66,11 +90,9 @@ func (k *KubeconfigProvider) Get(runtimeID string) ([]byte,
 	return item.Value(), nil
 }
 
-// getkubeConfigFromSecret gets the kubeconfig from the secret.
-func getKubeConfigFromSecret(logger *zap.SugaredLogger, client v1.CoreV1Interface, runtimeID string) ([]byte,
-	error,
-) {
-	secretResourceName := fmt.Sprintf("kubeconfig-%s", runtimeID)
+// getKubeConfigFromSecret gets the kubeconfig from the secret.
+func getKubeConfigFromSecret(logger *zap.SugaredLogger, client v1.CoreV1Interface, runtimeID string) ([]byte, error) {
+	secretResourceName := kubconfigSecretPrefix + runtimeID
 
 	secret, err := getKubeConfigSecret(logger, client, runtimeID, secretResourceName)
 	if err != nil {
@@ -92,11 +114,8 @@ func getKubeConfigFromSecret(logger *zap.SugaredLogger, client v1.CoreV1Interfac
 }
 
 // getKubeConfigSecret gets the kubeconfig secret from the cluster.
-func getKubeConfigSecret(logger *zap.SugaredLogger,
-	client v1.CoreV1Interface,
-	runtimeID, secretResourceName string,
-) (*corev1.Secret, error) {
-	secret, err := client.Secrets("kcp-system").Get(context.Background(), secretResourceName, metav1.GetOptions{})
+func getKubeConfigSecret(logger *zap.SugaredLogger, client v1.CoreV1Interface, runtimeID, secretResourceName string) (*corev1.Secret, error) {
+	secret, err := client.Secrets(kcpNamespace).Get(context.Background(), secretResourceName, metav1.GetOptions{})
 	if err != nil {
 		if k8serr.IsNotFound(err) { // accepted failure
 			logger.Debugf("kubeconfig kubeconfigprovider cannot find a kubeconfig-secret '%s' for cluster with runtimeID %s: %s",
@@ -117,7 +136,12 @@ func getKubeConfigSecret(logger *zap.SugaredLogger,
 	return secret, nil
 }
 
+// getJitterTTL returns a TTL with added jitter.
 func getJitterTTL(ttl time.Duration) time.Duration {
+	if ttl < 3*time.Minute {
+		return ttl
+	}
+
 	maxTTL := ttl
 	buffer := int64(maxTTL.Minutes() / 3) //nolint:mnd // we accept TTLS with 1/3 length above maxTTL
 	jitter := rand.Int63n(buffer) + int64(maxTTL.Minutes())

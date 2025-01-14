@@ -812,7 +812,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 
 			secretKCPStored := kmctesting.NewKCPStoredSecret(tc.givenShoot.RuntimeID, tc.KubeConfig)
 			secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
-			kubeconfigProvider := kubeconfigprovider.New(secretCacheClient.CoreV1(), logger, 1*time.Minute)
+			kubeconfigProvider := kubeconfigprovider.New(secretCacheClient.CoreV1(), logger, 1*time.Minute, "test")
 
 			// initiate process instance.
 			givenProcess := &Process{
@@ -876,7 +876,7 @@ func TestExecute(t *testing.T) {
 
 	secretKCPStored := kmctesting.NewKCPStoredSecret(runtimeID, expectedKubeconfig)
 	secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
-	kubeconfigProvider := kubeconfigprovider.New(secretCacheClient.CoreV1(), log, 1*time.Minute)
+	kubeconfigProvider := kubeconfigprovider.New(secretCacheClient.CoreV1(), log, 1*time.Minute, "test")
 
 	expectedScanMap := NewScanMap()
 	collector := stubs.NewCollector(expectedScanMap, nil)

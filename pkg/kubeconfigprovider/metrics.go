@@ -11,9 +11,8 @@ var cacheSizeMetric = promauto.NewGaugeVec(
 		Subsystem: "kubeconfig_cache",
 		Name:      "size",
 		Help:      "Number of items in the kubeconfig kubeconfigprovider.",
-	}, nil)
+	}, []string{"name"})
 
-func recordMetrics() {
-	// TODO: Implement metrics recording
-	// cacheSizeMetric.With(prometheus.Labels{}).Set(float64(kubeConfigCache.Len()))
+func (k *KubeconfigProvider) recordMetrics() {
+	cacheSizeMetric.With(prometheus.Labels{"name": k.name}).Set(float64(k.cache.Len()))
 }
