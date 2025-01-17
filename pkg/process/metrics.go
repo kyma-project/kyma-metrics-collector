@@ -6,8 +6,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
 )
 
 const (
@@ -28,7 +28,7 @@ var (
 			Namespace: namespace,
 			Subsystem: subsystem,
 			Name:      "items_in_cache",
-			Help:      "Number of items in the cache.",
+			Help:      "Number of items in the kubeconfigprovider.",
 		}, nil)
 
 	subAccountProcessed = promauto.NewCounterVec(

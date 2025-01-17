@@ -8,7 +8,7 @@ import (
 	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/cache"
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 )
 
@@ -33,7 +33,7 @@ func (p *Process) pollKEBForRuntimes() {
 
 		p.namedLogger().Debugf("num of runtimes are: %d", runtimesPage.Count)
 		p.populateCacheAndQueue(runtimesPage)
-		p.namedLogger().Debugf("length of the cache after KEB is done populating: %d", p.Cache.ItemCount())
+		p.namedLogger().Debugf("length of the kubeconfigprovider after KEB is done populating: %d", p.Cache.ItemCount())
 		p.namedLogger().Infof("waiting to poll KEB again after %v....", p.KEBClient.Config.PollWaitDuration)
 		recordItemsInCache(float64(p.Cache.ItemCount()))
 		time.Sleep(p.KEBClient.Config.PollWaitDuration)
@@ -72,7 +72,6 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 				GlobalAccountID: runtime.GlobalAccountID,
 				ShootName:       runtime.ShootName,
 				ProviderType:    strings.ToLower(runtime.Provider),
-				KubeConfig:      "",
 				ScanMap:         nil,
 			}
 
@@ -85,29 +84,29 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 				runtime.SubAccountID,
 				runtime.GlobalAccountID)
 
-			// Cluster is trackable but does not exist in the cache
+			// Cluster is trackable but does not exist in the kubeconfigprovider
 			if !isFoundInCache {
 				err := p.Cache.Add(runtime.SubAccountID, newRecord, cache.NoExpiration)
 				if err != nil {
-					p.namedLoggerWithRecord(&newRecord).With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Error("Failed to add subAccountID to cache. Skipping queueing it")
+					p.namedLoggerWithRecord(&newRecord).With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Error("Failed to add subAccountID to kubeconfigprovider. Skipping queueing it")
 					continue
 				}
 
 				p.Queue.Add(runtime.SubAccountID)
-				p.namedLoggerWithRecord(&newRecord).With(log.KeyResult, log.ValueSuccess).Debug("Queued and added to cache")
+				p.namedLoggerWithRecord(&newRecord).With(log.KeyResult, log.ValueSuccess).Debug("Queued and added to kubeconfigprovider")
 
 				continue
 			}
 
-			// Cluster is trackable and exists in the cache
+			// Cluster is trackable and exists in the kubeconfigprovider
 			if record, ok := recordObj.(kmccache.Record); ok {
 				if record.ShootName == runtime.ShootName {
 					continue
 				}
-				// The shootname has changed hence the record in the cache is not valid anymore
+				// The shootname has changed hence the record in the kubeconfigprovider is not valid anymore
 				// No need to queue as the subAccountID already exists in queue
 				p.Cache.Set(runtime.SubAccountID, newRecord, cache.NoExpiration)
-				p.namedLoggerWithRecord(&record).Debug("Resetted the values in cache for subAccount")
+				p.namedLoggerWithRecord(&record).Debug("Resetted the values in kubeconfigprovider for subAccount")
 
 				// delete metrics for old shoot name.
 				if success := deleteMetrics(record); !success {
@@ -128,11 +127,10 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 			runtime.GlobalAccountID)
 
 		if isFoundInCache {
-			// Cluster is not trackable but is found in cache should be deleted
+			// Cluster is not trackable but is found in kubeconfigprovider should be deleted
 			p.Cache.Delete(runtime.SubAccountID)
-			p.Queue.Done(runtime.SubAccountID)
 			p.namedLogger().With(log.KeySubAccountID, runtime.SubAccountID).
-				With(log.KeyRuntimeID, runtime.RuntimeID).Debug("Deleted subAccount from cache")
+				With(log.KeyRuntimeID, runtime.RuntimeID).Debug("Deleted subAccount from kubeconfigprovider")
 			// delete metrics for old shoot name.
 			if record, ok := recordObj.(kmccache.Record); ok {
 				if success := deleteMetrics(record); !success {
@@ -147,7 +145,7 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 			With(log.KeyRuntimeID, runtime.RuntimeID).Debug("Ignoring SubAccount as it is not trackable")
 	}
 
-	// Cleaning up subAccounts from the cache which are not returned by KEB anymore
+	// Cleaning up subAccounts from the kubeconfigprovider which are not returned by KEB anymore
 	for sAccID, recordObj := range p.Cache.Items() {
 		if _, ok := validSubAccounts[sAccID]; !ok {
 			record, ok := recordObj.Object.(kmccache.Record)
@@ -156,10 +154,10 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 
 			if !ok {
 				p.namedLoggerWithRecord(&record).
-					Error("bad item from cache, could not cast to a record obj")
+					Error("bad item from kubeconfigprovider, could not cast to a record obj")
 			} else {
 				p.namedLoggerWithRecord(&record).
-					Info("SubAccount is not trackable anymore, deleting it from cache")
+					Info("SubAccount is not trackable anymore, deleting it from kubeconfigprovider")
 			}
 			// delete metrics for old shoot name.
 			if success := deleteMetrics(record); !success {
