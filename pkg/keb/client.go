@@ -40,7 +40,7 @@ func NewClient(config *Config, logger *zap.SugaredLogger) *Client {
 	}
 }
 
-func (c Client) NewRequest() (*http.Request, error) {
+func (c *Client) NewRequest() (*http.Request, error) {
 	kebURL, err := url.ParseRequestURI(c.Config.URL)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (c Client) NewRequest() (*http.Request, error) {
 	return req, nil
 }
 
-func (c Client) GetAllRuntimes(req *http.Request) (*kebruntime.RuntimesPage, error) {
+func (c *Client) GetAllRuntimes(req *http.Request) (*kebruntime.RuntimesPage, error) {
 	morePages := true
 	pageNum := 1
 	recordsSeen := 0
@@ -85,7 +85,7 @@ func (c Client) GetAllRuntimes(req *http.Request) (*kebruntime.RuntimesPage, err
 	return finalRuntimesPage, nil
 }
 
-func (c Client) getRuntimesPerPage(req *http.Request, pageNum int) (*kebruntime.RuntimesPage, error) {
+func (c *Client) getRuntimesPerPage(req *http.Request, pageNum int) (*kebruntime.RuntimesPage, error) {
 	// define URL.
 	c.Logger.Debugf("polling for runtimes with URL: %s", req.URL.String())
 
@@ -163,6 +163,6 @@ func (c Client) getRuntimesPerPage(req *http.Request, pageNum int) (*kebruntime.
 	return runtimesPage, err
 }
 
-func (c Client) namedLogger() *zap.SugaredLogger {
+func (c *Client) namedLogger() *zap.SugaredLogger {
 	return c.Logger.Named(clientName).With("component", "KEB")
 }
