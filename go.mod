@@ -1,6 +1,6 @@
 module github.com/kyma-project/kyma-metrics-collector
 
-go 1.23.4
+go 1.23.5
 
 require (
 	github.com/avast/retry-go/v4 v4.6.0
