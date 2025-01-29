@@ -20,7 +20,6 @@ const (
 
 var (
 	_                    resource.ScanConverter = &Scan{}
-	ErrStatusNotSet                             = fmt.Errorf("VolumeSnapshotContent: Status not set")
 	ErrRestoreSizeNotSet                        = fmt.Errorf("VolumeSnapshotContent: RestoreSize not set")
 )
 
@@ -38,7 +37,7 @@ func (s *Scan) EDP() (resource.EDPMeasurement, error) {
 
 	for _, vsc := range s.vscs.Items {
 		if vsc.Status == nil {
-			errs = append(errs, fmt.Errorf("%w: %s", ErrStatusNotSet, vsc.Name))
+			// Skip VSCs without status
 			continue
 		}
 
