@@ -1,5 +1,5 @@
 module-name: kyma-metrics-collector
-kind: kyma
+kind: kcp
 protecode:
   - europe-docker.pkg.dev/kyma-project/prod/kyma-metrics-collector:main
 whitesource:
