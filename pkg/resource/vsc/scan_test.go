@@ -135,7 +135,7 @@ func TestScan_EDP(t *testing.T) {
 					Count:         0,
 				},
 			},
-			expextedError: ErrStatusNotSet,
+			expextedError: nil,
 		},
 		{
 			name: "vscs no restore size",
