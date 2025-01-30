@@ -10,9 +10,8 @@ Proposed
 
 Currently, Kyma Metrics Collector (KMC) pushes consumption per runtime every 5 minutes to the Event Data Platform (EDP) backend.
 We need to switch to pushing consumption per runtime every 1 hour to the Unified Metering (UM) backend.
-Check the wiki page [here](https://wiki.one.int.sap/wiki/display/kyma/Advanced+Customer+Billing#AdvancedCustomerBilling-TargetPicture) for more details.
 
-This is a good point of time to revisit the architecture of KMC and introduce improvements.
+Check the wiki page [here](https://wiki.one.int.sap/wiki/display/kyma/Advanced+Customer+Billing) for more details.
 
 ## Decision
 
@@ -185,13 +184,12 @@ The data stored in the `Cache Directory` in the `Object Storage Bucket` can be r
 
 ```
 type CacheUMMeasurement struct {
-    InstanceID             string
+	InstanceID             string
 	SubAccountID           string
 	LastEnqueuingTimestamp string
 	MeasurementMap         map[resource.ScannerID]UMMeasurement
 }
 ```
-
 
 #### Data Stored in Sending Queue Directory in the Object Storage Bucket
 
