@@ -3,6 +3,7 @@ package pvc
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
@@ -37,7 +38,7 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 	ctx, span := otel.Tracer("").Start(ctx, "pvc_scan", kmcotel.SpanAttributes(runtime))
 	defer span.End()
 
-	clientset, err := s.createClientset(&runtime.Kubeconfig)
+	clientset, err := s.createClientset(&runtime.Kubeconfig, runtime.Client)
 	if err != nil {
 		retErr := fmt.Errorf("failed to create clientset: %w", err)
 		span.RecordError(retErr)
@@ -60,9 +61,9 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 	}, nil
 }
 
-func (s *Scanner) createClientset(config *rest.Config) (kubernetes.Interface, error) {
+func (s *Scanner) createClientset(config *rest.Config, client *http.Client) (kubernetes.Interface, error) {
 	if s.clientFactory == nil {
-		return kubernetes.NewForConfig(config)
+		return kubernetes.NewForConfigAndClient(config, client)
 	}
 
 	return s.clientFactory(config)

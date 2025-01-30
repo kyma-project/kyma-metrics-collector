@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
@@ -55,7 +56,7 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 	ctx, span := otel.Tracer("").Start(ctx, "redis_scan", kmcotel.SpanAttributes(runtime))
 	defer span.End()
 
-	dynamicClient, err := s.createClientFactory(&runtime.Kubeconfig)
+	dynamicClient, err := s.createClientFactory(&runtime.Kubeconfig, runtime.Client)
 	if err != nil {
 		return nil, err
 	}
@@ -95,9 +96,9 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 	return nil, errors.Join(errs...)
 }
 
-func (s *Scanner) createClientFactory(config *rest.Config) (dynamic.Interface, error) {
+func (s *Scanner) createClientFactory(config *rest.Config, client *http.Client) (dynamic.Interface, error) {
 	if s.clientFactory == nil {
-		return dynamic.NewForConfig(config)
+		return dynamic.NewForConfigAndClient(config, client)
 	}
 
 	return s.clientFactory(config)

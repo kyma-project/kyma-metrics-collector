@@ -3,6 +3,7 @@ package vsc
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	volumesnapshotclientset "github.com/kubernetes-csi/external-snapshotter/client/v6/clientset/versioned"
 	"go.opentelemetry.io/otel"
@@ -33,7 +34,7 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 	ctx, span := otel.Tracer("").Start(ctx, "vsc_scan", kmcotel.SpanAttributes(runtime))
 	defer span.End()
 
-	clientset, err := s.createClientSet(&runtime.Kubeconfig)
+	clientset, err := s.createClientSet(&runtime.Kubeconfig, runtime.Client)
 	if err != nil {
 		retErr := fmt.Errorf("failed to create clientset: %w", err)
 		span.RecordError(retErr)
@@ -56,9 +57,9 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 	}, nil
 }
 
-func (s *Scanner) createClientSet(config *rest.Config) (volumesnapshotclientset.Interface, error) {
+func (s *Scanner) createClientSet(config *rest.Config, client *http.Client) (volumesnapshotclientset.Interface, error) {
 	if s.clientFactory == nil {
-		return volumesnapshotclientset.NewForConfig(config)
+		return volumesnapshotclientset.NewForConfigAndClient(config, client)
 	}
 
 	return s.clientFactory(config)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
@@ -42,7 +43,7 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 	ctx, span := otel.Tracer("").Start(ctx, "node_scan", kmcotel.SpanAttributes(runtime))
 	defer span.End()
 
-	cl, err := s.createClientset(&runtime.Kubeconfig)
+	cl, err := s.createClientset(&runtime.Kubeconfig, runtime.Client)
 	if err != nil {
 		retErr := fmt.Errorf("failed to create clientset: %w", err)
 		span.RecordError(err)
@@ -72,9 +73,9 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 	}, nil
 }
 
-func (s *Scanner) createClientset(config *rest.Config) (metadata.Interface, error) {
+func (s *Scanner) createClientset(config *rest.Config, client *http.Client) (metadata.Interface, error) {
 	if s.clientFactory == nil {
-		return metadata.NewForConfig(config)
+		return metadata.NewForConfigAndClient(config, client)
 	}
 
 	return s.clientFactory(config)
