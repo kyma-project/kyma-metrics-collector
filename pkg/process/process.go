@@ -2,13 +2,13 @@ package process
 
 import (
 	"fmt"
-	"k8s.io/client-go/rest"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
@@ -52,10 +52,12 @@ func (f *K8sClientFactory) NewClient(config *rest.Config) (*http.Client, error) 
 	// After all scanners are done, all connections opened by the client will be closed.
 	// See: https://github.com/kubernetes/kubernetes/issues/109289
 	config.Proxy = http.ProxyFromEnvironment
+
 	client, err := rest.HTTPClientFor(config)
 	if err != nil {
 		return nil, err
 	}
+
 	return client, nil
 }
 

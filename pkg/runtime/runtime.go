@@ -1,8 +1,9 @@
 package runtime
 
 import (
-	"k8s.io/client-go/rest"
 	"net/http"
+
+	"k8s.io/client-go/rest"
 )
 
 type Info struct {

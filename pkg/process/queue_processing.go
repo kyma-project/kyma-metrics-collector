@@ -3,10 +3,11 @@ package process
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 	"k8s.io/client-go/tools/clientcmd"
-	"net/http"
 
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
