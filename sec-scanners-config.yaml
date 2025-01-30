@@ -1,9 +1,14 @@
 module-name: kyma-metrics-collector
+kind: kcp
 protecode:
   - europe-docker.pkg.dev/kyma-project/prod/kyma-metrics-collector:main
 whitesource:
   language: golang-mod
-  subprojects: false
+  exclude:
+    - "**/test/**"
+    - "**/*_test.go"
+checkmarx-one:
+  preset: go-default
   exclude:
     - "**/test/**"
     - "**/*_test.go"
