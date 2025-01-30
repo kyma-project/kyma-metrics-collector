@@ -3,12 +3,10 @@ package process
 import (
 	"context"
 	"fmt"
-	"k8s.io/client-go/rest"
-	"net/http"
-
 	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 	"k8s.io/client-go/tools/clientcmd"
+	"net/http"
 
 	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
@@ -61,17 +59,14 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) bool 
 		return false
 	}
 
-	// Create HTTP client from REST client config. Use proxy from environment
-	// setting the proxy to http.ProxyFromEnvironment will avoid the client to cache the TLSConfiguration. This is important as it leads to a memory leak.
-	// Scanners have to use the same client to avoid the memory leak.
-	// After all scanners are done, all connections opened by the client will be closed.
-	// See: https://github.com/kubernetes/kubernetes/issues/109289
-	restClientConfig.Proxy = http.ProxyFromEnvironment
-	client, err := rest.HTTPClientFor(restClientConfig)
-	if err != nil {
-		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to create HTTP client from REST config: %w", err))
+	client := http.DefaultClient
+	if p.ClientFactory != nil {
+		client, err = p.ClientFactory.NewClient(restClientConfig)
+		if err != nil {
+			p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to create HTTP client from REST config: %w", err))
 
-		return false
+			return false
+		}
 	}
 	defer client.CloseIdleConnections()
 

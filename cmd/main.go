@@ -125,6 +125,7 @@ func main() {
 	)
 
 	kubeconfigProvider := kubeconfigprovider.New(secretCacheClient.CoreV1(), logger, opts.KubeconfigCacheTTL, kubeconfigProviderName)
+	clientFactory := &kmcprocess.K8sClientFactory{}
 
 	kmcProcess := kmcprocess.Process{
 		KEBClient:          kebClient,
@@ -137,6 +138,7 @@ func main() {
 		ScrapeInterval:     opts.ScrapeInterval,
 		Queue:              queue.NewQueue("trackable-skrs"),
 		WorkersPoolSize:    opts.WorkerPoolSize,
+		ClientFactory:      clientFactory,
 	}
 
 	// Start execution

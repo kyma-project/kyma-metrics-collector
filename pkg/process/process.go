@@ -2,6 +2,8 @@ package process
 
 import (
 	"fmt"
+	"k8s.io/client-go/rest"
+	"net/http"
 	"sync"
 	"time"
 
@@ -27,12 +29,35 @@ type Process struct {
 	ScrapeInterval     time.Duration
 	WorkersPoolSize    int
 	Logger             *zap.SugaredLogger
+	ClientFactory      HttpClientFactory
 }
 
 const (
 	trackableTrue  = true
 	trackableFalse = false
 )
+
+type HttpClientFactory interface {
+	NewClient(config *rest.Config) (*http.Client, error)
+}
+
+var _ HttpClientFactory = &K8sClientFactory{}
+
+type K8sClientFactory struct{}
+
+func (f *K8sClientFactory) NewClient(config *rest.Config) (*http.Client, error) {
+	// Create HTTP client from REST client config. Use proxy from environment
+	// setting the proxy to http.ProxyFromEnvironment will avoid the client to cache the TLSConfiguration. This is important as it leads to a memory leak.
+	// Scanners have to use the same client to avoid the memory leak.
+	// After all scanners are done, all connections opened by the client will be closed.
+	// See: https://github.com/kubernetes/kubernetes/issues/109289
+	config.Proxy = http.ProxyFromEnvironment
+	client, err := rest.HTTPClientFor(config)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
 
 // Start runs the complete process of collection and sending metrics.
 func (p *Process) Start() {
