@@ -42,7 +42,7 @@ func TestScanner_Scan_Successful(t *testing.T) {
 			gcpRedisGVR:   "GcpRedisInstanceList",
 		}, awsRedises)
 
-	clients := stubs.RuntimeClients{
+	clients := stubs.Clients{
 		DynamicInterface: dynamicClient,
 	}
 
@@ -74,7 +74,7 @@ func TestScanner_Scan_Error(t *testing.T) {
 		return true, nil, errors.New("failed to list aws redis instances")
 	})
 
-	clients := stubs.RuntimeClients{
+	clients := stubs.Clients{
 		DynamicInterface: dynamicClient,
 	}
 

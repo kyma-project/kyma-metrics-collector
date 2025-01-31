@@ -29,7 +29,7 @@ func TestScanner_Scan_Successful(t *testing.T) {
 		},
 	}
 
-	clients := stubs.RuntimeClients{
+	clients := stubs.Clients{
 		VolumeSnapshotInterface: fake.NewSimpleClientset(vscs),
 	}
 
@@ -53,7 +53,7 @@ func TestScanner_Scan_Error(t *testing.T) {
 		return true, nil, errors.New("failed to list vscs")
 	})
 
-	clients := stubs.RuntimeClients{
+	clients := stubs.Clients{
 		VolumeSnapshotInterface: clientset,
 	}
 

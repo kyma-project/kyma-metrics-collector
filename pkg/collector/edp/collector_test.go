@@ -347,7 +347,7 @@ func TestCollector_CollectAndSend(t *testing.T) {
 				GlobalAccountID: globalAccountID,
 				ShootName:       shootName,
 			}
-			clients := runtimestubs.RuntimeClients{}
+			clients := runtimestubs.Clients{}
 
 			scanMap, err := EDPCollector.CollectAndSend(context.Background(), &runtimeInfo, clients, tc.previousScanMap)
 			if tc.expectedErrInCollectAndSend {

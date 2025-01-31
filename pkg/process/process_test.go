@@ -823,8 +823,8 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				ScrapeInterval:     3 * time.Second,
 				Logger:             logger,
 				KubeconfigProvider: kubeconfigProvider,
-				ClientFactory: &runtimestubs.RuntimeClientFactory{
-					RuntimeClients: runtimestubs.RuntimeClients{},
+				ClientFactory: &runtimestubs.ClientFactory{
+					Clients: runtimestubs.Clients{},
 				},
 			}
 
@@ -906,8 +906,8 @@ func TestExecute(t *testing.T) {
 		ScrapeInterval:     3 * time.Second,
 		Logger:             log,
 		KubeconfigProvider: kubeconfigProvider,
-		ClientFactory: &runtimestubs.RuntimeClientFactory{
-			RuntimeClients: runtimestubs.RuntimeClients{},
+		ClientFactory: &runtimestubs.ClientFactory{
+			Clients: runtimestubs.Clients{},
 		},
 	}
 

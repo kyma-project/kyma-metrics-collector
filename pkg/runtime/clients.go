@@ -18,9 +18,9 @@ type Clients struct {
 	client         *http.Client
 }
 
-type RuntimeClientFactory struct{}
+type ClientsFactory struct{}
 
-func (r RuntimeClientFactory) NewClients(config *rest.Config) (Interface, error) {
+func (r ClientsFactory) NewClients(config *rest.Config) (Interface, error) {
 	return NewClients(config)
 }
 

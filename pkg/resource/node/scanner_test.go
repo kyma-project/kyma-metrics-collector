@@ -37,7 +37,7 @@ func TestScanner_Scan_Successful(t *testing.T) {
 		nodes,
 	)
 
-	clients := stubs.RuntimeClients{
+	clients := stubs.Clients{
 		MetadataInterface: clientset,
 	}
 
@@ -69,7 +69,7 @@ func TestScanner_Scan_Error(t *testing.T) {
 		return true, nil, errors.New("failed to list nodes")
 	})
 
-	clients := stubs.RuntimeClients{
+	clients := stubs.Clients{
 		MetadataInterface: clientset,
 	}
 

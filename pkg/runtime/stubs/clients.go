@@ -10,36 +10,36 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
-type RuntimeClients struct {
+type Clients struct {
 	MetadataInterface       metadata.Interface
 	KubernetesInterface     kubernetes.Interface
 	VolumeSnapshotInterface volumesnapshotclientset.Interface
 	DynamicInterface        dynamic.Interface
 }
 
-func (r RuntimeClients) CloseConnections() {
+func (r Clients) CloseConnections() {
 }
 
-func (r RuntimeClients) Metadata() metadata.Interface {
+func (r Clients) Metadata() metadata.Interface {
 	return r.MetadataInterface
 }
 
-func (r RuntimeClients) K8s() kubernetes.Interface {
+func (r Clients) K8s() kubernetes.Interface {
 	return r.KubernetesInterface
 }
 
-func (r RuntimeClients) VolumeSnapshot() volumesnapshotclientset.Interface {
+func (r Clients) VolumeSnapshot() volumesnapshotclientset.Interface {
 	return r.VolumeSnapshotInterface
 }
 
-func (r RuntimeClients) Dynamic() dynamic.Interface {
+func (r Clients) Dynamic() dynamic.Interface {
 	return r.DynamicInterface
 }
 
-type RuntimeClientFactory struct {
-	RuntimeClients
+type ClientFactory struct {
+	Clients
 }
 
-func (r RuntimeClientFactory) NewClients(config *rest.Config) (runtime.InterfaceCloser, error) {
-	return r.RuntimeClients, nil
+func (r ClientFactory) NewClients(config *rest.Config) (runtime.InterfaceCloser, error) {
+	return r.Clients, nil
 }
