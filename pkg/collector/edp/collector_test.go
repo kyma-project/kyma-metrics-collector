@@ -22,6 +22,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	runtimestubs "github.com/kyma-project/kyma-metrics-collector/pkg/runtime/stubs"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
 
@@ -346,8 +347,9 @@ func TestCollector_CollectAndSend(t *testing.T) {
 				GlobalAccountID: globalAccountID,
 				ShootName:       shootName,
 			}
+			clients := runtimestubs.Clients{}
 
-			scanMap, err := EDPCollector.CollectAndSend(context.Background(), &runtimeInfo, tc.previousScanMap)
+			scanMap, err := EDPCollector.CollectAndSend(context.Background(), &runtimeInfo, clients, tc.previousScanMap)
 			if tc.expectedErrInCollectAndSend {
 				require.Error(t, err)
 			} else {

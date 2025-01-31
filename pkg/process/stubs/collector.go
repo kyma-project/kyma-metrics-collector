@@ -19,6 +19,6 @@ func NewCollector(newScanMap collector.ScanMap, err error) Collector {
 	}
 }
 
-func (c Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, previousScans collector.ScanMap) (collector.ScanMap, error) {
+func (c Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, clients runtime.Interface, previousScans collector.ScanMap) (collector.ScanMap, error) {
 	return c.newScanMap, c.err
 }

@@ -8,8 +8,6 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 
 	kmcotel "github.com/kyma-project/kyma-metrics-collector/pkg/otel"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
@@ -18,9 +16,7 @@ import (
 
 var _ resource.Scanner = &Scanner{}
 
-type Scanner struct {
-	clientFactory func(config *rest.Config) (kubernetes.Interface, error)
-}
+type Scanner struct{}
 
 // NewScanner creates a new instance of Scanner.
 // While not strictly necessary, this factory function is provided
@@ -33,20 +29,11 @@ func (s *Scanner) ID() resource.ScannerID {
 	return "pvc"
 }
 
-func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
+func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info, clients runtime.Interface) (resource.ScanConverter, error) {
 	ctx, span := otel.Tracer("").Start(ctx, "pvc_scan", kmcotel.SpanAttributes(runtime))
 	defer span.End()
 
-	clientset, err := s.createClientset(&runtime.Kubeconfig)
-	if err != nil {
-		retErr := fmt.Errorf("failed to create clientset: %w", err)
-		span.RecordError(retErr)
-		span.SetStatus(codes.Error, retErr.Error())
-
-		return nil, retErr
-	}
-
-	pvcs, err := clientset.CoreV1().PersistentVolumeClaims(corev1.NamespaceAll).List(ctx, metav1.ListOptions{})
+	pvcs, err := clients.K8s().CoreV1().PersistentVolumeClaims(corev1.NamespaceAll).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		retErr := fmt.Errorf("failed to list pvcs: %w", err)
 		span.RecordError(retErr)
@@ -58,12 +45,4 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 	return &Scan{
 		pvcs: *pvcs,
 	}, nil
-}
-
-func (s *Scanner) createClientset(config *rest.Config) (kubernetes.Interface, error) {
-	if s.clientFactory == nil {
-		return kubernetes.NewForConfig(config)
-	}
-
-	return s.clientFactory(config)
 }

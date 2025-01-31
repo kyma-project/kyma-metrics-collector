@@ -21,8 +21,8 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
+	kmcmetrics "github.com/kyma-project/kyma-metrics-collector/pkg/metrics"
 	kmcotel "github.com/kyma-project/kyma-metrics-collector/pkg/otel"
 	kmcprocess "github.com/kyma-project/kyma-metrics-collector/pkg/process"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/queue"
@@ -30,6 +30,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/pvc"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/redis"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/vsc"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime/kubeconfigprovider"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/service"
 )
 
@@ -57,6 +58,8 @@ func main() {
 			logger.Errorf("Failed to shutdown OTel SDK: %v", err)
 		}
 	}()
+
+	kmcmetrics.RegisterTLSCacheMetrics()
 
 	cfg := new(env.Config)
 	if err := envconfig.Process("", cfg); err != nil {
