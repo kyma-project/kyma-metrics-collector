@@ -134,7 +134,7 @@ Flow for each `Runtime Reconciler`:
 
 1. `Runtime Reconciler` reconciles `Runtime CRs` every 20 minutes. Note that in the future, each `Runtime CR` will have a [boolean field](https://github.com/kyma-project/infrastructure-manager/issues/547) indicating whether the runtime is billable or not.
 2. `Runtime Reconciler` gets the cache file for the subaccount ID from the `Cache Directory` in the `Object Storage Bucket`. The cache file contains the last successful UM measurements.
-3. `Runtime Reconciler` scrapes billable resources in the runtime and creates a `UM measurement`. If a scraping fails or the conversion of a scan to a `UM measurement` fails, then the `Runtime Reconciler` falls back to the measurement from the cache.
+3. `Runtime Reconciler` scrapes billable resources in the runtime and creates a `UM measurement`. If scraping fails or the conversion of a scan to an `UM measurement` fails, then the `Runtime Reconciler` falls back to the measurement from the cache.
 4. If 1 hour has passed since the last time a `UM measurement` was added to the `Sending Queue` for the subaccount ID, then the `Runtime Reconciler` calculates the Capacity Units and adds the current `UM measurement` to the `Sending Queue`.
 > **NOTE:** When an item is added to the `Sending Queue`, a uuid is generated. The uuid is added to the `In-memory Sending Queue` and the items itself is added to the `Sending Queue Directory` in the `Object Storage Bucket` with the uuid as the key.
 
