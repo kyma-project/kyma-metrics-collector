@@ -10,13 +10,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
-	"k8s.io/client-go/rest"
 	k8stesting "k8s.io/client-go/testing"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime/stubs"
 )
 
 func TestScanner_ID(t *testing.T) {
@@ -32,32 +31,30 @@ func TestScanner_Scan_Successful(t *testing.T) {
 		},
 	}
 
-	clientFactory := func(*rest.Config) (dynamic.Interface, error) {
-		scheme := k8sruntime.NewScheme()
-		if err := cloudresourcesv1beta1.AddToScheme(scheme); err != nil {
-			return nil, err
-		}
+	scheme := k8sruntime.NewScheme()
+	err := cloudresourcesv1beta1.AddToScheme(scheme)
+	require.NoError(t, err)
 
-		dynamicClient := dynamicfake.NewSimpleDynamicClientWithCustomListKinds(scheme,
-			map[schema.GroupVersionResource]string{
-				awsRedisGVR:   "AwsRedisInstanceList",
-				azureRedisGVR: "AzureRedisInstanceList",
-				gcpRedisGVR:   "GcpRedisInstanceList",
-			}, awsRedises)
+	dynamicClient := dynamicfake.NewSimpleDynamicClientWithCustomListKinds(scheme,
+		map[schema.GroupVersionResource]string{
+			awsRedisGVR:   "AwsRedisInstanceList",
+			azureRedisGVR: "AzureRedisInstanceList",
+			gcpRedisGVR:   "GcpRedisInstanceList",
+		}, awsRedises)
 
-		return dynamicClient, nil
+	clients := stubs.RuntimeClients{
+		DynamicInterface: dynamicClient,
 	}
 
 	scanner := Scanner{
-		clientFactory: clientFactory,
-		specs:         &config.PublicCloudSpecs{},
+		specs: &config.PublicCloudSpecs{},
 	}
 
 	provider := "test-provider"
 
 	result, err := scanner.Scan(context.Background(), &runtime.Info{
 		ProviderType: provider,
-	})
+	}, clients)
 	require.NoError(t, err)
 	require.NotNil(t, result)
 
@@ -68,25 +65,22 @@ func TestScanner_Scan_Successful(t *testing.T) {
 }
 
 func TestScanner_Scan_Error(t *testing.T) {
-	clientFactory := func(*rest.Config) (dynamic.Interface, error) {
-		scheme := k8sruntime.NewScheme()
-		if err := cloudresourcesv1beta1.AddToScheme(scheme); err != nil {
-			return nil, err
-		}
+	scheme := k8sruntime.NewScheme()
+	err := cloudresourcesv1beta1.AddToScheme(scheme)
+	require.NoError(t, err)
 
-		dynamicClient := dynamicfake.NewSimpleDynamicClient(scheme)
-		dynamicClient.PrependReactor("list", "awsredisinstances", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-			return true, nil, errors.New("failed to list aws redis instances")
-		})
+	dynamicClient := dynamicfake.NewSimpleDynamicClient(scheme)
+	dynamicClient.PrependReactor("list", "awsredisinstances", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		return true, nil, errors.New("failed to list aws redis instances")
+	})
 
-		return dynamicClient, nil
+	clients := stubs.RuntimeClients{
+		DynamicInterface: dynamicClient,
 	}
 
-	scanner := Scanner{
-		clientFactory: clientFactory,
-	}
+	scanner := Scanner{}
 
-	result, err := scanner.Scan(context.Background(), &runtime.Info{})
+	result, err := scanner.Scan(context.Background(), &runtime.Info{}, clients)
 
 	require.Error(t, err)
 	require.Nil(t, result)

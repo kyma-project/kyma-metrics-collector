@@ -8,8 +8,8 @@ import (
 	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/runtime/kubeconfigprovider"
 )
 
 // pollKEBForRuntimes polls KEB for runtimes information.

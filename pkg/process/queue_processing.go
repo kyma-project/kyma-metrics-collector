@@ -3,15 +3,14 @@ package process
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 	"k8s.io/client-go/tools/clientcmd"
 
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/runtime/kubeconfigprovider"
 )
 
 func (p *Process) processSubAccountID(subAccountID string, identifier int) bool {
@@ -60,17 +59,6 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) bool 
 		return false
 	}
 
-	client := http.DefaultClient
-	if p.ClientFactory != nil {
-		client, err = p.ClientFactory.NewClient(restClientConfig)
-		if err != nil {
-			p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to create HTTP client from REST config: %w", err))
-
-			return false
-		}
-	}
-	defer client.CloseIdleConnections()
-
 	// Collect and send measurements to EDP backend
 	ctx := context.Background()
 	runtimeInfo := runtime.Info{
@@ -80,11 +68,17 @@ func (p *Process) processSubAccountID(subAccountID string, identifier int) bool 
 		GlobalAccountID: record.GlobalAccountID,
 		ShootName:       record.ShootName,
 		ProviderType:    record.ProviderType,
-		Kubeconfig:      *restClientConfig,
-		Client:          client,
 	}
 
-	newScans, err := p.EDPCollector.CollectAndSend(ctx, &runtimeInfo, record.ScanMap)
+	clients, err := p.ClientFactory.NewClients(restClientConfig)
+	if err != nil {
+		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to create clients: %w", err))
+
+		return false
+	}
+	defer clients.CloseConnections()
+
+	newScans, err := p.EDPCollector.CollectAndSend(ctx, &runtimeInfo, clients, record.ScanMap)
 	if err != nil {
 		p.handleError(&record, subAccountID, identifier, fmt.Errorf("failed to collect and send measurements to EDP backend: %w", err))
 

@@ -9,13 +9,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/metadata/fake"
-	"k8s.io/client-go/rest"
 	k8stesting "k8s.io/client-go/testing"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime/stubs"
 )
 
 func TestScanner_ID(t *testing.T) {
@@ -34,24 +33,23 @@ func TestScanner_Scan_Successful(t *testing.T) {
 	scheme := fake.NewTestScheme()
 	scheme.AddKnownTypes(corev1.SchemeGroupVersion, &metav1.PartialObjectMetadata{}, &metav1.PartialObjectMetadataList{})
 
-	clientFactory := func(*rest.Config) (metadata.Interface, error) {
-		clientset := fake.NewSimpleMetadataClient(scheme,
-			nodes,
-		)
+	clientset := fake.NewSimpleMetadataClient(scheme,
+		nodes,
+	)
 
-		return clientset, nil
+	clients := stubs.RuntimeClients{
+		MetadataInterface: clientset,
 	}
 
 	scanner := Scanner{
-		clientFactory: clientFactory,
-		specs:         &config.PublicCloudSpecs{},
+		specs: &config.PublicCloudSpecs{},
 	}
 
 	provider := "test-provider"
 
 	result, err := scanner.Scan(context.Background(), &runtime.Info{
 		ProviderType: provider,
-	})
+	}, clients)
 	require.NoError(t, err)
 	require.NotNil(t, result)
 
@@ -66,19 +64,18 @@ func TestScanner_Scan_Error(t *testing.T) {
 	scheme := fake.NewTestScheme()
 	scheme.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.Node{}, &corev1.NodeList{})
 
-	clientFactory := func(*rest.Config) (metadata.Interface, error) {
-		clientset := fake.NewSimpleMetadataClient(scheme, &corev1.NodeList{})
-		clientset.PrependReactor("list", "nodes", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-			return true, nil, errors.New("failed to list nodes")
-		})
+	clientset := fake.NewSimpleMetadataClient(scheme, &corev1.NodeList{})
+	clientset.PrependReactor("list", "nodes", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		return true, nil, errors.New("failed to list nodes")
+	})
 
-		return clientset, nil
+	clients := stubs.RuntimeClients{
+		MetadataInterface: clientset,
 	}
 
-	scanner := Scanner{
-		clientFactory: clientFactory,
-	}
-	result, err := scanner.Scan(context.Background(), &runtime.Info{})
+	scanner := Scanner{}
+
+	result, err := scanner.Scan(context.Background(), &runtime.Info{}, clients)
 
 	require.Error(t, err)
 	require.Nil(t, result)

@@ -15,7 +15,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
 type Process struct {
@@ -23,13 +23,13 @@ type Process struct {
 	EDPClient          *edp.Client
 	EDPCollector       collector.CollectorSender
 	Queue              workqueue.TypedDelayingInterface[string]
-	KubeconfigProvider *kubeconfigprovider.KubeconfigProvider
+	KubeconfigProvider runtime.ConfigProvider
 	Cache              *cache.Cache
 	PublicCloudSpecs   *config.PublicCloudSpecs
 	ScrapeInterval     time.Duration
 	WorkersPoolSize    int
 	Logger             *zap.SugaredLogger
-	ClientFactory      HttpClientFactory
+	ClientFactory      runtime.ClientFactory
 }
 
 const (

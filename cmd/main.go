@@ -21,7 +21,6 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
 	log "github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	kmcmetrics "github.com/kyma-project/kyma-metrics-collector/pkg/metrics"
 	kmcotel "github.com/kyma-project/kyma-metrics-collector/pkg/otel"
@@ -31,6 +30,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/pvc"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/redis"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/vsc"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime/kubeconfigprovider"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/service"
 )
 
@@ -125,7 +125,6 @@ func main() {
 	)
 
 	kubeconfigProvider := kubeconfigprovider.New(secretCacheClient.CoreV1(), logger, opts.KubeconfigCacheTTL, kubeconfigProviderName)
-	clientFactory := &kmcprocess.K8sClientFactory{}
 
 	kmcProcess := kmcprocess.Process{
 		KEBClient:          kebClient,
@@ -138,7 +137,6 @@ func main() {
 		ScrapeInterval:     opts.ScrapeInterval,
 		Queue:              queue.NewQueue("trackable-skrs"),
 		WorkersPoolSize:    opts.WorkerPoolSize,
-		ClientFactory:      clientFactory,
 	}
 
 	// Start execution
