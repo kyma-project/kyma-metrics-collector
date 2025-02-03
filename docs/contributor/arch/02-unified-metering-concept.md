@@ -219,6 +219,7 @@ type Measure struct {
 
 #### UM Payload
 
+Documentation for UM payload schema is available [here](https://pages.github.tools.sap/metering/documentation/docs/unified-metering/meter-your-app/#32-record-usage-for-btp-customer-managed-datastream).
 An example for UM payload for one runtime:
 
 ```
