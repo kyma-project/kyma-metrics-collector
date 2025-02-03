@@ -269,7 +269,7 @@ An example for UM payload for one runtime:
          "value": "Standard_D8_v3"
       },
       "customDimensions": {
-         "count": "3"
+         "count": 3
       }
    },
    {
@@ -341,8 +341,8 @@ An example for UM payload for one runtime:
          "value": 150
       },
       "customDimensions": {
-         "count": "3",
-         "size_gb_rounded": "192",
+         "count": 3,
+         "size_gb_rounded": 192,
       }
    },
    {
@@ -368,8 +368,8 @@ An example for UM payload for one runtime:
          "value": 150
       },
       "customDimensions": {
-         "count": "3",
-         "size_gb_rounded": "192",
+         "count": 3,
+         "size_gb_rounded": 192,
       }
    },
    {
@@ -395,8 +395,8 @@ An example for UM payload for one runtime:
          "value": "S1"
       },
       "customDimensions": {
-         "count": "3",
-         "size_gb_total": "150",
+         "count": 3,
+         "size_gb_total": 150,
       }
    }
 ]
@@ -408,8 +408,8 @@ A persistent cache ensures that cached data is not lost when the KMC restarts.
 KMC may restart for various reasons, such as upgrades or crashes due to exceeding memory limits.
 
 Similarly, a persistent sending queue prevents the loss of `UM measurements` if KMC is temporarily unable to send them to UM.
-This could happen due to network issues or if the UM service is down. During this time, the Runtime Reconciler will continue scraping resources and adding UM measurements to the Sending Queue.
-Once the network connection is restored or the UM service becomes available again, the Sending Workers will resume sending UM measurements to UM.
+This could happen due to network issues or if the UM service is down. During this time, the `Runtime Reconciler` will continue scraping resources and adding `UM measurements` to the Sending Queue.
+Once the network connection is restored or the UM service becomes available again, the `Sending Workers` will resume sending `UM measurements` to UM.
 
 #### Technologies Used
 
@@ -421,5 +421,7 @@ The main benefit of this workqueue is that it supports multiple consumers and th
 `Sending Workers` will be concurrently getting items from the `In-memory Sending Queue`.
 
 #### Threat Modelling
+
+![arch](../assets/TAM.drawio.svg)
 
 The threat modelling for the new architecture is documented [here](https://wiki.one.int.sap/wiki/pages/viewpage.action?pageId=5007037549).
