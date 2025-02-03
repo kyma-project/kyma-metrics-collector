@@ -134,7 +134,7 @@ Flow for each `Runtime Reconciler`:
 
 1. `Runtime Reconciler` reconciles `Runtime CRs` every 20 minutes. Note that in the future, each `Runtime CR` will have a [boolean field](https://github.com/kyma-project/infrastructure-manager/issues/547) indicating whether the runtime is billable or not.
 2. `Runtime Reconciler` gets the cache file for the subaccount ID from the `Cache Directory` in the `Object Storage Bucket`. The cache file contains the last successful UM measurements.
-3. `Runtime Reconciler` scrapes billable resources in the runtime and creates a `UM measurement`. If a scraping fails or the conversion of a scan to a `UM measurement` fails, then the `Runtime Reconciler` falls back to the measurement from the cache.
+3. `Runtime Reconciler` scrapes billable resources in the runtime and creates a `UM measurement`. If scraping fails or the conversion of a scan to an `UM measurement` fails, then the `Runtime Reconciler` falls back to the measurement from the cache.
 4. If 1 hour has passed since the last time a `UM measurement` was added to the `Sending Queue` for the subaccount ID, then the `Runtime Reconciler` calculates the Capacity Units and adds the current `UM measurement` to the `Sending Queue`.
 > **NOTE:** When an item is added to the `Sending Queue`, a uuid is generated. The uuid is added to the `In-memory Sending Queue` and the items itself is added to the `Sending Queue Directory` in the `Object Storage Bucket` with the uuid as the key.
 
@@ -404,13 +404,12 @@ An example for UM payload for one runtime:
 
 #### Benefits of Having a Persistent Cache and a Persistent Sending Queue
 
-Persistent cache will prevent us from losing cache data when the KMC restarts.
-There could be multiple reasons for KMC restarts, such as upgrades or crashes because of exceeding memory limit.
+A persistent cache ensures that cached data is not lost when the KMC restarts.
+KMC may restart for various reasons, such as upgrades or crashes due to exceeding memory limits.
 
-Persistent sending queue will prevent us from losing `UM measurements` in case KMC is not able to send measurements to UM.
-This could be due to network issues or UM service being down.
-And during this time, the `Runtime Reconciler` will continue scraping resources and adding `UM measurements` to the `Sending Queue`. 
-Once the network issue is resolved or UM service is up again, the `Sending Workers` will start sending the `UM measurements` to UM.
+Similarly, a persistent sending queue prevents the loss of `UM measurements` if KMC is temporarily unable to send them to UM.
+This could happen due to network issues or if the UM service is down. During this time, the Runtime Reconciler will continue scraping resources and adding UM measurements to the Sending Queue.
+Once the network connection is restored or the UM service becomes available again, the Sending Workers will resume sending UM measurements to UM.
 
 #### Technologies Used
 
