@@ -421,7 +421,7 @@ The main benefit of mini-go is that it will work with any object storage as long
 The main benefit of this workqueue is that it supports multiple consumers and this is needed for our use case since multiple 
 `Sending Workers` will be concurrently getting items from the `In-memory Sending Queue`.
 
-#### Threat Modelling
+#### Threat Modeling
 
 ![arch](../assets/TAM.drawio.svg)
 
