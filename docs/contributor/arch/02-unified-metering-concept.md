@@ -71,7 +71,7 @@ where the `collector.ScanMap` is a type with the following definition:
 ```
 type ScanMap map[resource.ScannerID]resource.ScanConverter
 ```
-`resource.ScannerID` is simply a string identifying the scanner (e.g. `node`, `pvc` or `redis`) and `resource.ScanConverter` is an interface specifying the method needed for converting a scan to an `EDP measurement`.
+`resource.ScannerID` is a string identifying the scanner (for example `node`, `pvc`, or `redis`), and `resource.ScanConverter` is an interface specifying the method needed for converting a scan to an `EDP measurement`.
 
 
 The `Scan` structs which implements the `resource.ScanConverter` interface store the entire list of billable resources.
