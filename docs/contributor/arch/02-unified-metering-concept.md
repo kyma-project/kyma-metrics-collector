@@ -22,7 +22,7 @@ For more information, see the [Advanced Customer Billing](https://wiki.one.int.s
 1. `Kym Environment Broker (KEB) Polling Goroutine` sends a request to `KEB` every 10 minutes to get the existing runtimes.
 2. `KEB Polling Goroutine` adds the subaccounts' IDs for billable runtimes to the `In-memory Processing Queue`.
 3. Each `Processing Worker` gets a subaccount ID from the `In-memory Processing Queue` to start processing it. Note that by default, there are 5 `Processing Workers`.
-4. `Processing worker` gets the cache item for the subaccount ID from the `In-memory Cache`. The cache item contains the last successful scans of the billable resources.
+4. `Processing Worker` gets the cache item for the subaccount ID from the `In-memory Cache`. The cache item contains the last successful scans of the billable resources.
 5. `Processing Worker` scrapes billable resources in the runtime and creates an `EDP measurement`. If a scraping fails or the conversion of a scan to an `EDP measurement` fails, then the `Processing Worker` falls back to the scan from the cache.
 6. `Processing Worker` sends the payload to EDP.
 7. `Processing Worker` updates the cache item for the subaccount ID with the new scan.
