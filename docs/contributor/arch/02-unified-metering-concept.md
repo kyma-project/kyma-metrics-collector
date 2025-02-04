@@ -11,7 +11,7 @@ Proposed
 Currently, Kyma Metrics Collector (KMC) pushes consumption per runtime every 5 minutes to the Event Data Platform (EDP) backend.
 We need to switch to pushing consumption per runtime every 1 hour to the Unified Metering (UM) backend.
 
-Check the wiki page [here](https://wiki.one.int.sap/wiki/display/kyma/Advanced+Customer+Billing) for more details.
+For more information, see the [Advanced Customer Billing](https://wiki.one.int.sap/wiki/display/kyma/Advanced+Customer+Billing) Wiki page.
 
 ## Decision
 
