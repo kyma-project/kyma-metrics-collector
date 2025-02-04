@@ -1,4 +1,4 @@
-# 1. Architecture for Switching to Unified Metering Backend
+# 2. Architecture for Switching to Unified Metering Backend
 
 Date: 2025-01-15
 
@@ -136,11 +136,11 @@ Flow for each `Runtime Reconciler`:
 2. `Runtime Reconciler` gets the cache file for the subaccount ID from the `Cache Directory` in the `Object Storage Bucket`. The cache file contains the last successful UM measurements.
 3. `Runtime Reconciler` scrapes billable resources in the runtime and creates a `UM measurement`. If scraping fails or the conversion of a scan to an `UM measurement` fails, then the `Runtime Reconciler` falls back to the measurement from the cache.
 4. If 1 hour has passed since the last time a `UM measurement` was added to the `Sending Queue` for the subaccount ID, then the `Runtime Reconciler` calculates the Capacity Units and adds the current `UM measurement` to the `Sending Queue`.
-> **NOTE:** When an item is added to the `Sending Queue`, a uuid is generated. The uuid is added to the `In-memory Sending Queue` and the items itself is added to the `Sending Queue Directory` in the `Object Storage Bucket` with the uuid as the key.
+> **NOTE:** When an item is added to the `Sending Queue`, a `uuid` is generated. The `uuid` is added to the `In-memory Sending Queue` and the item itself is added to the `Sending Queue Directory` in the `Object Storage Bucket` with the `uuid` as the key.
 
 Flow for each `Sending Worker`:
 1. `Sending Worker` gets a `UM measurement` from the `Sending Queue`.
-> **NOTE:**  When an item is retrieved from the `Sending Queue`, a uuid is retrieved from the `In-memory Sending Queue` and then the item having this uuid as the key is retrieved from the `Sending Queue Directory` in the `Object Storage Bucket`.
+> **NOTE:**  When an item is retrieved from the `Sending Queue`, a `uuid` is retrieved from the `In-memory Sending Queue` and then the item having this `uuid` as the key is retrieved from the `Sending Queue Directory` in the `Object Storage Bucket`.
 2. `Sending Worker` sends the payload to UM.
 3. If the payload was sent successfully to UM, then the `Sending Worker` removes the `UM measurement` from the `Sending Queue`.
 > **NOTE:** When an item is removed from the `Sending Queue`, it means that it will be removed from the `Sending Queue Directory` in the `Object Storage Bucket`.
