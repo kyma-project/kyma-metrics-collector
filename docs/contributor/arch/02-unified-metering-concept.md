@@ -409,7 +409,7 @@ A persistent cache ensures that cached data is not lost when KMC restarts.
 KMC may restart for various reasons, such as upgrades or crashes due to exceeding memory limits.
 
 Similarly, a persistent sending queue prevents the loss of `UM measurements` if KMC is temporarily unable to send them to UM.
-This could happen due to network issues or if the UM service is down. During this time, the `Runtime Reconciler` will continue scraping resources and adding `UM measurements` to the Sending Queue.
+This could happen due to network issues or if the UM service is down. During this time, the `Runtime Reconciler` continues scraping resources and adding `UM measurements` to the Sending Queue.
 Once the network connection is restored or the UM service becomes available again, the `Sending Workers` will resume sending `UM measurements` to UM.
 
 #### Technologies Used
