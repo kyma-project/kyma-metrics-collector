@@ -30,7 +30,7 @@ For more information, see the [Advanced Customer Billing](https://wiki.one.int.s
 
 #### EDP Measurement
 
-`EDP measurement` has the following `struct`:
+The `EDP measurement` has the following `struct`:
 ```
 type EDPMeasurement struct {
 	VMTypes            []VMType        
