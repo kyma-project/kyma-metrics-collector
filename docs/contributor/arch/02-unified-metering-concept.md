@@ -425,4 +425,4 @@ The main benefit of this workqueue is that it supports multiple consumers and th
 
 ![arch](../assets/TAM.drawio.svg)
 
-The threat modelling for the new architecture is documented [here](https://wiki.one.int.sap/wiki/pages/viewpage.action?pageId=5007037549).
+For more information on the threat modeling for the new architecture, see the [documentation](https://wiki.one.int.sap/wiki/pages/viewpage.action?pageId=5007037549).
