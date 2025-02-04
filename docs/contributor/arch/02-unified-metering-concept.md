@@ -405,7 +405,7 @@ An example for UM payload for one runtime:
 
 #### Benefits of Having a Persistent Cache and a Persistent Sending Queue
 
-A persistent cache ensures that cached data is not lost when the KMC restarts.
+A persistent cache ensures that cached data is not lost when KMC restarts.
 KMC may restart for various reasons, such as upgrades or crashes due to exceeding memory limits.
 
 Similarly, a persistent sending queue prevents the loss of `UM measurements` if KMC is temporarily unable to send them to UM.
