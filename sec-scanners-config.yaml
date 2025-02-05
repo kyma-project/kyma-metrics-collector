@@ -1,8 +1,8 @@
 module-name: kyma-metrics-collector
 kind: kcp
-protecode:
+bdba:
   - europe-docker.pkg.dev/kyma-project/prod/kyma-metrics-collector:main
-whitesource:
+mend:
   language: golang-mod
   exclude:
     - "**/test/**"
