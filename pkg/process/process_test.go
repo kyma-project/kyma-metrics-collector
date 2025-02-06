@@ -22,10 +22,11 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	kmckeb "github.com/kyma-project/kyma-metrics-collector/pkg/keb"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/logger"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/process/stubs"
 	runtime2 "github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime/kubeconfigprovider"
+	runtimestubs "github.com/kyma-project/kyma-metrics-collector/pkg/runtime/stubs"
 	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
 
@@ -811,7 +812,7 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 			g.Expect(err).Should(gomega.BeNil())
 
 			secretKCPStored := kmctesting.NewKCPStoredSecret(tc.givenShoot.RuntimeID, tc.KubeConfig)
-			secretCacheClient := fake.NewSimpleClientset(secretKCPStored)
+			secretCacheClient := fake.NewClientset(secretKCPStored)
 			kubeconfigProvider := kubeconfigprovider.New(secretCacheClient.CoreV1(), logger, 1*time.Minute, "test")
 
 			// initiate process instance.
@@ -822,6 +823,9 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				ScrapeInterval:     3 * time.Second,
 				Logger:             logger,
 				KubeconfigProvider: kubeconfigProvider,
+				ClientFactory: &runtimestubs.ClientFactory{
+					Clients: runtimestubs.Clients{},
+				},
 			}
 
 			// when
@@ -902,6 +906,9 @@ func TestExecute(t *testing.T) {
 		ScrapeInterval:     3 * time.Second,
 		Logger:             log,
 		KubeconfigProvider: kubeconfigProvider,
+		ClientFactory: &runtimestubs.ClientFactory{
+			Clients: runtimestubs.Clients{},
+		},
 	}
 
 	go func() {

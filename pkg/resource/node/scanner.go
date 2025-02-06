@@ -9,8 +9,6 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/metadata"
-	"k8s.io/client-go/rest"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	kmcotel "github.com/kyma-project/kyma-metrics-collector/pkg/otel"
@@ -23,8 +21,6 @@ var _ resource.Scanner = &Scanner{}
 var ErrNoNodesFound = errors.New("no nodes found")
 
 type Scanner struct {
-	clientFactory func(config *rest.Config) (metadata.Interface, error)
-
 	specs *config.PublicCloudSpecs
 }
 
@@ -38,20 +34,11 @@ func (s *Scanner) ID() resource.ScannerID {
 	return "node"
 }
 
-func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
+func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info, clients runtime.Interface) (resource.ScanConverter, error) {
 	ctx, span := otel.Tracer("").Start(ctx, "node_scan", kmcotel.SpanAttributes(runtime))
 	defer span.End()
 
-	cl, err := s.createClientset(&runtime.Kubeconfig)
-	if err != nil {
-		retErr := fmt.Errorf("failed to create clientset: %w", err)
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-
-		return nil, retErr
-	}
-
-	list, err := cl.Resource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "nodes"}).List(ctx, metav1.ListOptions{})
+	list, err := clients.Metadata().Resource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "nodes"}).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		retErr := fmt.Errorf("failed to list list: %w", err)
 		span.RecordError(err)
@@ -70,12 +57,4 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 		specs:        s.specs,
 		list:         *list,
 	}, nil
-}
-
-func (s *Scanner) createClientset(config *rest.Config) (metadata.Interface, error) {
-	if s.clientFactory == nil {
-		return metadata.NewForConfig(config)
-	}
-
-	return s.clientFactory(config)
 }

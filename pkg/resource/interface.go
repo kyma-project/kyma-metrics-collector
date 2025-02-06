@@ -15,7 +15,7 @@ type Scanner interface {
 	// The scan is time dependent and should be taken at the time of the call.
 	// The scanner is responsible for exposing metrics about the values retrieved. All scanners should follow a similar pattern.
 	// These metrics are just for informational purposes and must not be used for alerting or billing.
-	Scan(ctx context.Context, runtime *runtime.Info) (ScanConverter, error)
+	Scan(ctx context.Context, runtime *runtime.Info, clients runtime.Interface) (ScanConverter, error)
 
 	// ID returns the ID of the scanner. This name is used to identify the measure in the record.
 	ID() ScannerID

@@ -33,7 +33,7 @@ func NewCollector(EDPClient *Client, scanner ...resource.Scanner) *Collector {
 	}
 }
 
-func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, previousScans collector.ScanMap) (collector.ScanMap, error) {
+func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, clients runtime.Interface, previousScans collector.ScanMap) (collector.ScanMap, error) {
 	var errs []error
 
 	childCtx, span := otel.Tracer("").Start(ctx, "collect_scans_and_send_measurements", kmcotel.SpanAttributes(runtime))
@@ -41,7 +41,7 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 
 	currentTimestamp := getTimestampNow()
 
-	scans, err := c.executeScans(childCtx, previousScans, runtime)
+	scans, err := c.executeScans(childCtx, previousScans, runtime, clients)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("failed to successfully execute one or more scans : %w", err))
 		span.RecordError(err)
@@ -82,13 +82,13 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, p
 	return scans, errors.Join(errs...)
 }
 
-func (c *Collector) executeScans(ctx context.Context, previousScans collector.ScanMap, runtime *runtime.Info) (collector.ScanMap, error) {
+func (c *Collector) executeScans(ctx context.Context, previousScans collector.ScanMap, runtime *runtime.Info, clients runtime.Interface) (collector.ScanMap, error) {
 	var errs []error
 
 	currentScans := make(collector.ScanMap)
 
 	for _, s := range c.scanners {
-		scan, err := s.Scan(ctx, runtime)
+		scan, err := s.Scan(ctx, runtime, clients)
 		success := err == nil
 		collector.RecordScan(success, string(s.ID()), *runtime)
 

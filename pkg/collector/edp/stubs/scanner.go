@@ -21,7 +21,7 @@ func NewScanner(scanConverter resource.ScanConverter, scanError error, ID resour
 	}
 }
 
-func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
+func (s Scanner) Scan(ctx context.Context, runtime *runtime.Info, clients runtime.Interface) (resource.ScanConverter, error) {
 	return s.scanConverter, s.scanError
 }
 
