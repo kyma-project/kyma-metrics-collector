@@ -1,4 +1,4 @@
-FROM 1.23.6-alpine3.21 as builder
+FROM golang:1.23.6-alpine3.21 as builder
 
 ENV BASE_APP_DIR /go/src/github.com/kyma-project/kyma-metrics-collector
 WORKDIR ${BASE_APP_DIR}
