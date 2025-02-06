@@ -1,7 +1,6 @@
-FROM europe-docker.pkg.dev/kyma-project/prod/external/library/golang:1.23.6-alpine3.21 as builder
+FROM europe-docker.pkg.dev/kyma-project/prod/external/library/golang:1.23.6-alpine3.21 AS builder
 
-ENV BASE_APP_DIR /go/src/github.com/kyma-project/kyma-metrics-collector
-WORKDIR ${BASE_APP_DIR}
+WORKDIR /go/src/github.com/kyma-project/kyma-metrics-collector
 
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -v -o kyma-metrics-collector ./cmd/main.go
@@ -13,6 +12,6 @@ LABEL org.opencontainers.image.source="https://github.com/kyma-project/kyma-metr
 WORKDIR /app
 
 COPY --from=builder /app /app
-USER nonroot:nonroot
+USER 65532:65532
 
 ENTRYPOINT ["/app/kyma-metrics-collector"]
