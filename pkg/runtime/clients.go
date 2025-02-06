@@ -1,5 +1,11 @@
 package runtime
 
+// Clients is a struct that holds the clients for the different Kubernetes APIs.
+// For kmc it is currently necessary to control the creation of the clients and the underlying http.Client
+// due to https://github.com/kubernetes/kubernetes/issues/109289
+// Without this package it would be possible to create multiple clients with different http.Client instances
+// which would lead to a lot of open connections and therefore potential resource leaks.
+
 import (
 	"net/http"
 
@@ -20,7 +26,7 @@ type Clients struct {
 
 type ClientsFactory struct{}
 
-func (r ClientsFactory) NewClients(config *rest.Config) (Interface, error) {
+func (r ClientsFactory) NewClients(config *rest.Config) (*Clients, error) {
 	return NewClients(config)
 }
 
