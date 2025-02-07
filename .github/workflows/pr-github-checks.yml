@@ -72,4 +72,3 @@ jobs:
             fix
             test
           requireScope: false
-          subjectPattern: ^([A-Z].*[^.]|bump .*)$
