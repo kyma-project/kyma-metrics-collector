@@ -24,6 +24,13 @@
     "enabled": false
   },
   "golang": {
-    "postUpdateOptions": ["gomodTidy"]
-  }
+    "postUpdateOptions": ["gomodTidy"],
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "matchDatasources": ["golang-version"],
+      "rangeStrategy": "bump"
+    }
+  ]
 }
