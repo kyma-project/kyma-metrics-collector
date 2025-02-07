@@ -14,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	kmcotel "github.com/kyma-project/kyma-metrics-collector/pkg/otel"
@@ -36,8 +35,6 @@ var (
 var _ resource.Scanner = &Scanner{}
 
 type Scanner struct {
-	clientFactory func(config *rest.Config) (dynamic.Interface, error)
-
 	specs *config.PublicCloudSpecs
 }
 
@@ -51,15 +48,11 @@ func (s *Scanner) ID() resource.ScannerID {
 	return "redis"
 }
 
-func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.ScanConverter, error) {
+func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info, clients runtime.Interface) (resource.ScanConverter, error) {
 	ctx, span := otel.Tracer("").Start(ctx, "redis_scan", kmcotel.SpanAttributes(runtime))
 	defer span.End()
 
-	dynamicClient, err := s.createClientFactory(&runtime.Kubeconfig)
-	if err != nil {
-		return nil, err
-	}
-
+	dynamicClient := clients.Dynamic()
 	aws := dynamicClient.Resource(awsRedisGVR)
 	azure := dynamicClient.Resource(azureRedisGVR)
 	gcp := dynamicClient.Resource(gcpRedisGVR)
@@ -93,14 +86,6 @@ func (s *Scanner) Scan(ctx context.Context, runtime *runtime.Info) (resource.Sca
 	}
 
 	return nil, errors.Join(errs...)
-}
-
-func (s *Scanner) createClientFactory(config *rest.Config) (dynamic.Interface, error) {
-	if s.clientFactory == nil {
-		return dynamic.NewForConfig(config)
-	}
-
-	return s.clientFactory(config)
 }
 
 func listRedisInstances(

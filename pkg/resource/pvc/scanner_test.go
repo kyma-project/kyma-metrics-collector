@@ -9,12 +9,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/rest"
 	k8stesting "k8s.io/client-go/testing"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime/stubs"
 )
 
 func TestScanner_ID(t *testing.T) {
@@ -30,19 +29,16 @@ func TestScanner_Scan_Successful(t *testing.T) {
 		},
 	}
 
-	clientFactory := func(*rest.Config) (kubernetes.Interface, error) {
-		clientset := fake.NewSimpleClientset(pvcs)
-		return clientset, nil
+	clients := &stubs.Clients{
+		KubernetesInterface: fake.NewClientset(pvcs),
 	}
 
-	scanner := Scanner{
-		clientFactory: clientFactory,
-	}
+	scanner := Scanner{}
 
 	provider := "test-provider"
 	result, err := scanner.Scan(context.Background(), &runtime.Info{
 		ProviderType: provider,
-	})
+	}, clients)
 	require.NoError(t, err)
 	require.NotNil(t, result)
 
@@ -52,19 +48,17 @@ func TestScanner_Scan_Successful(t *testing.T) {
 }
 
 func TestScanner_Scan_Error(t *testing.T) {
-	clientFactory := func(*rest.Config) (kubernetes.Interface, error) {
-		clientset := fake.NewSimpleClientset()
-		clientset.PrependReactor("list", "persistentvolumeclaims", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-			return true, nil, errors.New("failed to list pvcs")
-		})
+	clientset := fake.NewClientset()
+	clientset.PrependReactor("list", "persistentvolumeclaims", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		return true, nil, errors.New("failed to list pvcs")
+	})
 
-		return clientset, nil
+	clients := &stubs.Clients{
+		KubernetesInterface: clientset,
 	}
 
-	scanner := Scanner{
-		clientFactory: clientFactory,
-	}
-	result, err := scanner.Scan(context.Background(), &runtime.Info{})
+	scanner := Scanner{}
+	result, err := scanner.Scan(context.Background(), &runtime.Info{}, clients)
 
 	require.Error(t, err)
 	require.Nil(t, result)

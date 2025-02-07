@@ -1,6 +1,10 @@
 package runtime
 
-import "k8s.io/client-go/rest"
+import (
+	"net/http"
+
+	"k8s.io/client-go/rest"
+)
 
 type Info struct {
 	InstanceID      string
@@ -10,4 +14,5 @@ type Info struct {
 	ShootName       string
 	ProviderType    string
 	Kubeconfig      rest.Config
+	Client          *http.Client
 }

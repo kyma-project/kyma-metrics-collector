@@ -7,7 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector"
-	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/kubeconfigprovider"
+	kmccache "github.com/kyma-project/kyma-metrics-collector/pkg/runtime/kubeconfigprovider"
 )
 
 const (

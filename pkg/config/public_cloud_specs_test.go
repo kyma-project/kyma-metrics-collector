@@ -31,8 +31,6 @@ func TestGetFeature(t *testing.T) {
 			expectedFeature: Feature{
 				CpuCores: 2,
 				Memory:   4,
-				Storage:  20,
-				MaxNICs:  2,
 			},
 		},
 		{
@@ -41,8 +39,6 @@ func TestGetFeature(t *testing.T) {
 			expectedFeature: Feature{
 				CpuCores: 8,
 				Memory:   32,
-				Storage:  200,
-				MaxNICs:  4,
 			},
 		},
 		{
@@ -51,8 +47,6 @@ func TestGetFeature(t *testing.T) {
 			expectedFeature: Feature{
 				CpuCores: 4,
 				Memory:   16,
-				Storage:  0,
-				MaxNICs:  2,
 			},
 		},
 		{
@@ -61,8 +55,6 @@ func TestGetFeature(t *testing.T) {
 			expectedFeature: Feature{
 				CpuCores: 8,
 				Memory:   32,
-				Storage:  0,
-				MaxNICs:  4,
 			},
 		},
 		{
@@ -71,8 +63,6 @@ func TestGetFeature(t *testing.T) {
 			expectedFeature: Feature{
 				CpuCores: 16,
 				Memory:   64,
-				Storage:  0,
-				MaxNICs:  8,
 			},
 		},
 		{
@@ -81,8 +71,6 @@ func TestGetFeature(t *testing.T) {
 			expectedFeature: Feature{
 				CpuCores: 32,
 				Memory:   128,
-				Storage:  0,
-				MaxNICs:  8,
 			},
 		},
 		{
@@ -91,8 +79,6 @@ func TestGetFeature(t *testing.T) {
 			expectedFeature: Feature{
 				CpuCores: 48,
 				Memory:   192,
-				Storage:  0,
-				MaxNICs:  8,
 			},
 		},
 		{
@@ -101,8 +87,6 @@ func TestGetFeature(t *testing.T) {
 			expectedFeature: Feature{
 				CpuCores: 64,
 				Memory:   256,
-				Storage:  0,
-				MaxNICs:  8,
 			},
 		},
 		{
