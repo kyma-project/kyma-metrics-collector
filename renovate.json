@@ -31,6 +31,11 @@
     {
       "matchDatasources": ["golang-version"],
       "rangeStrategy": "bump"
+    },
+    {
+      "managers": ["gomod"],
+      "depTypeList": ["indirect"],
+      "enabled": false
     }
   ]
 }
