@@ -1,6 +1,29 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
-  ]
+    "config:recommended",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(chore)",
+    ":semanticCommitScopeDisabled"
+  ],
+  "labels": ["area/dependency", "kind/chore"],
+  "gomod": {
+    "postUpdateOptions": ["gomodTidy"],
+    "enabled": true
+  },
+  "kustomize": {
+    "enabled": false
+  },
+  "dockerfile": {
+    "enabled": true
+  },
+  "helm-values": {
+    "enabled": false
+  },
+  "github-actions": {
+    "enabled": false
+  },
+  "golang": {
+    "postUpdateOptions": ["gomodTidy"]
+  }
 }
