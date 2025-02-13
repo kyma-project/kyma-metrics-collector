@@ -9,7 +9,7 @@ package runtime
 import (
 	"net/http"
 
-	volumesnapshotclientset "github.com/kubernetes-csi/external-snapshotter/client/v6/clientset/versioned"
+	volumesnapshotclientset "github.com/kubernetes-csi/external-snapshotter/client/v8/clientset/versioned"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"

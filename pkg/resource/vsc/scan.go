@@ -6,7 +6,7 @@ import (
 	"math"
 	"time"
 
-	v1 "github.com/kubernetes-csi/external-snapshotter/client/v6/apis/volumesnapshot/v1"
+	v1 "github.com/kubernetes-csi/external-snapshotter/client/v8/apis/volumesnapshot/v1"
 
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 )
