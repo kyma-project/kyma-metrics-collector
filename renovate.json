@@ -6,9 +6,14 @@
     ":semanticCommitTypeAll(chore)",
     ":semanticCommitScopeDisabled"
   ],
-  "labels": ["area/dependency", "kind/chore"],
+  "labels": [
+    "area/dependency",
+    "kind/chore"
+  ],
   "gomod": {
-    "postUpdateOptions": ["gomodTidy"],
+    "postUpdateOptions": [
+      "gomodTidy"
+    ],
     "enabled": true
   },
   "kustomize": {
@@ -23,19 +28,59 @@
   "github-actions": {
     "enabled": false
   },
-  "golang": {
-    "postUpdateOptions": ["gomodTidy"],
-    "enabled": true
-  },
   "packageRules": [
     {
-      "matchDatasources": ["golang-version"],
+      "matchCategories": [
+        "golang"
+      ],
+      "postUpdateOptions": [
+        "gomodTidy"
+      ],
+      "enabled": true
+    },
+    {
+      "matchDatasources": [
+        "golang-version"
+      ],
       "rangeStrategy": "bump"
     },
     {
-      "managers": ["gomod"],
-      "depTypeList": ["indirect"],
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchDepTypes": [
+        "indirect"
+      ],
       "enabled": false
+    },
+    {
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "schedule": "every month",
+      "enabled": false
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true
     }
-  ]
+  ],
+    "customManagers": [
+        {
+            "customType": "regex",
+            "fileMatch": [
+                "^\\.env$"
+            ],
+            "matchStrings": [
+                "ENV_ISTIO_VERSION=(?<currentValue>\\d+?\\.\\d+?\\.\\d+?)"
+            ],
+            "datasourceTemplate": "github-releases",
+            "versioningTemplate": "semver",
+            "depNameTemplate": "kyma-project/istio"
+        }
+    ]
 }
