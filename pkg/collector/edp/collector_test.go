@@ -1,7 +1,6 @@
 package edp
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -349,7 +348,7 @@ func TestCollector_CollectAndSend(t *testing.T) {
 			}
 			clients := runtimestubs.Clients{}
 
-			scanMap, err := EDPCollector.CollectAndSend(context.Background(), &runtimeInfo, clients, tc.previousScanMap)
+			scanMap, err := EDPCollector.CollectAndSend(t.Context(), &runtimeInfo, clients, tc.previousScanMap)
 			if tc.expectedErrInCollectAndSend {
 				require.Error(t, err)
 			} else {

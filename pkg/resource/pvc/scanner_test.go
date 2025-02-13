@@ -1,7 +1,6 @@
 package pvc
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -36,7 +35,7 @@ func TestScanner_Scan_Successful(t *testing.T) {
 	scanner := Scanner{}
 
 	provider := "test-provider"
-	result, err := scanner.Scan(context.Background(), &runtime.Info{
+	result, err := scanner.Scan(t.Context(), &runtime.Info{
 		ProviderType: provider,
 	}, clients)
 	require.NoError(t, err)
@@ -58,7 +57,7 @@ func TestScanner_Scan_Error(t *testing.T) {
 	}
 
 	scanner := Scanner{}
-	result, err := scanner.Scan(context.Background(), &runtime.Info{}, clients)
+	result, err := scanner.Scan(t.Context(), &runtime.Info{}, clients)
 
 	require.Error(t, err)
 	require.Nil(t, result)
