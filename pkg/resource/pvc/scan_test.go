@@ -164,7 +164,7 @@ func TestScan_EDP(t *testing.T) {
 			},
 		},
 		{
-			name: "cloud-manager with unparasable nfs capacity label using pvc capacity as fallback",
+			name: "cloud-manager with unparseable nfs capacity label using pvc capacity as fallback",
 			pvcs: corev1.PersistentVolumeClaimList{
 				Items: []corev1.PersistentVolumeClaim{
 					{
