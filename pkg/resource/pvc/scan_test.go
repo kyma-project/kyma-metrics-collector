@@ -108,6 +108,89 @@ func TestScan_EDP(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "cloud-manager with no nfs capacity label",
+			pvcs: corev1.PersistentVolumeClaimList{
+				Items: []corev1.PersistentVolumeClaim{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app.kubernetes.io/component":  "cloud-manager",
+								"app.kubernetes.io/part-of":    "kyma",
+								"app.kubernetes.io/managed-by": "cloud-manager",
+							}, // NFS labels
+						},
+						Status: corev1.PersistentVolumeClaimStatus{
+							Phase:    corev1.ClaimBound,
+							Capacity: corev1.ResourceList{corev1.ResourceStorage: apiresource.MustParse("20Gi")},
+						},
+					},
+				},
+			},
+			expected: resource.EDPMeasurement{
+				ProvisionedVolumes: resource.ProvisionedVolumes{
+					SizeGbTotal:   60, // 3 * 20
+					SizeGbRounded: 64, // 2 * 32
+					Count:         1,
+				},
+			},
+		},
+		{
+			name: "cloud-manager with nfs capacity label taking priority",
+			pvcs: corev1.PersistentVolumeClaimList{
+				Items: []corev1.PersistentVolumeClaim{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app.kubernetes.io/component":                              "cloud-manager",
+								"app.kubernetes.io/part-of":                                "kyma",
+								"app.kubernetes.io/managed-by":                             "cloud-manager",
+								"cloud-resources.kyma-project.io/nfsVolumeStorageCapacity": "40Gi",
+							}, // NFS labels
+						},
+						Status: corev1.PersistentVolumeClaimStatus{
+							Phase:    corev1.ClaimBound,
+							Capacity: corev1.ResourceList{corev1.ResourceStorage: apiresource.MustParse("20Gi")},
+						},
+					},
+				},
+			},
+			expected: resource.EDPMeasurement{
+				ProvisionedVolumes: resource.ProvisionedVolumes{
+					SizeGbTotal:   120, // 3 * 40
+					SizeGbRounded: 128, // 32 * 4
+					Count:         1,
+				},
+			},
+		},
+		{
+			name: "cloud-manager with unparseable nfs capacity label using pvc capacity as fallback",
+			pvcs: corev1.PersistentVolumeClaimList{
+				Items: []corev1.PersistentVolumeClaim{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app.kubernetes.io/component":                              "cloud-manager",
+								"app.kubernetes.io/part-of":                                "kyma",
+								"app.kubernetes.io/managed-by":                             "cloud-manager",
+								"cloud-resources.kyma-project.io/nfsVolumeStorageCapacity": "invalid value",
+							}, // NFS labels
+						},
+						Status: corev1.PersistentVolumeClaimStatus{
+							Phase:    corev1.ClaimBound,
+							Capacity: corev1.ResourceList{corev1.ResourceStorage: apiresource.MustParse("20Gi")},
+						},
+					},
+				},
+			},
+			expected: resource.EDPMeasurement{
+				ProvisionedVolumes: resource.ProvisionedVolumes{
+					SizeGbTotal:   60, // 3 * 20
+					SizeGbRounded: 64, // 2 * 32
+					Count:         1,
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {

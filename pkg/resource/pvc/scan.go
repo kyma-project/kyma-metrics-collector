@@ -27,6 +27,8 @@ var nfsLabels = map[string]string{
 	"app.kubernetes.io/managed-by": "cloud-manager",
 }
 
+const nfsCapacityLabel = "cloud-resources.kyma-project.io/nfsVolumeStorageCapacity"
+
 var _ resource.ScanConverter = &Scan{}
 
 type Scan struct {
@@ -47,6 +49,15 @@ func (s *Scan) EDP() (resource.EDPMeasurement, error) {
 		if hasAllLabels(pvc.Labels, nfsLabels) {
 			if pvc.Status.Phase == corev1.ClaimBound {
 				currPVC := getSizeInGB(pvc.Status.Capacity.Storage())
+
+				// label is used as primary source of truth for size - when present, and valid
+				if sizeFromLabel, ok := pvc.Labels[nfsCapacityLabel]; ok {
+					quantityFromLabel, err := apiresource.ParseQuantity(sizeFromLabel)
+					if err == nil {
+						currPVC = getSizeInGB(&quantityFromLabel)
+					}
+				}
+
 				// for NFS PVCs we multiply the used capacity by 3 to compensate for the higher price
 				nfsPVCStorage := currPVC * nfsPriceMultiplier
 				edp.ProvisionedVolumes.SizeGbTotal += nfsPVCStorage
