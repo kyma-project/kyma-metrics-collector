@@ -1,4 +1,4 @@
-FROM europe-docker.pkg.dev/kyma-project/prod/external/library/golang:1.23.6-alpine3.21 AS builder
+FROM golang:1.24.0 AS builder
 
 WORKDIR /go/src/github.com/kyma-project/kyma-metrics-collector
 
