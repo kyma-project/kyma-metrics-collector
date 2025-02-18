@@ -131,7 +131,6 @@ func main() {
 		opts.WorkerPoolSize,
 		logger,
 	)
-
 	if err != nil {
 		logger.With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("Create KMC process")
 	}

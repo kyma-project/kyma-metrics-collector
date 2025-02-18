@@ -21,8 +21,8 @@ import (
 )
 
 const (
-	// Epsilon is used to compare floating point numbers using testify's InDelta and InEpsilon.
-	Epsilon = 0.0001
+	// Delta is used to compare floating point numbers using testify's InDelta.
+	Delta = 1.0e-4
 )
 
 const (
