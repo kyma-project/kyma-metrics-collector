@@ -26,7 +26,11 @@ type Clients struct {
 
 type ClientsFactory struct{}
 
-func (r ClientsFactory) NewClients(config *rest.Config) (*Clients, error) {
+func NewClientsFactory() *ClientsFactory {
+	return &ClientsFactory{}
+}
+
+func (r *ClientsFactory) NewClients(config *rest.Config) (InterfaceCloser, error) {
 	return NewClients(config)
 }
 
