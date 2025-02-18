@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -137,6 +138,7 @@ func main() {
 		ScrapeInterval:     opts.ScrapeInterval,
 		Queue:              queue.NewQueue("trackable-skrs"),
 		WorkersPoolSize:    opts.WorkerPoolSize,
+		ClientFactory:      runtime.NewClientsFactory(),
 	}
 
 	// Start execution
