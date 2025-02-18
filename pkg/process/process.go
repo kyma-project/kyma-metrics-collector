@@ -2,7 +2,6 @@ package process
 
 import (
 	"fmt"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/queue"
 	"sync"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/queue"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
