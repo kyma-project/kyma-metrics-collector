@@ -30,13 +30,13 @@ type Providers struct {
 }
 
 type Feature struct {
-	CpuCores int     `json:"cpu_cores"`
+	CpuCores float64 `json:"cpu_cores"`
 	Memory   float64 `json:"memory"`
 }
 
 type RedisInfo struct {
-	PriceStorageGB     int `json:"price_storage_gb"`
-	PriceCapacityUnits int `json:"price_cu"`
+	PriceStorageGB     float64 `json:"price_storage_gb"`
+	PriceCapacityUnits float64 `json:"price_cu"`
 }
 
 func (pcs *PublicCloudSpecs) GetFeature(cloudProvider, vmType string) *Feature {

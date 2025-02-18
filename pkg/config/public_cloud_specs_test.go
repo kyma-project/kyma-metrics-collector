@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	testPublicCloudSpecsPath = "../testing/fixtures/public_cloud_specs.json"
+	testPublicCloudSpecsPath           = "../testing/fixtures/public_cloud_specs.json"
+	testPublicCloudSpecsPathFractional = "../testing/fixtures/public_cloud_specs_fractional.json"
 )
 
 func TestGetFeature(t *testing.T) {
@@ -194,6 +195,65 @@ func TestGetFeature(t *testing.T) {
 	}
 }
 
+func TestGetFeatureFractional(t *testing.T) {
+	g := gomega.NewGomegaWithT(t)
+	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPathFractional}
+	specs, err := LoadPublicCloudSpecs(config)
+	g.Expect(err).Should(gomega.BeNil())
+
+	testCases := []struct {
+		cloudProvider   string
+		vmType          string
+		expectedFeature Feature
+		wantNil         bool
+	}{
+		{
+			cloudProvider: "azure",
+			vmType:        "standard_a1_v2",
+			expectedFeature: Feature{
+				CpuCores: 1.1,
+				Memory:   2.1,
+			},
+		},
+		{
+			cloudProvider: "aws",
+			vmType:        "m4.large",
+			expectedFeature: Feature{
+				CpuCores: 2.2,
+				Memory:   8.2,
+			},
+		},
+		{
+			cloudProvider: "gcp",
+			vmType:        "n1-standard-4",
+			expectedFeature: Feature{
+				CpuCores: 4.3,
+				Memory:   15.3,
+			},
+		},
+		{
+			cloudProvider: "sapconvergedcloud",
+			vmType:        "g_c12_m48",
+			expectedFeature: Feature{
+				CpuCores: 12.4,
+				Memory:   48.4,
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("%s-%s", tc.cloudProvider, tc.vmType), func(t *testing.T) {
+			gotFeature := specs.GetFeature(tc.cloudProvider, tc.vmType)
+			if tc.wantNil {
+				g.Expect(gotFeature).Should(gomega.BeNil())
+				return
+			}
+
+			g.Expect(*gotFeature).Should(gomega.Equal(tc.expectedFeature))
+		})
+	}
+}
+
 func TestGetRedisInfo(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPath}
@@ -217,6 +277,44 @@ func TestGetRedisInfo(t *testing.T) {
 			expectedRedis: RedisInfo{
 				PriceStorageGB:     1903,
 				PriceCapacityUnits: 773,
+			},
+		},
+		{
+			tier:    "foo",
+			wantNil: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.tier, func(t *testing.T) {
+			gotRedis := specs.GetRedisInfo(tc.tier)
+			if tc.wantNil {
+				g.Expect(gotRedis).Should(gomega.BeNil())
+				return
+			}
+
+			g.Expect(gotRedis).Should(gomega.Not(gomega.BeNil()))
+			g.Expect(*gotRedis).Should(gomega.Equal(tc.expectedRedis))
+		})
+	}
+}
+
+func TestGetRedisInfoFractional(t *testing.T) {
+	g := gomega.NewGomegaWithT(t)
+	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPathFractional}
+	specs, err := LoadPublicCloudSpecs(config)
+	g.Expect(err).Should(gomega.BeNil())
+
+	testCases := []struct {
+		tier          string
+		expectedRedis RedisInfo
+		wantNil       bool
+	}{
+		{
+			tier: "S1",
+			expectedRedis: RedisInfo{
+				PriceStorageGB:     182.5,
+				PriceCapacityUnits: 74.5,
 			},
 		},
 		{
