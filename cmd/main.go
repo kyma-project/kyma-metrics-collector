@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/kelseyhightower/envconfig"
-	gocache "github.com/patrickmn/go-cache"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"k8s.io/client-go/kubernetes"
@@ -26,7 +24,6 @@ import (
 	kmcmetrics "github.com/kyma-project/kyma-metrics-collector/pkg/metrics"
 	kmcotel "github.com/kyma-project/kyma-metrics-collector/pkg/otel"
 	kmcprocess "github.com/kyma-project/kyma-metrics-collector/pkg/process"
-	"github.com/kyma-project/kyma-metrics-collector/pkg/queue"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/node"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/pvc"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource/redis"
@@ -94,9 +91,6 @@ func main() {
 	kebClient := keb.NewClient(kebConfig, logger)
 	logger.Debugf("keb config: %v", kebConfig)
 
-	// Creating kubeconfigprovider with no expiration and the data will never be cleaned up
-	cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
-
 	// Creating EDP client
 	edpConfig := new(edp.Config)
 	if err := envconfig.Process("", edpConfig); err != nil {
@@ -127,18 +121,19 @@ func main() {
 
 	kubeconfigProvider := kubeconfigprovider.New(secretCacheClient.CoreV1(), logger, opts.KubeconfigCacheTTL, kubeconfigProviderName)
 
-	kmcProcess := kmcprocess.Process{
-		KEBClient:          kebClient,
-		EDPClient:          edpClient,
-		EDPCollector:       edpCollector,
-		KubeconfigProvider: kubeconfigProvider,
-		Logger:             logger,
-		PublicCloudSpecs:   publicCloudSpecs,
-		Cache:              cache,
-		ScrapeInterval:     opts.ScrapeInterval,
-		Queue:              queue.NewQueue("trackable-skrs"),
-		WorkersPoolSize:    opts.WorkerPoolSize,
-		ClientFactory:      runtime.NewClientsFactory(),
+	kmcProcess, err := kmcprocess.New(
+		kebClient,
+		edpClient,
+		edpCollector,
+		kubeconfigProvider,
+		publicCloudSpecs,
+		opts.ScrapeInterval,
+		opts.WorkerPoolSize,
+		logger,
+	)
+
+	if err != nil {
+		logger.With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("Create KMC process")
 	}
 
 	// Start execution
