@@ -1,11 +1,13 @@
 package process
 
 import (
-	kebruntime "github.com/kyma-project/kyma-environment-broker/common/runtime"
-	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
-	"github.com/onsi/gomega"
 	"testing"
 	"time"
+
+	kebruntime "github.com/kyma-project/kyma-environment-broker/common/runtime"
+	"github.com/onsi/gomega"
+
+	kmctesting "github.com/kyma-project/kyma-metrics-collector/pkg/testing"
 )
 
 // test sortOperations
@@ -92,6 +94,7 @@ func TestSortOperations(t *testing.T) {
 			operations := sortOperations(tc.runtime)
 
 			g.Expect(operations).To(gomega.HaveLen(tc.expectedLen))
+
 			for i, op := range operations {
 				g.Expect(op.state).To(gomega.Equal(tc.expected[i]))
 			}
