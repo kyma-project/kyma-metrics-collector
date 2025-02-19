@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/patrickmn/go-cache"
+	gocache "github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 	"k8s.io/client-go/util/workqueue"
 
@@ -13,6 +13,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/collector/edp"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/config"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/keb"
+	"github.com/kyma-project/kyma-metrics-collector/pkg/queue"
 	"github.com/kyma-project/kyma-metrics-collector/pkg/runtime"
 )
 
@@ -22,7 +23,7 @@ type Process struct {
 	EDPCollector       collector.CollectorSender
 	Queue              workqueue.TypedDelayingInterface[string]
 	KubeconfigProvider runtime.ConfigProvider
-	Cache              *cache.Cache
+	Cache              *gocache.Cache
 	PublicCloudSpecs   *config.PublicCloudSpecs
 	ScrapeInterval     time.Duration
 	WorkersPoolSize    int
@@ -34,6 +35,45 @@ const (
 	trackableTrue  = true
 	trackableFalse = false
 )
+
+// New creates a new Process object.
+func New(
+	kebClient *keb.Client,
+	edpClient *edp.Client,
+	edpCollector collector.CollectorSender,
+	configProvider runtime.ConfigProvider,
+	publicCloudSpecs *config.PublicCloudSpecs,
+	scrapeInterval time.Duration,
+	workerPoolSize int,
+	logger *zap.SugaredLogger,
+) (*Process, error) {
+	switch {
+	case logger == nil,
+		configProvider == nil,
+		publicCloudSpecs == nil,
+		edpCollector == nil,
+		edpClient == nil,
+		kebClient == nil:
+		return nil, fmt.Errorf("missing required parameter")
+	}
+
+	// Creating kubeconfigprovider with no expiration and the data will never be cleaned up
+	cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
+
+	return &Process{
+		KEBClient:          kebClient,
+		EDPClient:          edpClient,
+		EDPCollector:       edpCollector,
+		KubeconfigProvider: configProvider,
+		Logger:             logger,
+		PublicCloudSpecs:   publicCloudSpecs,
+		Cache:              cache,
+		ScrapeInterval:     scrapeInterval,
+		Queue:              queue.NewQueue("trackable-skrs"),
+		WorkersPoolSize:    workerPoolSize,
+		ClientFactory:      runtime.NewClientsFactory(),
+	}, nil
+}
 
 // Start runs the complete process of collection and sending metrics.
 func (p *Process) Start() {
