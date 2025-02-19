@@ -25,26 +25,25 @@ type simpleOperation struct {
 	succeeded bool
 }
 
+// isRuntimeTrackable determines if a runtime is trackable based on its operations.
+// A runtime is considered trackable if:
+// - It has a successful provisioning or unsuspension operation.
+// - It does not have a suspension or deprovisioning operation as the last operation.
+// - It has any other operation assuming the cluster was successfully provisioned and is billable.
 func isRuntimeTrackable(runtime kebruntime.RuntimeDTO) bool {
-	// we assume the following:
-	// a successful	provisioning operation marks the cluster as billable
-	// any suspension operation marks the cluster as not billable
-	// a successful unsuspension operation marks the cluster as billable again
-	// cluster lifecycle ends with deprovisioning
-	// any other operation assumes that the cluster was successfully provisioned and is billable
-	//
-	// we only check the last operation for these cases
-	//
+	// Sort operations by time
 	operations := sortOperations(runtime)
 
-	// if a cluster does not have any operations, it is not trackable
+	// If a cluster does not have any operations, it is not trackable
 	if len(operations) == 0 {
 		return false
 	}
 
+	// Get the last operation
 	lastOperation := operations[len(operations)-1]
 
-	//nolint:exhaustive // we only care about the for states, not the others
+	// Determine trackability based on the last operation state
+	//nolint:exhaustive // we only care about the four states, not the others
 	switch lastOperation.state {
 	case provisioning, unsuspension:
 		return lastOperation.succeeded
