@@ -27,8 +27,8 @@
   },
   "redis_tiers": {
     "S1": {
-      "price_storage_gb": 182.5,
-      "price_cu": 74.5
+      "price_storage_gb": 182,
+      "price_cu": 74
     }
   }
 }

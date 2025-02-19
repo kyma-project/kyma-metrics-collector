@@ -35,8 +35,8 @@ type Feature struct {
 }
 
 type RedisInfo struct {
-	PriceStorageGB     float64 `json:"price_storage_gb"`
-	PriceCapacityUnits float64 `json:"price_cu"`
+	PriceStorageGB     int `json:"price_storage_gb"`
+	PriceCapacityUnits int `json:"price_cu"`
 }
 
 func (pcs *PublicCloudSpecs) GetFeature(cloudProvider, vmType string) *Feature {
