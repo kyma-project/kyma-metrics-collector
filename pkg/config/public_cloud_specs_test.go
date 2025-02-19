@@ -205,7 +205,6 @@ func TestGetFeatureFractional(t *testing.T) {
 		cloudProvider   string
 		vmType          string
 		expectedFeature Feature
-		wantNil         bool
 	}{
 		{
 			cloudProvider: "azure",
@@ -244,11 +243,6 @@ func TestGetFeatureFractional(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("%s-%s", tc.cloudProvider, tc.vmType), func(t *testing.T) {
 			gotFeature := specs.GetFeature(tc.cloudProvider, tc.vmType)
-			if tc.wantNil {
-				g.Expect(gotFeature).Should(gomega.BeNil())
-				return
-			}
-
 			g.Expect(*gotFeature).Should(gomega.Equal(tc.expectedFeature))
 		})
 	}
