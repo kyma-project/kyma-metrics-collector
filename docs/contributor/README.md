@@ -61,3 +61,20 @@ See the following example payload:
   }
 }
 ```
+
+## KEB interface
+
+The KMC fetches the list of SKR clusters from KEB. The KEB provides the list of SKR clusters regardless of their billable state. 
+KMC uses this list to populate an internal queue for processing.
+Before attempting to add a cluster to the queue, the KMC checks if the cluster is billable. If the cluster is not billable, the KMC skips the cluster.
+This check is based on:
+
+### Runtime State:
+- The runtime state should not be `Deprovisioned`, `Deprovisioning`, or `Suspended`.
+
+### Operations:
+- The cluster must have operations.
+- The last operation should not be `Suspension` or `Deprovisioning`
+
+### Trackable States:
+- The runtime state should be one of the following: `Succeeded`, `Error`, `Upgrading`, or `Updating`.
