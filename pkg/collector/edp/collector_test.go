@@ -378,7 +378,7 @@ func checkPrometheusMetrics(t *testing.T, scannerID1, scannerID2 resource.Scanne
 		runtimeInfo.GlobalAccountID,
 	)
 	require.NoError(t, err)
-	require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
+	require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Delta)
 
 	// metrics: totalScans for scanner2
 	gotMetrics, err = collector.TotalScans.GetMetricWithLabelValues(
@@ -391,7 +391,7 @@ func checkPrometheusMetrics(t *testing.T, scannerID1, scannerID2 resource.Scanne
 		runtimeInfo.GlobalAccountID,
 	)
 	require.NoError(t, err)
-	require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
+	require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Delta)
 
 	// metrics: totalScansConverted for scanner1
 	gotMetrics, err = collector.TotalScansConverted.GetMetricWithLabelValues(
@@ -405,7 +405,7 @@ func checkPrometheusMetrics(t *testing.T, scannerID1, scannerID2 resource.Scanne
 		runtimeInfo.GlobalAccountID,
 	)
 	require.NoError(t, err)
-	require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
+	require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Delta)
 
 	// metrics: totalScansConverted for scanner2
 	gotMetrics, err = collector.TotalScansConverted.GetMetricWithLabelValues(
@@ -419,7 +419,7 @@ func checkPrometheusMetrics(t *testing.T, scannerID1, scannerID2 resource.Scanne
 		runtimeInfo.GlobalAccountID,
 	)
 	require.NoError(t, err)
-	require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Epsilon)
+	require.InEpsilon(t, float64(1), testutil.ToFloat64(gotMetrics), kmctesting.Delta)
 }
 
 func expectedHeadersInEDPReq() http.Header {

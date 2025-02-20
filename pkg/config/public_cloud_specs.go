@@ -30,7 +30,7 @@ type Providers struct {
 }
 
 type Feature struct {
-	CpuCores int     `json:"cpu_cores"`
+	CpuCores float64 `json:"cpu_cores"`
 	Memory   float64 `json:"memory"`
 }
 

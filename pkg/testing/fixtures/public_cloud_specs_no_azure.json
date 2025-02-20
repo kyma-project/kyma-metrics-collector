@@ -1,11 +1,5 @@
 {
   "providers" : {
-    "azure": {
-      "standard_a1_v2": {
-        "cpu_cores": 1,
-        "memory": 2
-      }
-    },
     "aws": {
       "m4.large": {
         "cpu_cores": 2,

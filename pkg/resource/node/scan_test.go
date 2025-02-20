@@ -15,8 +15,9 @@ func TestScan_EDP(t *testing.T) {
 	specs := &config.PublicCloudSpecs{
 		Providers: config.Providers{
 			AWS: map[string]config.Feature{
-				"t2.micro": {CpuCores: 1, Memory: 1},
-				"m5.large": {CpuCores: 2, Memory: 8},
+				"t2.micro":            {CpuCores: 1, Memory: 1},
+				"m5.large":            {CpuCores: 2, Memory: 8},
+				"gpu.fake.fractional": {CpuCores: 1234.1234455, Memory: 1234.1234455},
 			},
 			Azure: map[string]config.Feature{
 				"a1.standard": {CpuCores: 1, Memory: 1.75},
@@ -62,6 +63,53 @@ func TestScan_EDP(t *testing.T) {
 				ProvisionedRAMGb: 1,
 				VMTypes: []resource.VMType{
 					{Name: "t2.micro", Count: 1},
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name:     "single 'GPU' node",
+			provider: config.AWS,
+			list: metav1.PartialObjectMetadataList{
+				Items: []metav1.PartialObjectMetadata{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{"node.kubernetes.io/instance-type": "gpu.fake.fractional"},
+						},
+					},
+				},
+			},
+			expectedEDP: resource.EDPMeasurement{
+				ProvisionedCPUs:  1234.1234455,
+				ProvisionedRAMGb: 1234.1234455,
+				VMTypes: []resource.VMType{
+					{Name: "gpu.fake.fractional", Count: 1},
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name:     "multiple 'GPU' nodes",
+			provider: config.AWS,
+			list: metav1.PartialObjectMetadataList{
+				Items: []metav1.PartialObjectMetadata{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{"node.kubernetes.io/instance-type": "gpu.fake.fractional"},
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{"node.kubernetes.io/instance-type": "gpu.fake.fractional"},
+						},
+					},
+				},
+			},
+			expectedEDP: resource.EDPMeasurement{
+				ProvisionedCPUs:  2468.246891,
+				ProvisionedRAMGb: 2468.246891,
+				VMTypes: []resource.VMType{
+					{Name: "gpu.fake.fractional", Count: 2},
 				},
 			},
 			expectedError: nil,
@@ -150,8 +198,8 @@ func TestScan_EDP(t *testing.T) {
 
 			actualEDP, err := scan.EDP()
 
-			require.Equal(t, test.expectedEDP.ProvisionedCPUs, actualEDP.ProvisionedCPUs)
-			require.InDelta(t, test.expectedEDP.ProvisionedRAMGb, actualEDP.ProvisionedRAMGb, kmctesting.Epsilon)
+			require.InDelta(t, test.expectedEDP.ProvisionedCPUs, actualEDP.ProvisionedCPUs, kmctesting.Delta)
+			require.InDelta(t, test.expectedEDP.ProvisionedRAMGb, actualEDP.ProvisionedRAMGb, kmctesting.Delta)
 			require.ElementsMatch(t, test.expectedEDP.VMTypes, actualEDP.VMTypes)
 
 			if test.expectedError != nil {

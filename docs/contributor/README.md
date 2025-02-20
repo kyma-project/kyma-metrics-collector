@@ -26,7 +26,7 @@ The following steps happen periodically:
 
 ## EDP interface
 
-The data sent to EDP must adhere to the schema you see in [edp.json](./assets/edp.json).
+The data sent to EDP must adhere to the schema you see in [prod-schema.json](./assets/prod-schema.json).
 
 See the following example payload:
 

@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	testPublicCloudSpecsPath = "../testing/fixtures/public_cloud_specs.json"
+	testPublicCloudSpecsPath           = "../testing/fixtures/public_cloud_specs.json"
+	testPublicCloudSpecsPathFractional = "../testing/fixtures/public_cloud_specs_fractional.json"
 )
 
 func TestGetFeature(t *testing.T) {
@@ -189,6 +190,59 @@ func TestGetFeature(t *testing.T) {
 				return
 			}
 
+			g.Expect(*gotFeature).Should(gomega.Equal(tc.expectedFeature))
+		})
+	}
+}
+
+func TestGetFeatureFractional(t *testing.T) {
+	g := gomega.NewGomegaWithT(t)
+	config := &env.Config{PublicCloudSpecsPath: testPublicCloudSpecsPathFractional}
+	specs, err := LoadPublicCloudSpecs(config)
+	g.Expect(err).Should(gomega.BeNil())
+
+	testCases := []struct {
+		cloudProvider   string
+		vmType          string
+		expectedFeature Feature
+	}{
+		{
+			cloudProvider: "azure",
+			vmType:        "standard_a1_v2",
+			expectedFeature: Feature{
+				CpuCores: 1.1,
+				Memory:   2.1,
+			},
+		},
+		{
+			cloudProvider: "aws",
+			vmType:        "m4.large",
+			expectedFeature: Feature{
+				CpuCores: 2.2,
+				Memory:   8.2,
+			},
+		},
+		{
+			cloudProvider: "gcp",
+			vmType:        "n1-standard-4",
+			expectedFeature: Feature{
+				CpuCores: 4.3,
+				Memory:   15.3,
+			},
+		},
+		{
+			cloudProvider: "sapconvergedcloud",
+			vmType:        "g_c12_m48",
+			expectedFeature: Feature{
+				CpuCores: 12.4,
+				Memory:   48.4,
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("%s-%s", tc.cloudProvider, tc.vmType), func(t *testing.T) {
+			gotFeature := specs.GetFeature(tc.cloudProvider, tc.vmType)
 			g.Expect(*gotFeature).Should(gomega.Equal(tc.expectedFeature))
 		})
 	}

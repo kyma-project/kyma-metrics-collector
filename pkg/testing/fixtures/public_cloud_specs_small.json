@@ -17,6 +17,18 @@
         "cpu_cores": 4,
         "memory": 15
       }
+    },
+    "sapconvergedcloud": {
+      "g_c12_m48": {
+        "cpu_cores": 12,
+        "memory": 48
+      }
+    }
+  },
+  "redis_tiers": {
+    "S1": {
+      "price_storage_gb": 182,
+      "price_cu": 74
     }
   }
 }

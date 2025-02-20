@@ -2,7 +2,7 @@ package resource
 
 type EDPMeasurement struct {
 	VMTypes            []VMType           `json:"vm_types"            validate:"required"`
-	ProvisionedCPUs    int                `json:"provisioned_cpus"    validate:"numeric"`
+	ProvisionedCPUs    float64            `json:"provisioned_cpus"    validate:"numeric"`
 	ProvisionedRAMGb   float64            `json:"provisioned_ram_gb"  validate:"numeric"`
 	ProvisionedVolumes ProvisionedVolumes `json:"provisioned_volumes" validate:"required"`
 }
