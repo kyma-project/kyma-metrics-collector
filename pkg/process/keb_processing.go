@@ -177,36 +177,6 @@ func getOrDefault(runtimeStatus *kebruntime.Operation, defaultValue string) stri
 	return defaultValue
 }
 
-func isRuntimeTrackable(runtime kebruntime.RuntimeDTO) bool {
-	if runtime.Status.State == kebruntime.StateDeprovisioning {
-		return false
-	}
-
-	return isTrackableState(runtime.Status.State) || isProvisionedStatus(runtime)
-}
-
-// isProvisionedStatus returns true if the runtime is successfully provisioned, otherwise returns false.
-func isProvisionedStatus(runtime kebruntime.RuntimeDTO) bool {
-	if runtime.Status.Provisioning != nil &&
-		runtime.Status.Provisioning.State == string(kebruntime.StateSucceeded) &&
-		runtime.Status.Deprovisioning == nil {
-		return true
-	}
-
-	return false
-}
-
-// isTrackableState returns true if the runtime state is trackable, otherwise returns false.
-func isTrackableState(state kebruntime.State) bool {
-	//nolint:exhaustive // we only care about these states
-	switch state {
-	case kebruntime.StateSucceeded, kebruntime.StateError, kebruntime.StateUpgrading, kebruntime.StateUpdating:
-		return true
-	}
-
-	return false
-}
-
 func (p *Process) namedLogger() *zap.SugaredLogger {
 	return p.Logger.With("component", "kmc")
 }

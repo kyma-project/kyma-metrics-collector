@@ -61,3 +61,36 @@ See the following example payload:
   }
 }
 ```
+
+## KEB Interface
+
+KMC fetches the list of SKR clusters from KEB. KEB provides the list of SKR clusters regardless of their billable state. 
+KMC uses this list to populate an internal queue for processing.
+Before attempting to add a cluster to the queue, KMC checks if the cluster is billable. If the cluster is not billable, KMC skips the cluster.
+
+### Cluster Lifecycle
+```mermaid
+stateDiagram-v2
+    Running: Cluster is running
+    Suspended: Cluster is suspended
+    
+    [*] --> Running: Provisioning
+    Running --> Running: Non-destructive operations
+    Running --> Suspended: Suspension
+    Suspended --> Running: Unsuspension
+    Running --> [*]: Deprovisioning
+        
+    
+```
+
+### Billing State
+```mermaid
+stateDiagram-v2
+    Billable: Cluster is billable
+    NonBillable: Cluster is not billable
+    
+    [*] --> Billable: provisioned
+    Billable --> NonBillable: Cluster is suspended
+    NonBillable --> Billable: Cluster is unsuspended
+    Billable --> NonBillable: Cluster is deprovisioned
+```

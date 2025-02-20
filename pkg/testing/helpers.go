@@ -75,10 +75,12 @@ func WithProvisionedAndDeprovisionedStatus(statusState kebruntime.State) func(*k
 	return func(runtime *kebruntime.RuntimeDTO) {
 		runtime.Status.State = statusState
 		runtime.Status.Provisioning = &kebruntime.Operation{
-			State: string(kebruntime.StateSucceeded),
+			State:     string(kebruntime.StateSucceeded),
+			CreatedAt: time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC),
 		}
 		runtime.Status.Deprovisioning = &kebruntime.Operation{
-			State: string(kebruntime.StateSucceeded),
+			State:     string(kebruntime.StateSucceeded),
+			CreatedAt: time.Date(2100, 1, 1, 0, 0, 0, 0, time.UTC),
 		}
 	}
 }
