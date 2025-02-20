@@ -335,9 +335,10 @@ func TestCollector_CollectAndSend(t *testing.T) {
 			defer srv.Close()
 
 			edpConfig := newEDPConfig(srv.URL)
-			edpClient := NewClient(edpConfig, logger.NewLogger(zapcore.DebugLevel))
+			log := logger.NewLogger(zapcore.DebugLevel)
+			edpClient := NewClient(edpConfig, log)
 
-			EDPCollector := NewCollector(edpClient, scanner1, scanner2)
+			EDPCollector := NewCollector(edpClient, log, scanner1, scanner2)
 
 			runtimeInfo := runtime.Info{
 				InstanceID:      instanceID,

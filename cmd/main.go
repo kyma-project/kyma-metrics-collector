@@ -113,6 +113,7 @@ func main() {
 	vscScanner := vsc.NewScanner()
 	edpCollector := edp.NewCollector(
 		edpClient,
+		logger,
 		nodeScanner,
 		pvcScanner,
 		redisScanner,

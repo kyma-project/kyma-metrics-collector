@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 )
 
 type Collector struct {
+	logger    *zap.SugaredLogger
 	EDPClient *Client
 	scanners  []resource.Scanner
 }
@@ -26,8 +28,9 @@ var errNoMeasurementsSent = errors.New("no measurements sent to EDP")
 
 var _ collector.CollectorSender = &Collector{}
 
-func NewCollector(EDPClient *Client, scanner ...resource.Scanner) *Collector {
+func NewCollector(EDPClient *Client, logger *zap.SugaredLogger, scanner ...resource.Scanner) *Collector {
 	return &Collector{
+		logger:    logger,
 		EDPClient: EDPClient,
 		scanners:  scanner,
 	}
@@ -71,6 +74,8 @@ func (c *Collector) CollectAndSend(ctx context.Context, runtime *runtime.Info, c
 		currentTimestamp,
 		EDPMeasurements,
 	)
+
+	c.logger.Debug("Sending payload to EDP", zap.Any("payload", payload))
 
 	err = c.sendPayload(payload, runtime.SubAccountID)
 	if err != nil {
