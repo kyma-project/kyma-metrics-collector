@@ -62,13 +62,13 @@ See the following example payload:
 }
 ```
 
-## KEB interface
+## KEB Interface
 
-The KMC fetches the list of SKR clusters from KEB. The KEB provides the list of SKR clusters regardless of their billable state. 
+KMC fetches the list of SKR clusters from KEB. KEB provides the list of SKR clusters regardless of their billable state. 
 KMC uses this list to populate an internal queue for processing.
-Before attempting to add a cluster to the queue, the KMC checks if the cluster is billable. If the cluster is not billable, the KMC skips the cluster.
+Before attempting to add a cluster to the queue, KMC checks if the cluster is billable. If the cluster is not billable, KMC skips the cluster.
 
-### Cluster Lifecycle:
+### Cluster Lifecycle
 ```mermaid
 stateDiagram-v2
     Running: Cluster is running
@@ -83,7 +83,7 @@ stateDiagram-v2
     
 ```
 
-### Billing State:
+### Billing State
 ```mermaid
 stateDiagram-v2
     Billable: Cluster is billable
