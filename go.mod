@@ -14,7 +14,7 @@ require (
 	github.com/onsi/gomega v1.36.2
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.21.0
+	github.com/prometheus/client_golang v1.21.1
 	github.com/prometheus/client_model v0.6.1
 	github.com/stretchr/testify v1.10.0
 	go.opentelemetry.io/otel v1.34.0
