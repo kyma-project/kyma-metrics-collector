@@ -3,7 +3,7 @@ module github.com/kyma-project/kyma-metrics-collector/internal/tools
 go 1.24.1
 
 require (
-	github.com/bombsimon/wsl/v4 v4.5.0
+	github.com/bombsimon/wsl/v4 v4.6.0
 	github.com/golangci/golangci-lint v1.64.6
 )
 
