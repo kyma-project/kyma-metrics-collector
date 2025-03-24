@@ -16,7 +16,7 @@ import (
 )
 
 // ErrNotFound is returned when an item is not found in the cache.
-var ErrNotFound = errors.New("Item not found in cache")
+var ErrNotFound = errors.New("item not found in cache")
 
 const (
 	// namespace where the kubeconfig secrets are stored.
