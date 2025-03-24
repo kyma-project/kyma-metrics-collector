@@ -4,7 +4,7 @@ go 1.24.1
 
 require (
 	github.com/bombsimon/wsl/v4 v4.6.0
-	github.com/golangci/golangci-lint/v2 v2.0.0
+	github.com/golangci/golangci-lint/v2 v2.0.1
 )
 
 require (
