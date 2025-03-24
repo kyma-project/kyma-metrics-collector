@@ -11,7 +11,7 @@ import (
 	"github.com/kyma-project/kyma-metrics-collector/pkg/resource"
 )
 
-var ErrUnknownRedisTier = errors.New("Redis tier not defined")
+var ErrUnknownRedisTier = errors.New("redis tier not defined")
 
 var _ resource.ScanConverter = &Scan{}
 
