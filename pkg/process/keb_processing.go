@@ -64,7 +64,7 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 			With(log.KeyDeprovisioningStatus, deprovisioning).
 			Debug("Runtime state")
 
-		if skipRuntime(runtime, p.filterMeteringAccounts) {
+		if skipRuntime(runtime, p.runtimesToBeFiltered) {
 			continue
 		}
 

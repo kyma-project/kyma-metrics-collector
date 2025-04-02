@@ -130,6 +130,7 @@ func main() {
 		opts.ScrapeInterval,
 		opts.WorkerPoolSize,
 		logger,
+		opts.FilterRuntimeFile,
 	)
 	if err != nil {
 		logger.With(log.KeyResult, log.ValueFail).With(log.KeyError, err.Error()).Fatal("Create KMC process")

@@ -6,14 +6,12 @@ import (
 	"os"
 )
 
-const FilterListFile = "/etc/filter_list.yaml"
-
-type runtimesToNeFiltered struct {
+type accounts struct {
 	MeteringAccounts []string `yaml:"meteringAccounts"`
 }
 
-func readFilterFile() ([]byte, error) {
-	data, err := os.ReadFile(FilterListFile)
+func readFilterFile(file string) ([]byte, error) {
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
@@ -21,8 +19,7 @@ func readFilterFile() ([]byte, error) {
 }
 
 func parseRuntimesToBeFiltered(data []byte) (map[string]struct{}, error) {
-	// read the config file
-	var filter runtimesToNeFiltered
+	var filter accounts
 	var meteringAccounts = make(map[string]struct{})
 
 	err := yaml.Unmarshal(data, &filter)
