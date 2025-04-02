@@ -64,6 +64,10 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 			With(log.KeyDeprovisioningStatus, deprovisioning).
 			Debug("Runtime state")
 
+		if skipRuntime(runtime, p.filterMeteringAccounts) {
+			continue
+		}
+
 		if isRuntimeTrackable(runtime) {
 			newRecord := kmccache.Record{
 				SubAccountID:    runtime.SubAccountID,
