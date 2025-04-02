@@ -18,17 +18,18 @@ import (
 )
 
 type Process struct {
-	KEBClient          *keb.Client
-	EDPClient          *edp.Client
-	EDPCollector       collector.CollectorSender
-	Queue              workqueue.TypedDelayingInterface[string]
-	KubeconfigProvider runtime.ConfigProvider
-	Cache              *gocache.Cache
-	PublicCloudSpecs   *config.PublicCloudSpecs
-	ScrapeInterval     time.Duration
-	WorkersPoolSize    int
-	Logger             *zap.SugaredLogger
-	ClientFactory      runtime.ClientFactory
+	KEBClient              *keb.Client
+	EDPClient              *edp.Client
+	EDPCollector           collector.CollectorSender
+	Queue                  workqueue.TypedDelayingInterface[string]
+	KubeconfigProvider     runtime.ConfigProvider
+	Cache                  *gocache.Cache
+	PublicCloudSpecs       *config.PublicCloudSpecs
+	ScrapeInterval         time.Duration
+	WorkersPoolSize        int
+	Logger                 *zap.SugaredLogger
+	ClientFactory          runtime.ClientFactory
+	filterMeteringAccounts map[string]struct{}
 }
 
 const (
@@ -60,18 +61,27 @@ func New(
 	// Creating kubeconfigprovider with no expiration and the data will never be cleaned up
 	cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
+	clustersToBeFiltered, err := readFilterFile()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read clusters to be filtered file: %v", err)
+	}
+	filterList, err := parseRuntimesToBeFiltered(clustersToBeFiltered)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse cluster list to filter list: %v", err)
+	}
 	return &Process{
-		KEBClient:          kebClient,
-		EDPClient:          edpClient,
-		EDPCollector:       edpCollector,
-		KubeconfigProvider: configProvider,
-		Logger:             logger,
-		PublicCloudSpecs:   publicCloudSpecs,
-		Cache:              cache,
-		ScrapeInterval:     scrapeInterval,
-		Queue:              queue.NewQueue("trackable-skrs"),
-		WorkersPoolSize:    workerPoolSize,
-		ClientFactory:      runtime.NewClientsFactory(),
+		KEBClient:              kebClient,
+		EDPClient:              edpClient,
+		EDPCollector:           edpCollector,
+		KubeconfigProvider:     configProvider,
+		Logger:                 logger,
+		PublicCloudSpecs:       publicCloudSpecs,
+		Cache:                  cache,
+		ScrapeInterval:         scrapeInterval,
+		Queue:                  queue.NewQueue("trackable-skrs"),
+		WorkersPoolSize:        workerPoolSize,
+		ClientFactory:          runtime.NewClientsFactory(),
+		filterMeteringAccounts: filterList,
 	}, nil
 }
 
