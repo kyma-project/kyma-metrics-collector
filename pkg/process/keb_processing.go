@@ -65,6 +65,7 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 			Debug("Runtime state")
 
 		if p.skipRuntime(runtime, p.globalAccToBeFiltered) {
+			p.namedLogger().Debugf("skipping runtime: %s", runtime)
 			continue
 		}
 
