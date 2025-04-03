@@ -7,7 +7,7 @@ import (
 )
 
 type accounts struct {
-	MeteringAccounts []string `yaml:"meteringAccounts"`
+	SkippedGlobalAccounts []string `yaml:"skippedGlobalAccounts"`
 }
 
 func readFilterFile(file string) ([]byte, error) {
@@ -20,19 +20,19 @@ func readFilterFile(file string) ([]byte, error) {
 
 func parseRuntimesToBeFiltered(data []byte) (map[string]struct{}, error) {
 	var filter accounts
-	var meteringAccounts = make(map[string]struct{})
+	var skippedAccounts = make(map[string]struct{})
 
 	err := yaml.Unmarshal(data, &filter)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, account := range filter.MeteringAccounts {
+	for _, account := range filter.SkippedGlobalAccounts {
 		if err = uuid.Validate(account); err != nil {
 			continue
 		}
-		meteringAccounts[account] = struct{}{}
+		skippedAccounts[account] = struct{}{}
 	}
 
-	return meteringAccounts, nil
+	return skippedAccounts, nil
 }
