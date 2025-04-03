@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -704,6 +705,51 @@ func TestPrometheusMetricsProcessSubAccountID(t *testing.T) {
 				"the last published time should be updated only when a new event is published to EDP.")
 		})
 	}
+}
+
+func TestSkipGlobalAccountID(t *testing.T) {
+	tt := []struct {
+		name     string
+		runtime  kebruntime.RuntimeDTO
+		filter   map[string]struct{}
+		expected bool
+	}{
+		{
+			name: "runtime in filter list",
+			runtime: kebruntime.RuntimeDTO{
+				GlobalAccountID: "8946D5DE-E59A-4F4D-B65D-4595758D1FB1",
+			},
+			filter:   map[string]struct{}{"8946D5DE-E59A-4F4D-B65D-4595758D1FB1": {}},
+			expected: true,
+		},
+		{
+			name: "runtime not in filter list",
+			runtime: kebruntime.RuntimeDTO{
+				GlobalAccountID: "8946D5DE-E59A-4F4D-B65D-4595758D1FB1",
+			},
+			filter:   map[string]struct{}{"E653F9B0-97F1-4BF4-AAF2-268C5217CF49": {}},
+			expected: false,
+		},
+		{
+			name: "empty filter list",
+			runtime: kebruntime.RuntimeDTO{
+				GlobalAccountID: "8946D5DE-E59A-4F4D-B65D-4595758D1FB1",
+			},
+			filter:   map[string]struct{}{},
+			expected: false,
+		},
+	}
+
+	for _, tc := range tt {
+		p := Process{
+			globalAccToBeFiltered: tc.filter,
+		}
+		t.Run(tc.name, func(t *testing.T) {
+			actual := p.skipRuntime(tc.runtime, tc.filter)
+			require.Equal(t, tc.expected, actual)
+		})
+	}
+
 }
 
 func TestExecute(t *testing.T) {

@@ -1,7 +1,7 @@
 package process
 
 import (
-	"github.com/kyma-project/kyma-environment-broker/common/runtime"
+	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 	"os"
 )
@@ -28,13 +28,11 @@ func parseRuntimesToBeFiltered(data []byte) (map[string]struct{}, error) {
 	}
 
 	for _, account := range filter.MeteringAccounts {
+		if err = uuid.Validate(account); err != nil {
+			continue
+		}
 		meteringAccounts[account] = struct{}{}
 	}
 
 	return meteringAccounts, nil
-}
-
-func skipRuntime(meteringAccount runtime.RuntimeDTO, filterMeteringAccounts map[string]struct{}) bool {
-	_, ok := filterMeteringAccounts[meteringAccount.GlobalAccountID]
-	return ok
 }

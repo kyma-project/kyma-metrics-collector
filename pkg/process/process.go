@@ -18,18 +18,18 @@ import (
 )
 
 type Process struct {
-	KEBClient            *keb.Client
-	EDPClient            *edp.Client
-	EDPCollector         collector.CollectorSender
-	Queue                workqueue.TypedDelayingInterface[string]
-	KubeconfigProvider   runtime.ConfigProvider
-	Cache                *gocache.Cache
-	PublicCloudSpecs     *config.PublicCloudSpecs
-	ScrapeInterval       time.Duration
-	WorkersPoolSize      int
-	Logger               *zap.SugaredLogger
-	ClientFactory        runtime.ClientFactory
-	runtimesToBeFiltered map[string]struct{}
+	KEBClient             *keb.Client
+	EDPClient             *edp.Client
+	EDPCollector          collector.CollectorSender
+	Queue                 workqueue.TypedDelayingInterface[string]
+	KubeconfigProvider    runtime.ConfigProvider
+	Cache                 *gocache.Cache
+	PublicCloudSpecs      *config.PublicCloudSpecs
+	ScrapeInterval        time.Duration
+	WorkersPoolSize       int
+	Logger                *zap.SugaredLogger
+	ClientFactory         runtime.ClientFactory
+	globalAccToBeFiltered map[string]struct{}
 }
 
 const (
@@ -75,18 +75,18 @@ func New(
 	}
 
 	return &Process{
-		KEBClient:            kebClient,
-		EDPClient:            edpClient,
-		EDPCollector:         edpCollector,
-		KubeconfigProvider:   configProvider,
-		Logger:               logger,
-		PublicCloudSpecs:     publicCloudSpecs,
-		Cache:                cache,
-		ScrapeInterval:       scrapeInterval,
-		Queue:                queue.NewQueue("trackable-skrs"),
-		WorkersPoolSize:      workerPoolSize,
-		ClientFactory:        runtime.NewClientsFactory(),
-		runtimesToBeFiltered: filterList,
+		KEBClient:             kebClient,
+		EDPClient:             edpClient,
+		EDPCollector:          edpCollector,
+		KubeconfigProvider:    configProvider,
+		Logger:                logger,
+		PublicCloudSpecs:      publicCloudSpecs,
+		Cache:                 cache,
+		ScrapeInterval:        scrapeInterval,
+		Queue:                 queue.NewQueue("trackable-skrs"),
+		WorkersPoolSize:       workerPoolSize,
+		ClientFactory:         runtime.NewClientsFactory(),
+		globalAccToBeFiltered: filterList,
 	}, nil
 }
 
