@@ -29,6 +29,7 @@ type Options struct {
 	ListenAddr          int
 	LogLevel            zapcore.Level
 	KubeconfigCacheTTL  time.Duration
+	FilterRuntimeFile   string
 }
 
 func ParseArgs() *Options {
@@ -39,6 +40,7 @@ func ParseArgs() *Options {
 	logLevelStr := flag.String("log-level", DefaultLogLevel.String(), "The log-level of the application. E.g. fatal, error, info, debug etc")
 	listenAddr := flag.Int("listen-addr", DefaultListenAddr, "The application starts server in this port to serve the metrics and healthz endpoints")
 	debugPort := flag.Int("debug-port", DefaultDebugPort, "The custom port to debug when needed")
+	filterRuntimeFile := flag.String("filter-runtime-file", "", "The file containing the list of runtimes to filter")
 	kubeconfigCacheTTL := flag.Duration("kubeconfig-cache-ttl", DefaultKubeconfigCacheTTL, "The TTL of the kubeconfig cache")
 	flag.Parse()
 
@@ -54,6 +56,7 @@ func ParseArgs() *Options {
 		LogLevel:           logLevel,
 		ListenAddr:         *listenAddr,
 		KubeconfigCacheTTL: *kubeconfigCacheTTL,
+		FilterRuntimeFile:  *filterRuntimeFile,
 	}
 }
 
