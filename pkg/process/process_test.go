@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -16,6 +15,7 @@ import (
 	"github.com/onsi/gomega"
 	gocache "github.com/patrickmn/go-cache"
 	"github.com/prometheus/client_golang/prometheus/testutil"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zapcore"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/util/workqueue"
@@ -744,12 +744,12 @@ func TestSkipGlobalAccountID(t *testing.T) {
 		p := Process{
 			globalAccToBeFiltered: tc.filter,
 		}
+
 		t.Run(tc.name, func(t *testing.T) {
-			actual := p.skipRuntime(tc.runtime, tc.filter)
+			actual := p.skipRuntime(tc.runtime)
 			require.Equal(t, tc.expected, actual)
 		})
 	}
-
 }
 
 func TestExecute(t *testing.T) {

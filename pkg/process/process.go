@@ -63,11 +63,13 @@ func New(
 	cache := gocache.New(gocache.NoExpiration, gocache.NoExpiration)
 
 	filterList := make(map[string]struct{})
+
 	if fileName != "" {
 		data, err := readFilterFile(fileName)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read clusters to be filtered file: %v", err)
 		}
+
 		filterList, err = parseRuntimesToBeFiltered(data)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse cluster list to filter list: %v", err)

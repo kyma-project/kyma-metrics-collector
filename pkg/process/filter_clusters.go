@@ -1,13 +1,14 @@
 package process
 
 import (
+	"os"
+
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
-	"os"
 )
 
 type accounts struct {
-	SkippedGlobalAccounts []string `yaml:"skippedGlobalAccounts"`
+	SkippedGlobalAccounts []string `yaml:"globalAccounts"`
 }
 
 func readFilterFile(file string) ([]byte, error) {
@@ -15,12 +16,14 @@ func readFilterFile(file string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return data, nil
 }
 
 func parseRuntimesToBeFiltered(data []byte) (map[string]struct{}, error) {
 	var filter accounts
-	var skippedAccounts = make(map[string]struct{})
+
+	skippedAccounts := make(map[string]struct{})
 
 	err := yaml.Unmarshal(data, &filter)
 	if err != nil {
@@ -31,6 +34,7 @@ func parseRuntimesToBeFiltered(data []byte) (map[string]struct{}, error) {
 		if err = uuid.Validate(account); err != nil {
 			continue
 		}
+
 		skippedAccounts[account] = struct{}{}
 	}
 

@@ -64,8 +64,8 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 			With(log.KeyDeprovisioningStatus, deprovisioning).
 			Debug("Runtime state")
 
-		if p.skipRuntime(runtime, p.globalAccToBeFiltered) {
-			p.namedLogger().Debugf("skipping runtime with runtimeID: %s, shootName: %s", runtime.RuntimeID, runtime.ShootName)
+		if p.skipRuntime(runtime) {
+			p.namedLogger().Infof("skipping runtime with runtimeID: %s, shootName: %s", runtime.RuntimeID, runtime.ShootName)
 			continue
 		}
 
@@ -200,7 +200,7 @@ func (p *Process) namedLoggerWithRuntime(runtime kebruntime.RuntimeDTO) *zap.Sug
 	return p.Logger.With("component", "kmc").With(log.KeyRuntimeID, runtime.RuntimeID).With(log.KeyShoot, runtime.ShootName).With(log.KeySubAccountID, runtime.SubAccountID).With(log.KeyGlobalAccountID, runtime.GlobalAccountID)
 }
 
-func (p *Process) skipRuntime(runtime kebruntime.RuntimeDTO, filterGlobalAccounts map[string]struct{}) bool {
-	_, ok := filterGlobalAccounts[runtime.GlobalAccountID]
+func (p *Process) skipRuntime(runtime kebruntime.RuntimeDTO) bool {
+	_, ok := p.globalAccToBeFiltered[runtime.GlobalAccountID]
 	return ok
 }
