@@ -201,6 +201,7 @@ func (p *Process) namedLoggerWithRuntime(runtime kebruntime.RuntimeDTO) *zap.Sug
 }
 
 func (p *Process) skipRuntime(runtime kebruntime.RuntimeDTO) bool {
+	p.namedLogger().With(log.KeyRuntimeID, runtime.RuntimeID).Infof("Checking if runtime should be skipped: %s", p.globalAccToBeFiltered)
 	_, ok := p.globalAccToBeFiltered[runtime.GlobalAccountID]
 	return ok
 }
