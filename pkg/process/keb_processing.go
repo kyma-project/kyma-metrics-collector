@@ -64,7 +64,6 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 			With(log.KeyDeprovisioningStatus, deprovisioning).
 			Debug("Runtime state")
 
-		p.namedLogger().Infof("Checking if runtime is in skip list: %s", p.globalAccToBeFiltered)
 		if p.skipRuntime(runtime) {
 			p.namedLogger().Infof("skipping runtime with runtimeID: %s, shootName: %s", runtime.RuntimeID, runtime.ShootName)
 			continue
