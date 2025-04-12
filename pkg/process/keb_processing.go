@@ -64,6 +64,13 @@ func (p *Process) populateCacheAndQueue(runtimes *kebruntime.RuntimesPage) {
 			With(log.KeyDeprovisioningStatus, deprovisioning).
 			Debug("Runtime state")
 
+		if p.skipRuntime(runtime) {
+			p.namedLogger().Infof("skipping runtime with globalAccountID: %s subAccountID: %s, "+
+				"runtimeID: %s, shootName: %s, instanceID: %s",
+				runtime.GlobalAccountID, runtime.SubAccountID, runtime.RuntimeID, runtime.ShootName, runtime.InstanceID)
+			continue
+		}
+
 		if isRuntimeTrackable(runtime) {
 			newRecord := kmccache.Record{
 				SubAccountID:    runtime.SubAccountID,
@@ -193,4 +200,9 @@ func (p *Process) namedLoggerWithRecord(record *kmccache.Record) *zap.SugaredLog
 
 func (p *Process) namedLoggerWithRuntime(runtime kebruntime.RuntimeDTO) *zap.SugaredLogger {
 	return p.Logger.With("component", "kmc").With(log.KeyRuntimeID, runtime.RuntimeID).With(log.KeyShoot, runtime.ShootName).With(log.KeySubAccountID, runtime.SubAccountID).With(log.KeyGlobalAccountID, runtime.GlobalAccountID)
+}
+
+func (p *Process) skipRuntime(runtime kebruntime.RuntimeDTO) bool {
+	_, ok := p.globalAccToBeFiltered[runtime.GlobalAccountID]
+	return ok
 }
