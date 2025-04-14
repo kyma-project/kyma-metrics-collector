@@ -61,17 +61,6 @@ func (eClient Client) NewRequest(dataTenant string) (*http.Request, error) {
 	return req, nil
 }
 
-func (eClient Client) getEDPURL(dataTenant string) string {
-	return fmt.Sprintf(edpPathFormat,
-		eClient.Config.URL,
-		eClient.Config.Namespace,
-		eClient.Config.DataStreamName,
-		eClient.Config.DataStreamVersion,
-		dataTenant,
-		eClient.Config.DataStreamEnv,
-	)
-}
-
 func (eClient Client) Send(req *http.Request, payload []byte) (*http.Response, error) {
 	// define retry policy.
 	retryOptions := []retry.Option{
@@ -133,6 +122,17 @@ func (eClient Client) Send(req *http.Request, payload []byte) (*http.Response, e
 	eClient.namedLogger().Debugf("sent an event to '%s' with eventstream: '%s'", req.URL.String(), string(payload))
 
 	return resp, nil
+}
+
+func (eClient Client) getEDPURL(dataTenant string) string {
+	return fmt.Sprintf(edpPathFormat,
+		eClient.Config.URL,
+		eClient.Config.Namespace,
+		eClient.Config.DataStreamName,
+		eClient.Config.DataStreamVersion,
+		dataTenant,
+		eClient.Config.DataStreamEnv,
+	)
 }
 
 func (c Client) namedLogger() *zap.SugaredLogger {
