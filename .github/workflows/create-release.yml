@@ -21,6 +21,10 @@ on:
         description: "Do not publish"
         default: false
 
+permissions:
+  id-token: write
+  contents: write
+
 # Required secrets:
 # - GITHUB_TOKEN
 # - BOT_TOKEN
