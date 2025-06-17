@@ -6,7 +6,7 @@ require (
 	github.com/avast/retry-go/v4 v4.6.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
-	github.com/jellydator/ttlcache/v3 v3.3.0
+	github.com/jellydator/ttlcache/v3 v3.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kubernetes-csi/external-snapshotter/client/v8 v8.2.0
 	github.com/kyma-project/cloud-manager v0.1.5-0.20241113200138-f935e7d62359
@@ -75,7 +75,7 @@ require (
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/oauth2 v0.27.0 // indirect
-	golang.org/x/sync v0.14.0 // indirect
+	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
