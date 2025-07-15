@@ -1,5 +1,9 @@
 # Kyma Metrics Collector
 
+## :warning: **Archived**
+
+This repository has been deprecated and archived. There is no public replacement available.
+
 ## Status
 
 [![REUSE status](https://api.reuse.software/badge/github.com/kyma-project/kyma-metrics-collector)](https://api.reuse.software/info/github.com/kyma-project/kyma-metrics-collector)
